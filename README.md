@@ -28,19 +28,6 @@ For the very urgent that work with a Java, Kotlin or other Jar platform:
 
 1) Add the following repository to your Gradle repositories: 
 ```
-repositories {
-    //AADD
-    maven("https://cpsgit.informatik.uni-kl.de/api/v4/projects/152/packages/maven") {
-        name = "GitLab"
-        credentials(HttpHeaderCredentials::class) {
-            name = "Repository-Read-Token"
-            value = "glpat-QgQBx35Gmo6jYfmMEPSP"
-        }
-        authentication {
-            create<HttpHeaderAuthentication>("header")
-        }
-    }
-}
 ```
 2) add the following dependency to your Gradle dependencies: 
 ```
