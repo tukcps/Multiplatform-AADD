@@ -163,6 +163,21 @@ With the help of the class DDBuilder that provides DSL features, we can write
 ```
 More complete documentation is in the folder doc. 
 
+### Multiplatform Utilization
+With the conversion of the jAADD library into a Multiplatform Project, the option exists to generate a shared C library. This shared C library can then be utilized in C++/C code projects.
+The work flow is as follows. First build the project as usual. The build process, gradle, will generate a shared library libnative.<.dylib ,.so ,.lib > under build/bin/native/<debugShared, releaseShared>.
+Together with the header file inside of the same dirs the lib can be linked against in C/C++ projects. An example usage can be found below.
+```
+    libnative_ExportedSymbols* lib = libnative_symbols();
+    libnative_kref_com_github_tukcps_aadd_DDBuilder builder = lib->kotlin.root.com.github.tukcps.aadd.DDBuilder.DDBuilder();
+    libnative_KDouble x1_min = 0.0;
+    libnative_KDouble x1_max = 1.0;
+    const char* x1_name = "x1";
+    libnative_kref_com_github_tukcps_aadd_AADD x1 = lib->kotlin.root.com.github.tukcps.aadd.DDBuilder.range_(builder,x1_min,x1_max,x1_name);
+    std::cout << "x1 =[ " << lib->kotlin.root.com.github.tukcps.aadd.AADD.get_min(x1) << ", " << lib->kotlin.root.com.github.tukcps.aadd.AADD.get_max(x1) << " ]";
+```
+For more information on how to use a multiplatform shared library please visit the official kotlin page.
+
 ### API Changelog
 
 ##### Versions MP-AADD 0.1+
