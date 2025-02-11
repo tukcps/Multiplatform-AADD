@@ -51,7 +51,23 @@ Gradle will get and use the respective version (i.e., 0.1.8), and you just can u
 To quickly try some pre-existing examples, it is suggested to use IntelliJ IDEA (https://www.jetbrains.com/idea/), and to import the Gradle project.
 Navigate to "src/test," and right-click on a benchmark, or example to run it. 
 
-### Semi-Symbolic Computations with AADD
+Another option available for dependency is the utilization of Github Packages. If you have a Github account and created a Personal Access Token (Available under Settings-Developer Settings) you can utilize the following maven repository hosted by Github Packages.
+```
+maven {
+        url = uri("https://maven.pkg.github.com/tukcps/Multiplatform-AADD")
+        credentials {
+            username = "<Your-Github-User-Name>"
+            password = "<Your-Github-Personal-Access-Token>"
+        }
+    }
+```
+The direkt Gradle dependency is in that case the following.
+
+```
+implementation("com.github.tukcps:multiplatform-aadd:0.1.7")
+```
+### Semi-Symbolic Comput
+ations with AADD
 
 The AADD library allows users execute code in a semi-symbolic way.
 For this purpose, it provides representations of variables and constants of the types
