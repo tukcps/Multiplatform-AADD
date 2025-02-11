@@ -126,3 +126,23 @@ kotlin {
     }
 }
 
+publishing {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/tukcps/Multiplatform-AADD")
+            credentials {
+                username = System.getenv("GITHUB_USER") ?: "enter-github-username"
+                password = System.getenv("GITHUB_TOKEN") ?: "enter-github-token"
+            }
+        }
+    }
+    publications {
+        create<MavenPublication>("gpr"){
+            from(components["kotlin"])
+            groupId = "com.github.tukcps"
+            artifactId = "multiplatform-aadd"
+            version = "0.1.7"
+        }
+    }
+}
