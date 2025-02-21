@@ -7,67 +7,52 @@
 
 ![Logo of AADD](doc/AADDLogo.png)
 
+## What are AADDs?  
 AADDs permit semi-symbolic computations on Ranges, Integers, and its interactions with control flow via predicates.
 AADDs are a combination of reduced, ordered BDD that model discrete conditions and Affine Forms that model computations on real numbers.
 Both interact via predicates that are structured in the form of a BDD.
-Note that for purely Boolean problems, a SAT solver might be better suited.
+The overview and control of the interactions between discrete and continuous variables might be useful in many problems, 
+e.g. the development of  
 
+- Methods for symbolic execution of software that has computations on Double or Integer numbers,
+- Methods for runtime-verification, 
+- Methods for verification of neural networks, 
+- Constraint propagation or SMT solvers where discrete and continuous solutions are tightly entangled.
+
+To learn more:
+
+- Grimm et al., EPTCS 247, 2017, pp. 1-17; https://doi.org/10.4204/EPTCS.247.1
+- Zivkovic et al., IEEE TCAD 38/10 2019;  https://ieeexplore.ieee.org/document/8428606
+- Zivkovic et al., DATE 2019; http://dx.doi.org/10.23919/DATE.2019.8715278
+
+
+> For purely Boolean problems, optimized BDD packages or a SAT solver are likely better suited.
+
+## Contents and Use of the AADD Library
 This repository contains the *multi-platform* AADD library.
 It implements *Affine Arithmetic Decision Diagrams* (AADD) for various platforms, including
 binary shared libraries (for use from C/C++, ...), and the Java Virtual Machine platform.
 
 The development environment is:
-- Kotlin v2.1+ ; Java 19+ Byte code or various binary platforms
-- Gradle 7.8+ as build tool.  
-- Kotlin test for unit testing 
+- Kotlin v2.1+ which compiles to Java 19+ Byte code or various binary platforms, 
+- Kotlin test for unit testing, 
+- Gradle 7.8+ as build tool. 
 
-The Gradle build tool automatically downloads all dependencies; unlike in
-previous versions, we use a simple LP solver.
+The Gradle build tool automatically downloads all dependencies.
+The multi platform version includes a simple LP solver (which is ok as most LP problems in AADD are small ones, where the overhead for starting a complex solver is expensive).
+For the JVM platforms, other solvers for LP/MILP problems like OjAlgo will be used in the next updates.
 
-For the very urgent that work with a Java, Kotlin or other Jar platform: 
-
-1) Add the following repository to your Gradle repositories: 
+To include the AADD library in an application, add the following dependency to your Gradle dependencies: 
 ```
-repositories {
-    //AADD
-    maven("https://cpsgit.informatik.uni-kl.de/api/v4/projects/152/packages/maven") {
-        name = "GitLab"
-        credentials(HttpHeaderCredentials::class) {
-            name = "Repository-Read-Token"
-            value = "glpat-QgQBx35Gmo6jYfmMEPSP"
-        }
-        authentication {
-            create<HttpHeaderAuthentication>("header")
-        }
-    }
-}
-```
-2) add the following dependency to your Gradle dependencies: 
-```
-        implementation("com.github.tukcps:aadd:0.1.8")
+    implementation("io.github.tukcps:aadd:0.1.8") 
 ```
 Gradle will get and use the respective version (i.e., 0.1.8), and you just can use it in your code.
 
 To quickly try some pre-existing examples, it is suggested to use IntelliJ IDEA (https://www.jetbrains.com/idea/), and to import the Gradle project.
 Navigate to "src/test," and right-click on a benchmark, or example to run it. 
 
-Another option available for dependency is the utilization of Github Packages. If you have a Github account and created a Personal Access Token (Available under Settings-Developer Settings) you can utilize the following maven repository hosted by Github Packages.
-```
-maven {
-        url = uri("https://maven.pkg.github.com/tukcps/Multiplatform-AADD")
-        credentials {
-            username = "<Your-Github-User-Name>"
-            password = "<Your-Github-Personal-Access-Token>"
-        }
-    }
-```
-The direkt Gradle dependency is in that case the following.
 
-```
-implementation("com.github.tukcps:multiplatform-aadd:0.1.7")
-```
-### Semi-Symbolic Comput
-ations with AADD
+## Semi-Symbolic Computations with AADD
 
 The AADD library allows users execute code in a semi-symbolic way.
 For this purpose, it provides representations of variables and constants of the types
