@@ -18,5 +18,15 @@ class NumberRangeTests {
         println(rangeA == rangeB)
     }
 
+    @Test
+    fun reluTest()
+    {
+        // The relu functions sets negative values to 0 and non negaitve it just passes
+        // Thus for -1.0 .. 1.0 we expect a return range of 0.0 .. 1.0
+        val range = Range(-1.0 .. 1.0)
+        val relu_res = range.relu()
+        //println(relu_res)
+
+    }
 
 }

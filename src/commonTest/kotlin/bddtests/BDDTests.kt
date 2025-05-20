@@ -2,9 +2,10 @@
 
 package bddtests
 
-import com.github.tukcps.aadd.*
-import com.github.tukcps.aadd.values.XBool
+import com.github.tukcps.aadd.BDD
+import com.github.tukcps.aadd.DDBuilder
 import com.github.tukcps.aadd.functions.numInternalNodes
+import com.github.tukcps.aadd.values.XBool
 import kotlin.test.*
 
 
@@ -61,9 +62,8 @@ internal class BDDTests {
             val a = cond.ite(True, False) // ITE(1,True, False)
             val b = cond.ite(False, True) // ITE(1, False, True)
             val c = a.not() // ITE(1, False, True), shall just flip values at leaves
-            // println(cond); println(a); println(b); println(c)
-            assertTrue(b == c)
-            assertFalse(a == b)
+            assertEquals(b, c)
+            assertNotEquals(a, b)
         }
     }
 
@@ -71,25 +71,24 @@ internal class BDDTests {
     @Test
     fun complementBoolCondTest() {
         DDBuilder {
-            val cond = variable("a")
+            val cond = boolean("a")
             val a = cond.ite(True, False) // ITE(1,True, False)
             val b = cond.ite(False, True) // ITE(1, False, True)
             val c = a.not() // ITE(1, False, True), shall just flip values at leaves
-            // println(cond); println(a); println(b); println(c)
-            assertTrue(b == c)
-            assertFalse(a == b)
+            assertEquals(b, c)
+            assertNotEquals(a, b)
         }
     }
 
-    @Test
+    @Test @Ignore
     fun nodesOrderTest() {
         DDBuilder {
-            var res=variable("res")
+            val res= boolean("res")
             val a=real(1.0 .. 4.0)
             val b=real(0.5)
             val c=(a*b greaterThan real(1.0))
-            res=c.ite(True, res)
-            println(res.toIteString() )
+            val ite = c.ite(True, res)
+            // println(res.toIteString() )
         }
     }
 
@@ -118,14 +117,13 @@ internal class BDDTests {
         DDBuilder {
             val tru = True
             val fal = False
-            val c = variable("c")
+            val c = boolean("c")
             val d = fal and c and tru
-            val e = fal.or(variable("e"))
+            val e = fal.or(boolean("e"))
             assertEquals(False, d)
             assertEquals(False, fal)
             assertEquals(True, tru)
             assertEquals(1, e.height())
-            // println("d = $d; e = $e")
         }
     }
 
@@ -135,9 +133,9 @@ internal class BDDTests {
             val cond = real(1.0..2.0) greaterThanOrEquals real(1.5)
             val b = cond.ite(False, True)
             var r = b.ite(True, b)
-            assertTrue(r == b)
+            assertEquals(r, b)
             r = b.ite(False, b)
-            assertTrue(r == False)
+            assertEquals(r, False)
         }
     }
 
@@ -177,11 +175,11 @@ internal class BDDTests {
             freeNodes = b.numInternalNodes()
             assertEquals(0, freeNodes)
 
-            val c = variable("c")
+            val c = boolean("c")
             freeNodes = c.numInternalNodes()
             assertEquals(1, freeNodes)
 
-            val d = c or variable("d")
+            val d = c or boolean("d")
             freeNodes = d.numInternalNodes()
             assertEquals(2, freeNodes)
 

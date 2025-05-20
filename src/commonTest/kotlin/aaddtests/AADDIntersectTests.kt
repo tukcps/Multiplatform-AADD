@@ -124,14 +124,12 @@ class AADDIntersectTests {
             val a = Reals
             val b = real(1.0..2.0, "b")
             val y = a intersect b // as AADD.Leaf
-            println(y)
-            // assertEquals(b.min, y.min, 0.00001)
-            // assertEquals(b.max, y.max, 0.00001)
+            assertEquals(b.min, y.min, 0.00001)
+            assertEquals(b.max, y.max, 0.00001)
 
             val z = (b intersect a) // as AADD.Leaf
-            println(z)
-            // assertEquals(b.min, z.min, 0.00001)
-            // assertEquals(b.max, z.max, 0.00001)
+            assertEquals(b.min, z.min, 0.00001)
+            assertEquals(b.max, z.max, 0.00001)
         }
     }
 
@@ -153,10 +151,10 @@ class AADDIntersectTests {
 
             c2.intersect(b2)
 
-            println("A1: $a1, B1: $b1, C1: $c1")
-            println("A2: $a2, B2: $b2, C2: $c2")
+            // println("A1: $a1, B1: $b1, C1: $c1")
+            // println("A2: $a2, B2: $b2, C2: $c2")
 
-            println(a1 == c1)
+            // println(a1 == c1)
         }
     }
 

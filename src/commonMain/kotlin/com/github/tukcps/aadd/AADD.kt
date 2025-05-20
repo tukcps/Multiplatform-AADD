@@ -20,6 +20,10 @@ import kotlin.math.max
 import kotlin.math.min
 import com.github.tukcps.aadd.pwl.relu
 
+typealias Real = AADD
+typealias Integer = IDD
+typealias Bool = BDD
+
 /**
  * The class AADD implements an Affine Arithmetic Decision Diagram (AADD).
  * An AADD is, in very brief, a decision diagram (class DD) whose leaf nodes
@@ -104,9 +108,9 @@ sealed class AADD: DD<AffineForm>, NumberRange<Double> {
     }
 
 
-    fun relu() : AADD = when(this){
+    fun relu(split_threshold : Double = 0.1) : AADD = when(this){
         is Internal -> builder.internal(index,T.relu(),F.relu())
-        is Leaf -> relu(value,builder)
+        is Leaf -> relu(value,builder,split_threshold)
     }
 
     /** Method that returns a brief String representation of the NumberRange interface */

@@ -1,14 +1,18 @@
-@file:Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE", "UnusedVariable")
+@file:Suppress("UnusedVariable")
 
 package aaddtests
 
 
-import com.github.tukcps.aadd.*
+import com.github.tukcps.aadd.AADD
+import com.github.tukcps.aadd.BDD
 import com.github.tukcps.aadd.DDBuilder
-import com.github.tukcps.aadd.values.*
+import com.github.tukcps.aadd.values.AffineForm
+import com.github.tukcps.aadd.values.Range
+import com.github.tukcps.aadd.values.XBool
 import kotlin.test.Test
-import kotlin.test.assertTrue
 import kotlin.test.assertEquals
+import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 
 class AADDTutorialKotlinAsTestWithoutR {
@@ -93,12 +97,12 @@ class AADDTutorialKotlinAsTestWithoutR {
             val a = boolean(true) // gets BDD with Boolean value true or false
             val f = False                // Constant leaf with value false
             val t = True
-            val x = variable("X") // Boolean variable with value true or false
+            val x = boolean("X") // Boolean variable with value true or false
             val d = (f and x) or t
             val e = t and x
-            assertTrue(a === True)
+            assertSame(a, True)
             assertTrue((d as BDD.Leaf) === True)
-            assertTrue(e == x)
+            assertEquals(e, x)
         }
     }
 
@@ -106,9 +110,9 @@ class AADDTutorialKotlinAsTestWithoutR {
     fun assumeGuaranteeExercise() {
         DDBuilder{
             this.config.noiseSymbolsFlag = true
-            val a: BDD = False
-            val b: BDD = variable("b")
-            val c: BDD = variable("c")
+            val a = False
+            val b = boolean("b")
+            val c = boolean("c")
             val d = a or (b and c.not() )
             assertEquals(2, d.height())
             assertEquals(3, d.numLeaves())
@@ -134,7 +138,7 @@ class AADDTutorialKotlinAsTestWithoutR {
             val b = real(2.0 .. 4.0, "b")
             val c = a greaterThan b
             assertTrue(c.height() == 1)
-            assertTrue(c == XBool.X)
+            assertEquals(c, XBool.X)
         }
     }
 

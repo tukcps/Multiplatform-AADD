@@ -331,7 +331,7 @@ class AffineFormTestWithoutRWithOriginalForms {
         DDBuilder{
             config.noiseSymbolsFlag = true
             config.originalFormsFlag = true
-            scheme=DDBuilder.approxScheme.Chebyshev
+            scheme=DDBuilder.ApproximationScheme.Chebyshev
             var terms = HashMap<Int, Double>()
             terms[1] = 2.0
             terms[2] = 1.0

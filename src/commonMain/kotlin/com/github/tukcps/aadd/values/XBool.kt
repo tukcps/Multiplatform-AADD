@@ -67,7 +67,9 @@ interface XBool {
 
 
 @Serializable
-class XBoolImpl(private val xBoolEnum: XBoolEnum = XBoolEnum.X): XBool {
+class XBoolImpl(
+    private val xBoolEnum: XBoolEnum = XBoolEnum.X
+): XBool {
 
     override val value: XBool get() =  when(xBoolEnum) {
         XBoolEnum.True -> True
@@ -87,9 +89,8 @@ class XBoolImpl(private val xBoolEnum: XBoolEnum = XBoolEnum.X): XBool {
             True   -> "True"
             False  -> "False"
             NaB    -> "Contradiction"
-            // InfeasibleB -> "Infeasible"
-            X   -> "Unknown"
-            else  -> "BDD leaf: None of True, False, NaB, X"
+            X      -> "Unknown"
+            else   -> "BDD leaf: None of True, False, NaB, X"
         }
 
     override fun intersect(other: XBool): XBool =

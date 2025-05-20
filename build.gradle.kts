@@ -1,11 +1,11 @@
 group = "com.github.tukcps"
-version = "0.1.7"
+version = "0.1.10"
 
 plugins {
-    id("org.jetbrains.kotlin.multiplatform") version "2.1.0"
-    kotlin("plugin.serialization") version "2.1.0"
+    id("org.jetbrains.kotlin.multiplatform") version "2.1.20"
+    kotlin("plugin.serialization") version "2.1.20"
     id("idea")
-    id("org.jetbrains.dokka") version "0.10.1"
+    id("org.jetbrains.dokka") version "2.0.0"
     id("maven-publish")
 }
 
@@ -14,15 +14,10 @@ repositories {
 }
 
 kotlin {
+    jvmToolchain(21)
+
     jvm {
-        compilations.all {
-            kotlinOptions.jvmTarget = "19"
-            java.targetCompatibility = JavaVersion.VERSION_19
-        }
         withJava()
-        testRuns["test"].executionTask.configure {
-            useJUnitPlatform()
-        }
     }
 
     val hostOs = System.getProperty("os.name")
@@ -33,6 +28,7 @@ kotlin {
     val isArm64 = procArch.startsWith("aarch64")
     val isX64 = procArch.startsWith("x86_64") || procArch.startsWith("x64") || procArch.startsWith("amd64")
 
+    @Suppress("UNUSED_VARIABLE")
     val nativeTarget = when {
         isMacOs -> {
             when {
@@ -94,15 +90,15 @@ kotlin {
         val commonMain by getting {
             dependencies{
                 implementation("org.jetbrains.kotlin:kotlin-bom")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
                 implementation("org.jetbrains.kotlin:kotlin-reflect")
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
-                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
+                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.2")
             }
         }
         val commonTest by getting {
             dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.2")
                 implementation(kotlin("test"))
             }
         }
@@ -111,16 +107,16 @@ kotlin {
         val nativeMain by getting {
             dependencies{
                 implementation("org.jetbrains.kotlin:kotlin-bom")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
                 implementation("org.jetbrains.kotlin:kotlin-reflect")
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
-                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
+                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.2")
             }
         }
         val nativeTest by getting {
             dependencies {
                 implementation(kotlin("test"))
-                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.2")
             }
         }
     }
@@ -142,7 +138,7 @@ publishing {
             from(components["kotlin"])
             groupId = "com.github.tukcps"
             artifactId = "multiplatform-aadd"
-            version = "0.1.7"
+            version = "0.1.10"
         }
     }
 }

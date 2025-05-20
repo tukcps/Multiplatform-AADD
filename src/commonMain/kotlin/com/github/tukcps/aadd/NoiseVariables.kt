@@ -39,6 +39,10 @@ class NoiseVariables {
     /** HashMap that keeps track how often an original form mapping is used **/
     private var timesused = HashMap <AffineForm, Int>(300,0.75F)
 
+    fun getCurrentMaxIndex() : Int { return maxIndex }
+
+    fun getCurrentMaxIndexGarbage() : Int { return maxIndexGarbage }
+
     /** Returns a new index of a noise variable. */
     fun newNoiseVar(): Int {
         if (maxIndex<beginIndexGarbage){

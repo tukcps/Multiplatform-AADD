@@ -20,7 +20,7 @@ open class Range(
     override val maxIsInf: Boolean get() = max.isInfinite()
     override val minIsInf: Boolean get() = min.isInfinite()
 
-    /** Checks if the range is of finite kind */
+    /** Checks if the range is finite */
     fun isFinite() = (min.isFinite()) && (max.isFinite())
     fun isReals() = (min == Double.NEGATIVE_INFINITY) && (max == Double.POSITIVE_INFINITY)
     override fun isZero(): Boolean = max == 0.0 && min == 0.0
@@ -153,6 +153,12 @@ open class Range(
         return retval
     }
 
+    /**
+     * Quick and dirty relu implementation over real valued intervals
+     * */
+    fun relu() : Range {
+        return Range(max(0.0,this.min),max(0.0,this.max))
+    }
 
     override fun lessThan(other: NumberRange<Double>): XBool {
         if (this === other) return XBool.False
@@ -165,7 +171,7 @@ open class Range(
         // L is a subset of R
         if (min > other.min && max < other.max || min == other.min && max < other.max || min > other.min && max == other.max)
             retval = XBool.NaB
-        // R is subset of L
+        // R is a subset of L
         if (min < other.min && max > other.max || min == other.min && max > other.max || min > other.min && max == other.max)
             retval = XBool.NaB
         // No subset, just overlapping
@@ -230,7 +236,7 @@ open class Range(
         other == 0.0 -> Range(0.0, 0.0)
         other == 1.0 -> this.clone()
         this.isZero() -> Range(0.0, 0.0)
-        this.isOne() -> Range(1.0, 1.0)
+        this.isOne() -> Range(other, other)
         else -> Range(min(this.min*other, this.max*other).minusUlp(), max(this.min*other, this.max*other).plusUlp())
     }
 
@@ -303,8 +309,8 @@ open class Range(
      */
     override operator fun times(other: NumberRange<Double>): Range {
         val iaMult = listOf(min * other.min, min * other.max, max * other.min, max * other.max)
-        var resultMin = iaMult.minOrNull()!!
-        var resultMax = iaMult.maxOrNull()!!
+        var resultMin = iaMult.min()
+        var resultMax = iaMult.max()
         resultMin -= resultMin.ulp
         resultMax += resultMax.ulp
         return Range(resultMin, resultMax)
@@ -412,7 +418,7 @@ open class Range(
     }
 }
 
-/** overloaded contains operator to allow "in" range notation */
+/** overloaded contains-operator to allow "in" range notation */
 operator fun ClosedFloatingPointRange<Double>.contains(range: ClosedFloatingPointRange<Double>): Boolean {
     if (this.start > range.start) return false
     if (this.endInclusive < range.endInclusive) return false

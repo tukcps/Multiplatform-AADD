@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 /**
  * Allows setting some options
  *
- * @param kotlinLPFlag
+ * @param kotlinLPFlag <- irrelevant in this version
  *
  * @param noiseSymbolsFlag Whether to generate new noise symbols or use existing ones.
  *

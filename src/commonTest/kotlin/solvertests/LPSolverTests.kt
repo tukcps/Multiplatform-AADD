@@ -3,6 +3,7 @@ import com.github.tukcps.aadd.AADD
 import com.github.tukcps.aadd.DDBuilder
 import kotlin.test.Test
 import com.github.tukcps.aadd.lpsolver.*
+import kotlin.math.ulp
 import kotlin.test.assertEquals
 
 
@@ -30,8 +31,8 @@ class LPSolverTests {
 
     @Test
     fun smallBoxLpProblemTest(){
-        var x0 = LpVariable("x0",canBeNegative = true)
-        var x1 = LpVariable("x1",canBeNegative = true)
+        val x0 = LpVariable("x0",canBeNegative = true)
+        val x1 = LpVariable("x1",canBeNegative = true)
         val c0 = LpConstraint(LpExpression(mapOf(x0 to 1.0)),LpConstraintSign.LESS_OR_EQUAL,1.0)
         val c1 = LpConstraint(LpExpression(mapOf(x0 to 1.0)),LpConstraintSign.GREATER_OR_EQUAL,-1.0)
         val c2 = LpConstraint(LpExpression(mapOf(x1 to 1.0)),LpConstraintSign.LESS_OR_EQUAL,1.0)
@@ -43,13 +44,8 @@ class LPSolverTests {
 
         val maxSol = solve(problemMax)
         val minSol = solve(problemMin)
-        println("")
-        println("MaxSolution:")
-        println((maxSol as Solved).functionValue)
-        println(maxSol.variablesValues)
-        println("MinSolution:")
-        println((minSol as Solved).functionValue)
-        println(minSol.variablesValues)
+        assertEquals(2.0, (maxSol as Solved).functionValue, 2.0.ulp)
+        assertEquals( 2.0, (minSol as Solved).functionValue, 2.0.ulp)
     }
 
     @Test
@@ -69,13 +65,8 @@ class LPSolverTests {
 
         val maxSol = solve(problemMax)
         val minSol = solve(problemMin)
-        println("")
-        println("MaxSolution:")
-        println((maxSol as Solved).functionValue)
-        println(maxSol.variablesValues)
-        println("MinSolution:")
-        println((minSol as Solved).functionValue)
-        println(minSol.variablesValues)
+        assertEquals(4.0, (maxSol as Solved).functionValue)
+        assertEquals(-2.0, (minSol as Solved).functionValue)
     }
 
 
@@ -88,9 +79,7 @@ class LPSolverTests {
                 r = assign(r,r+1.0)
             END()
             r.getRange()
-            println(r.toIteString())
+            // println(r.toIteString())
         }
-
     }
-
 }

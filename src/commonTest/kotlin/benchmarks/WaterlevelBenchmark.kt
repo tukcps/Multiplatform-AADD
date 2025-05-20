@@ -10,12 +10,12 @@ class WaterLevelBenchmark {
         DDBuilder {
             lpCalls = 0
             //val start = Clock.System.now().epochSeconds
-            println("==== Stupid water level monitor runtime verification test ====")
+            // println("==== Stupid water level monitor runtime verification test ====")
             // some constants with uncertain value.
             val outrate = real(-1.0..-0.6, "outrate")
             val inrate = real(0.6..1.0, "inrate")
             var level: AADD = real(1.0..11.0, "level")
-            var rate = variable("initial direction").ite(inrate, outrate)
+            var rate = boolean("initial direction").ite(inrate, outrate)
             for (time in 0..20) {
                 IF (level greaterThanOrEquals real(10.0))
                     rate = assign(rate, outrate)
@@ -24,7 +24,7 @@ class WaterLevelBenchmark {
                     rate = assign(rate, inrate)
                 END()
                 level += rate
-                println("for t = $time level = ${level.getRange()}")
+                // println("for t = $time level = ${level.getRange()}")
             }
 
 

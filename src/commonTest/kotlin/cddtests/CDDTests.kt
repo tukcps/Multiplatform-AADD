@@ -105,9 +105,9 @@ class CDDTests
     fun CDDConstructorTest() {
         DDBuilder {
             // Leaf and internal elements
-            var d1 = variable("1")
-            var d2 = variable("2")
-            var d3 = variable("3")
+            var d1 = boolean("1")
+            var d2 = boolean("2")
+            var d3 = boolean("3")
 
             val af1 = AffineForm(this, 1.0 .. 2.0)
             val af2 = AffineForm(this, 2.0 .. 3.0)

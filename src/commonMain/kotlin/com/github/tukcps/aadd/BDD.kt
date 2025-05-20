@@ -6,17 +6,28 @@ import com.github.tukcps.aadd.DD.Companion.LEAF_INDEX
 import com.github.tukcps.aadd.values.XBool
 
 /**
- * The class BDD implements an ROBDD.
- * It is derived from the superclass DD with subtypes BDD, IDD, AADD, StrDD.
- * It has leaves that are True, False, and two subclasses:
+ * The class BDD implements an ROBDD that models the interaction between discrete
+ * and continuous variables.
+ * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ * !!! IT IS NOT INTENDED TO BE USED AS A HIGH-PERFORMANCE BDD LIBRARY !!!
+ * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ * It is derived from the superclass DD that is used for BDD, IDD, AADD, StrDD.
+ * BDD is a sealed abstract class and has two internal concrete classes:
  * - BDD.Internal
  * - BDD.Leaf
+ * As BDD is sealed, a BDD is either a Leaf or an Internal node.
  * @author Christoph Grimm, Carna Zivkovic
  */
 sealed class BDD: DD<XBool>, XBool
 {
-    abstract override fun clone(): BDD
-
+    /**
+     * Internal node of a BDD.
+     * @param builder the builder and factory where the node was created and is used
+     * @param index the index of the BDD
+     * @param T BDD for true
+     * @param F BDD for false
+     * @param status
+     */
     class Internal(
         override var builder: DDBuilder,
         override val index: Int = LEAF_INDEX,
@@ -38,7 +49,11 @@ sealed class BDD: DD<XBool>, XBool
     }
 
 
-    /** A leaf of a BDD has a value of the type Bool, not nullable and not Any? */
+    /**
+     * A leaf of a BDD has a value of the type Bool, not nullable and not Any?
+     * @param builder
+     * @param value the value that is true, false, or one of the error cases contradiction, etc.
+     */
     class Leaf (
         override var builder: DDBuilder,
         override val value: XBool,
@@ -56,10 +71,10 @@ sealed class BDD: DD<XBool>, XBool
             when {
                 this === builder.True   -> "True"
                 this === builder.False  -> "False"
-                this === builder.NaB    -> "Contradiction"
-                this === builder.InfeasibleB -> "Infeasible"
+                this === builder.NaB    -> "Contradiction"    // --> ~Empty
+                this === builder.InfeasibleB -> "Infeasible"  // used to map infeasible parameters to infeasible result
                 this === builder.Bool   -> "Unknown"
-                else  -> "Error BDD leaf: None of True, False, Nab, Infeasible"
+                else  -> "Invalid BDD leaf: None of True, False, Nab, Infeasible"
             }
 
 
@@ -68,7 +83,6 @@ sealed class BDD: DD<XBool>, XBool
 
         infix fun and(other: Leaf): Leaf =
             builder.andTable[Pair(this, other)] ?: throw DDInternalError("Unknown BDD Leaf type")
-
 
         infix fun or(other: Leaf): Leaf =
             builder.orTable[Pair(this, other)] ?: throw DDInternalError("Unknown BDD Leaf type")

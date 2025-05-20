@@ -1,4 +1,4 @@
-@file:Suppress("unused")
+@file:Suppress("unused", "UnusedVariable")
 
 package examples
 
@@ -18,10 +18,10 @@ class AADDTutorialExamples {
             val range    = real(2.0..3.0, "r")
             val real     = Reals
             val empty    = Empty
-            println("scalar   = $scalar")
-            println("interval = $range")
-            println("real     = $real")
-            println("empty    = $empty")
+            // println("scalar   = $scalar")
+            // println("interval = $range")
+            // println("real     = $real")
+            // println("empty    = $empty")
         }
     }
 
@@ -30,8 +30,8 @@ class AADDTutorialExamples {
         DDBuilder{
             val a = real(1.0..2.0, "a")
             val b = real(1.0..2.0, "b")
-            println("    a-a = " + (a-a))
-            println("but a-b = " + (a-b))
+            // println("    a-a = " + (a-a))
+            // println("but a-b = " + (a-b))
         }
     }
 
@@ -44,9 +44,9 @@ class AADDTutorialExamples {
             val c = real(1.0..10.0, "c")
             val pi = real(3.141..3.142, "pi")
             val vol = real(4.0 / 3.0) *pi*a*b*c
-            println("Volume = ${vol.getRange()}")
-            config.toStringVerbose = true
-            println("Volume = $vol")
+            // println("Volume = ${vol.getRange()}")
+            // config.toStringVerbose = true
+            // println("Volume = $vol")
         }
     }
 
@@ -75,14 +75,13 @@ class AADDTutorialExamples {
     /** Instantiation of some BDD  */
     fun bddInstantiation() {
         DDBuilder{
-            val a = constant(true) // gets BDD with Boolean value true or false
             val f = False // Constant leaf with value false
             val t = True
-            val x = variable("X") // Constant with value true or false
-            println("a=$a")
-            println("f=$f")
-            println("t=$t")
-            println("X=$x")
+            val x = boolean("X") // Constant with value true or false
+            // println("a=$a")
+            // println("f=$f")
+            // println("t=$t")
+            // println("X=$x")
             val d = (f and x) or t
             val e = t and x
             assertSame(True, d)
@@ -138,11 +137,11 @@ class AADDTutorialExamples {
 
     fun cavExampleControlFlow() {
         DDBuilder {
-            var x: AADD = real(1.0..3.0, "x")   // [1, 3]; uses noise symbol w/ index 1
-            val y: AADD = real(1.0..2.0, "y")   // [0, 2]; uses noise symbol w/ index 1
+            var x: Real = real(1.0..3.0, "x")   // [1, 3]; uses noise symbol w/ index 1
+            val y: Real = real(1.0..2.0, "y")   // [0, 2]; uses noise symbol w/ index 1
 
             IF((x * y) greaterThan x.exp())
-            x = assign(x, x - real(1.5))
+                x = assign(x, x - real(1.5))
             END()
             println("x=$x" + " intersect -0.2..2=${x.constrainTo(Range(-0.2 .. 2.0))}")
             //display(x, "AADD x")

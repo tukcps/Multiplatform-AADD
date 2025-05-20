@@ -4,6 +4,8 @@ import com.github.tukcps.aadd.DD.Companion.LEAF_INDEX
 import com.github.tukcps.aadd.DD.Status
 import com.github.tukcps.aadd.values.IntegerRange
 import com.github.tukcps.aadd.values.NumberRange
+import com.github.tukcps.aadd.values.XBool
+import com.github.tukcps.aadd.values.XBoolImpl
 import kotlinx.serialization.Serializable
 import kotlin.math.abs
 import kotlin.math.min
@@ -286,23 +288,21 @@ sealed class IDD: DD<IntegerRange>, NumberRange<Long>{
                 // Stop of recursion, comparison of IntegerRange with 0.
                 if (isInfeasible || value.isEmpty())
                     return builder.InfeasibleB
-                when (op) {
-                    ">=" -> {
-                        if (value.min >= 0 || abs(value.min) < Long.MIN_VALUE) return builder.True
-                        if (value.max < 0) return builder.False
-                    }
-                    ">" -> {
-                        if (value.min > 0) return builder.True
-                        if (value.max < 0 || abs(value.max) < Long.MIN_VALUE) return builder.False
-                    }
-                    "<=" -> {
-                        if (value.min > 0) return builder.False
-                        if (value.max <= 0 || abs(value.max) < Long.MIN_VALUE) return builder.True
-                    }
-                    "<" -> {
-                        if (value.min > 0 || abs(value.min) < Long.MIN_VALUE) return builder.False
-                        if (value.max < 0) return builder.True
-                    }
+
+                if(abs(value.min) < Long.MIN_VALUE || abs(value.max) < Long.MIN_VALUE)
+                    // Overflow
+                    return builder.False
+
+                val cmp = when (op) {
+                    ">=" -> value.greaterThanOrEquals(0)
+                    ">" -> value.greaterThan(0)
+                    "<=" -> value.lessThanOrEquals(0)
+                    "<" -> value.lessThan(0)
+                    else -> throw IllegalArgumentException()
+                }
+                when(cmp) {
+                    XBool.True -> return builder.True
+                    XBool.False -> return builder.False
                 }
                 // We cannot clearly decide whether larger or smaller, hence we create a new Integer-Constraint.
                 // return if (op === ">=" || op === ">") builder.internal(builder.conds.newConstraint(value), builder.True, builder.False)

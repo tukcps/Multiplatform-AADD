@@ -63,7 +63,7 @@ sealed class CDD : DD<StateTuple> {
     }
 
     /**
-     * TODO: corutine implementation
+     * TODO: coroutine implementation
      * */
     fun solve()
     {
@@ -71,7 +71,7 @@ sealed class CDD : DD<StateTuple> {
     }
 
     /**
-     * TODO: corutine implementation
+     * TODO: coroutine implementation
      * */
     private fun computeBounds(indexes: IntArray, ge:BooleanArray, len: Int)
     {

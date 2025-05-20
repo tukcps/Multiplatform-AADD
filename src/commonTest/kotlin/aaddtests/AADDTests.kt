@@ -228,7 +228,7 @@ class AADDTests {
     @Test
     fun logTest() {
         DDBuilder {
-            scheme=DDBuilder.approxScheme.Chebyshev
+            scheme=DDBuilder.ApproximationScheme.Chebyshev
             var terms = HashMap<Int, Double>()
             terms[1] = 2.0
             terms[2] = 1.0
@@ -317,7 +317,7 @@ class AADDTests {
     @Test
     fun logTestIA() {
         DDBuilder {
-            scheme=DDBuilder.approxScheme.Chebyshev
+            scheme=DDBuilder.ApproximationScheme.Chebyshev
             val af = real(1.0..5.0)
             assertEquals(ln(1.0), af.log().getRange().min, 0.0000001)
             assertEquals(ln(5.0), af.log().getRange().max, 0.0000001)
@@ -705,18 +705,10 @@ class AADDTests {
     @Test
     fun reluTestAADD() {
         DDBuilder {
-            var a : AADD = real(-1.0..1.0)
-            IF(a greaterThanOrEquals 0.0)
-                a = assign(a, a + 10.0)
-            ELSE()
-                a = assign(a, a - 10.0)
-            END()
-            a.getRange()
-            println((a as AADD.Internal).T)
-            println((a as AADD.Internal).F)
-            val b = a.relu()
-            println((b as AADD.Internal).T)
-            println((b as AADD.Internal).F)
+            var a : Real = real(-1.0..1.0)
+            val relu_res = a.relu()
+            println(relu_res)
+            //println((relu_res as AADD.Internal).F.status)
         }
     }
 

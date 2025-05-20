@@ -47,7 +47,7 @@ class ConditionsTest {
     @Test
     fun isBooleanConditionTest2() {
         DDBuilder{
-            val a = variable( "a")
+            val a = boolean("a")
             assertTrue(a.isBoolCond())
         }
     }

@@ -214,7 +214,7 @@ class AffineFormTest {
     @Test
     fun testExpChebyshev(){
         DDBuilder{
-            this.scheme = DDBuilder.approxScheme.Chebyshev
+            this.scheme = DDBuilder.ApproximationScheme.Chebyshev
 
             val terms = HashMap<Int, Double>()
             terms[1] = 2.0
@@ -316,7 +316,7 @@ class AffineFormTest {
     @Test
     fun testLog() {
         DDBuilder{
-            scheme=DDBuilder.approxScheme.MinRange
+            scheme=DDBuilder.ApproximationScheme.MinRange
             var terms = HashMap<Int, Double>()
             terms[1] = 2.0
             terms[2] = 1.0
@@ -346,7 +346,7 @@ class AffineFormTest {
     @Test
     fun testLogChebyshev() {
         DDBuilder{
-            scheme = DDBuilder.approxScheme.Chebyshev
+            scheme = DDBuilder.ApproximationScheme.Chebyshev
             var terms = HashMap<Int, Double>()
             terms[1] = 2.0
             terms[2] = 1.0
@@ -379,7 +379,7 @@ class AffineFormTest {
     @Test
     fun testLogBase2Chebyshev() {
         DDBuilder{
-            scheme = DDBuilder.approxScheme.Chebyshev
+            scheme = DDBuilder.ApproximationScheme.Chebyshev
             var terms = HashMap<Int, Double>()
             terms[1] = 1.0
             terms[2] = 1.0
@@ -457,7 +457,7 @@ class AffineFormTest {
     @Test
     fun testSqrtChebyshev(){
         DDBuilder {
-            scheme = DDBuilder.approxScheme.MinRange
+            scheme = DDBuilder.ApproximationScheme.MinRange
 
             val v9 = AffineForm(this, 3.0) * AffineForm(this, 3.0)
             val v16 = AffineForm(this, 4.0) * AffineForm(this, 4.0)
@@ -578,7 +578,7 @@ class AffineFormTest {
     @Test
     fun testInvChebyshev(){
         DDBuilder{
-            this.scheme = DDBuilder.approxScheme.Chebyshev
+            this.scheme = DDBuilder.ApproximationScheme.Chebyshev
 
             val af1 = AffineForm(this, 1.0.. 2.0, 1)
             val zero = AffineForm(this, 0.0)
@@ -1086,7 +1086,7 @@ class AffineFormTest {
     @Test
     fun testPowerDoubleChebyshev(){
         DDBuilder{
-            this.scheme = DDBuilder.approxScheme.Chebyshev
+            this.scheme = DDBuilder.ApproximationScheme.Chebyshev
 
             //TODO: tests passed even though there is a division by zero for scalar affine forms
             val tol = 0.01

@@ -292,16 +292,16 @@ class IntegerRange(
     }
 
     override fun greaterThan(other: Long): XBool =
-        if (other < min) XBool.True else if (other > max) XBool.False else XBool.X
+        if (other < min) XBool.True else if (other >= max) XBool.False else XBool.X
 
     override fun greaterThanOrEquals(other: Long): XBool =
-        if (other <= min) XBool.True else if (other >= max) XBool.False else XBool.X
+        if (other <= min) XBool.True else if (other > max) XBool.False else XBool.X
 
     override fun lessThan(other: Long): XBool =
-        if (other > max) XBool.True else if (other < min) XBool.False else XBool.X
+        if (other > max) XBool.True else if (other <= min) XBool.False else XBool.X
 
     override fun lessThanOrEquals(other: Long): XBool =
-        if (other >= max) XBool.True else if (other <= min) XBool.False else XBool.X
+        if (other >= max) XBool.True else if (other < min) XBool.False else XBool.X
 
     override operator fun unaryMinus(): IntegerRange =
         IntegerRange(-max, -min)

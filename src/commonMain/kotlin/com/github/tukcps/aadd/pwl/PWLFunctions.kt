@@ -1,21 +1,54 @@
 package com.github.tukcps.aadd.pwl
 
 import com.github.tukcps.aadd.AADD
+import com.github.tukcps.aadd.DD
 import com.github.tukcps.aadd.DDBuilder
 import com.github.tukcps.aadd.values.AffineForm
 
-fun relu(af: AffineForm,builder:DDBuilder) : AADD {
+/**
+ * This is an implementation of the Rectified linear unit function. It works as follows: If the interval that is below
+ * 0 of the input affine form is larger than then the given split_threshold a split is performed by introducing an internal
+ * node with the constraint af >= 0. In this internal node the F sub tree is assigned 0 while the T subtree has af assigned.
+ * In the case that the threshold is not surpassed the affine form is just straight passed through the Relu function as
+ * a simple AADD Leaf with af as its value. If you want to always split simply set the threshold at 0
+ *
+ * @param af : Input affine form into the RELU function
+ * @param builder : Context in which the RELU function is performed
+ * @param split_threshold : Threshold at which a split is considered (Must be a value between 0 and 1 as it represents a % value)
+ *
+ * @return Either an internal node or a leaf node depending if a split has been performed or not
+ * */
+fun relu(af: AffineForm,builder:DDBuilder, split_threshold : Double = 0.1) : AADD {
     with(builder)
     {
         var res: AADD = AADD.Leaf(this, af)
-        IF(res.greaterThanOrEquals(0.0))
-            res = assign(res, res)
-        ELSE()
-            res = assign(res, real(0.0..0.0))
-        END()
-        return res
+        if (af.min <= 0)
+        {
+            val pct = (0.0 - af.min) / (af.max - af.min)
+            if(pct < split_threshold)
+            {
+                // Case that our split threshold is not reached so we return simply the leaf
+                return res
+            }
+            else
+            {
+                // Case that we are above the split threashold so we return the tree
+                IF(res.greaterThanOrEquals(0.0))
+                    res = assign(res, res)
+                ELSE()
+                    res = assign(res, real(0.0..0.0))
+                END()
+                return res
+            }
+        }
+        else
+        {
+            // If the whole affine form is anyways above 0 we can just return the leaf again
+            return res
+        }
     }
 }
+
 
 /*
       /**

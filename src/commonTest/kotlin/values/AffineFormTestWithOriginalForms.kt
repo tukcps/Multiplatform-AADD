@@ -273,7 +273,7 @@ class AffineFormTestWithOriginalForms {
         val builder = DDBuilder()
         with(builder){
             this.config.originalFormsFlag = true
-            builder.scheme=DDBuilder.approxScheme.Chebyshev
+            builder.scheme=DDBuilder.ApproximationScheme.Chebyshev
             var terms = HashMap<Int, Double>()
             terms[1] = 2.0
             terms[2] = 1.0

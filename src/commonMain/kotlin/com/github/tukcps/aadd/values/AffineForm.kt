@@ -828,7 +828,7 @@ class AffineForm(
         var delta: Double = (fMax + alpha * (1.0 - min - max)) / 2.0
         var noise: Double = (fMax + alpha * (min - max - 1.0)) / 2.0
 
-        if(builder.scheme==DDBuilder.approxScheme.Chebyshev && max-min>0.000000001 ) {
+        if(builder.scheme==DDBuilder.ApproximationScheme.Chebyshev && max-min>0.000000001 ) {
             alpha = (fMax- fMin)/(max-min)
             var touchingPoint = ln(alpha)
             delta = (fMin + alpha -  alpha * (min + touchingPoint)) / 2.0
@@ -890,7 +890,7 @@ class AffineForm(
                     var delta = (fMax + fMin - alpha * (min + max)) / 2.0
                     var noise = abs(fMax - fMin - alpha * (max - min)) / 2.0
                     // for smaller ranges MinRange is as good as Chebyshev
-                    if(builder.scheme==DDBuilder.approxScheme.Chebyshev && max-min>0.0001){
+                    if(builder.scheme==DDBuilder.ApproximationScheme.Chebyshev && max-min>0.0001){
                         alpha = (max.pow(other)-min.pow(other))/(max-min)
                         val touchingPoint =(alpha/other).pow(1/(other-1))
                         delta = (fMin + touchingPoint.pow(other) - alpha * (min + touchingPoint)) / 2.0
@@ -912,7 +912,7 @@ class AffineForm(
         var alpha = other * min.pow(other-1)
         var delta = (fMax + fMin - alpha *( min + max)) / 2.0
         var noise = abs(fMax - fMin -alpha * (max - min )) / 2.0
-        if(builder.scheme==DDBuilder.approxScheme.Chebyshev && max-min>0.0001){
+        if(builder.scheme==DDBuilder.ApproximationScheme.Chebyshev && max-min>0.0001){
             alpha = (max.pow(other)-min.pow(other))/(max-min)
             val touchingPoint =(alpha/other).pow(1/(other-1))
             delta = (fMin + touchingPoint.pow(other) - alpha * (min + touchingPoint)) / 2.0
@@ -1074,7 +1074,7 @@ class AffineForm(
         var delta = (2*fMax*fMin+u-l)/(4 * fMax)
         var noise = (fMax-fMin)*(fMax-fMin)/(4 * fMax)
 
-        if(builder.scheme==DDBuilder.approxScheme.Chebyshev&& max-min>0.0001) {
+        if(builder.scheme==DDBuilder.ApproximationScheme.Chebyshev&& max-min>0.0001) {
             alpha = 1 / (fMax + fMin)
             val touchingPoint = 1 / (4 * alpha.pow(2))
             delta = (fMin + sqrt(touchingPoint) - alpha * (min + touchingPoint)) / 2.0
@@ -1141,15 +1141,15 @@ class AffineForm(
 
         // It prevents however the division by 0 or near-0.
         // use min range approximation for small intervals
-        val alpha = if ((max-min) < 0.00001 || builder.scheme==DDBuilder.approxScheme.MinRange){
+        val alpha = if ((max-min) < 0.00001 || builder.scheme==DDBuilder.ApproximationScheme.MinRange){
             1/max
         } else {(u - l) / (max - min)}
         val touchingPoint = 1 / alpha
         val logxs = ln(touchingPoint)
-        val delta = if ((max-min) < 0.00001|| builder.scheme==DDBuilder.approxScheme.MinRange)
+        val delta = if ((max-min) < 0.00001|| builder.scheme==DDBuilder.ApproximationScheme.MinRange)
             (ln(min*max)-min/max-1)/2
         else(logxs + l-alpha*(min+touchingPoint)) / 2
-        val noise = if ((max-min) < 0.00001|| builder.scheme==DDBuilder.approxScheme.MinRange)
+        val noise = if ((max-min) < 0.00001|| builder.scheme==DDBuilder.ApproximationScheme.MinRange)
             (abs(ln(max/min)+min/max-1)/2)
         else abs(logxs - l - alpha * (touchingPoint - min)  ) / 2
         var af = affine(alpha, delta, noise)
@@ -1179,16 +1179,16 @@ class AffineForm(
         val u = (ln(max) / ln(base)).plusUlp()
         // It prevents however the division by 0 or near-0.
         // use min range approximation for small intervals
-        val alpha = if ((max-min) < 0.00001 || builder.scheme==DDBuilder.approxScheme.MinRange){
+        val alpha = if ((max-min) < 0.00001 || builder.scheme==DDBuilder.ApproximationScheme.MinRange){
             1/(max*ln(base))
         } else {(u - l) / (max - min)}
         val touchingPoint = 1 / (alpha *ln(base))
         val ys = (touchingPoint - min) * alpha + l
         val logxs = ln(touchingPoint)/ln(base)
-        val delta = if ((max-min) < 0.00001|| builder.scheme==DDBuilder.approxScheme.MinRange)
+        val delta = if ((max-min) < 0.00001|| builder.scheme==DDBuilder.ApproximationScheme.MinRange)
             (ln(min*max)-min/max-1)/2
         else(logxs + l-alpha*(min+touchingPoint)) / 2
-        val noise = if ((max-min) < 0.00001|| builder.scheme==DDBuilder.approxScheme.MinRange)
+        val noise = if ((max-min) < 0.00001|| builder.scheme==DDBuilder.ApproximationScheme.MinRange)
             (abs(ln(max/min)+min/max-1)/2).plusUlp()
         else
             (abs(logxs - l - alpha * (touchingPoint - min)  ) / 2).plusUlp()
@@ -1232,7 +1232,7 @@ class AffineForm(
         var noise = (u-l)*(u-l)/(2*u*u*l)
         noise += (noise.ulp + alpha.ulp + delta.ulp) + (u+l).ulp + (u-l).ulp
 
-        if(builder.scheme==DDBuilder.approxScheme.Chebyshev){
+        if(builder.scheme==DDBuilder.ApproximationScheme.Chebyshev){
             alpha=-1.0/(max*min)
             var touchingPoint = sqrt(1/-alpha)
             if(min<0)touchingPoint*=-1

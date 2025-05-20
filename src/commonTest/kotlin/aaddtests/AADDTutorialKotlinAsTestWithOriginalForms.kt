@@ -92,10 +92,10 @@ class AADDTutorialKotlinAsTestWithOriginalForms {
     fun bddInstantiation() {
         DDBuilder{
             this.config.originalFormsFlag = true
-            val a = constant(true) // gets BDD with Boolean value true or false
-            val f = False                // Constant leaf with value false
+            val a = boolean(true) // gets BDD with Boolean value true or false
+            val f = False         // Constant leaf with value false
             val t = True
-            val x = variable("X") // Boolean variable with value true or false
+            val x = boolean("X")  // Boolean variable "X" that can take values true or false
             val d = (f and x) or t
             val e = t and x
             assertTrue(a === True)
@@ -109,8 +109,8 @@ class AADDTutorialKotlinAsTestWithOriginalForms {
         DDBuilder{
             this.config.originalFormsFlag = true
             val a: BDD = False
-            val b: BDD = variable("b")
-            val c: BDD = variable("c")
+            val b: BDD = boolean("b")
+            val c: BDD = boolean("c")
             val d = a or (b and c.not() )
             assertEquals(2, d.height())
             assertEquals(3, d.numLeaves())

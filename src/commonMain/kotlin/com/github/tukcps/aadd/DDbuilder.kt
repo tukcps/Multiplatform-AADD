@@ -72,12 +72,22 @@ class DDBuilder(
     /**
      * Creates a real variable bounded by a range
      * @param range bounds of the real variable
+     * @param symbol noise symbol as a string
      */
     fun real(range: ClosedRange<Double>, symbol: String) =
         leaf(AffineForm(this, range, symbol))
+
+    /**
+     * Creates a real variable bounded by a ranges
+     * @param range - bounds of the real variable
+     */
     fun real(range: ClosedRange<Double>) =
         leaf(AffineForm(this, range))
 
+    /**
+     * Creates a constant of a value typed by Number
+     * @param value the value of the constant
+     */
     fun number(value: Number): DD<*> =
         when(value) {
             is Double -> real(value)
@@ -87,6 +97,10 @@ class DDBuilder(
             else -> throw DDException("Cannot convert $value to number")
         }
 
+    /**
+     * Creates a variable typed by ClosedRange<Number> bounded by a range
+     * @param range range with the bounds
+     */
     @Suppress("UNCHECKED_CAST")
     fun <T: Comparable<T>> number(range: ClosedRange<T>): DD<*> =
         when(range.start) {
@@ -96,6 +110,13 @@ class DDBuilder(
             is Long -> integer(range as ClosedRange<Long>)
             else -> throw DDException("Cannot convert $range to number range")
         }
+
+
+    /**
+     * Creates a boolean variable with a given id.
+     * @param id String that identifies the underlying variable in the decision diagrams
+     */
+    fun boolean(id: String): BDD = internal(conds.newVariable(id, this), True, False)
 
 
     /**
@@ -111,14 +132,14 @@ class DDBuilder(
     fun string(value: String): StrDD = StrDD.Leaf(this, value)
 
 
-    enum class approxScheme{
+    enum class ApproximationScheme{
         Chebyshev,
         MinRange,
         TaylorMiddle,
         LinearRegression
     }
 
-    var scheme =approxScheme.MinRange
+    var scheme = ApproximationScheme.MinRange
 
     fun setExternalConfig(configString: String) {
         config = jsonMapper.decodeFromString(string = configString)
@@ -204,22 +225,11 @@ class DDBuilder(
             else -> throw Exception("Inconsistent value in BDD")
         }
 
-    /**
-     * RELU function for an affine form. Sits here in the builder currently as the problem is that
-     * the return type introduces a circular dependency in affine forms
-     * @param af: Affine forms, number range that the relu function should be performed on
-     * @return AADD representing the result (a split occurs when the range is
-     * */
-
-    /** This method adds a new Boolean variable to the conditions  */
-    fun variable(varname: String): BDD =
-        internal(conds.newVariable(varname, this), True, False)
-
     fun variable(varname: String, fromExpr: String ="noSourceExpression", isDecVar: Boolean=false): BDD =
         internal(conds.newVariable(varname, this, fromExpr, isDecVar), True, False)
 
     /** Creates an internal node with a given index that must refer to an existing condition. */
-    fun internal(index: Int, T: BDD, F: BDD): BDD =
+    internal fun internal(index: Int, T: BDD, F: BDD): BDD =
         if (T === F)  T
         else  BDD.Internal(this, index, T, F)
 
@@ -230,7 +240,9 @@ class DDBuilder(
         pathConds.addFirst(cond)
         return  cond
     }
+
     fun END(): BDD = pathConds.removeFirst()
+
     fun ELSE(): BDD {
         val cond = END().not()
         pathConds.addFirst(cond)
@@ -258,15 +270,14 @@ class DDBuilder(
 
 
     /**
-     * Helper function that gathers the indizes of the root node of the supplied DD list, e.g. AADDs.
-     * @param ddli: The list of DDs that we gather the root indizes of
+     * Helper function that gathers the indices of the root node of the supplied DD list, e.g. AADDs.
+     * @param ddli: The list of DDs that we gather the root indices of
      * @return List of integers that represent the root indizes of the given DD list
      * */
-    fun gatherIndizes(ddli: MutableMap<String,DD<*>>) : MutableMap<String,Int>
+    fun gatherIndices(ddli: MutableMap<String,DD<*>>) : MutableMap<String,Int>
     {
         val indizes = mutableMapOf<String,Int>()
-        for(dd in ddli)
-        {
+        for(dd in ddli) {
             indizes[dd.key] = dd.value.index
         }
         return indizes
@@ -274,12 +285,9 @@ class DDBuilder(
 
     fun generateCDD(variables: MutableMap<String,DD<*>>, currentState: StateTuple, builder: DDBuilder) : CDD
     {
-
         val finalVars = mutableListOf<String>() // Variables that are already only represented by a single affine form or truth value thus not need to split them further
-        for (variable in variables)
-        {
-            if(variable.value is AADD.Leaf)
-            {
+        for (variable in variables) {
+            if(variable.value is AADD.Leaf) {
                 currentState.addContinuousVar(variable.key,(variable.value as AADD.Leaf).value)
                 finalVars.add(variable.key)
             }
@@ -292,7 +300,7 @@ class DDBuilder(
 
         for(variable in finalVars)variables.remove(variable)
 
-        val indizes = gatherIndizes(variables)
+        val indizes = gatherIndices(variables)
         var lowest = Int.MAX_VALUE
 
         for(indexTupel in indizes)
@@ -333,8 +341,6 @@ class DDBuilder(
 
     }
 
-    fun <T: Comparable<T>> value(r: ClosedRange<T>): DD<T> { TODO() }
-
     /** BDD Constants: True */
     val True = BDD.Leaf(this, true)
     val False = BDD.Leaf(this, false)
@@ -343,8 +349,8 @@ class DDBuilder(
     val InfeasibleB = BDD.Leaf(this, XBool.NaB, Status.Infeasible)
 
     /** AffineForm Constants */
-    var AFReals  = AffineForm(this, Range.Reals.min, Range.Reals.max)
-    var AFEmpty = AffineForm(this, Range.Empty.min, Range.Empty.max)
+    val AFReals  = AffineForm(this, Range.Reals.min, Range.Reals.max)
+    val AFEmpty = AffineForm(this, Range.Empty.min, Range.Empty.max)
 
     /** AADD Constants */
     val Reals = AADD.Leaf(this, AFReals, Status.NotSolved)
@@ -361,16 +367,14 @@ class DDBuilder(
     val InfeasableS = StrDD.Leaf(this, "", Status.Infeasible)
     val EmptyStrings = StrDD.Leaf(this,"", Status.NotSolved)
 
-
     var lpCalls = 0
-
 
     val jsonMapper = Json {
         prettyPrint = true
         allowSpecialFloatingPointValues = true
     }
 
-    val notTable = hashMapOf<BDD, BDD.Leaf>(
+    internal val notTable = hashMapOf<BDD, BDD.Leaf>(
         True to False,
         False to True,
         NaB to NaB,
@@ -378,7 +382,7 @@ class DDBuilder(
         Bool to Bool
     )
 
-    val andTable = hashMapOf(
+    internal val andTable = hashMapOf(
         Pair(True, True) to True,
         Pair(True, False) to False,
         Pair(True, Bool) to Bool,
@@ -391,7 +395,7 @@ class DDBuilder(
         Pair(False, NaB) to NaB,
         Pair(False, InfeasibleB) to InfeasibleB,
 
-        Pair(Bool, False) to Bool,
+        Pair(Bool, False) to False,
         Pair(Bool, True) to Bool,
         Pair(Bool, Bool) to Bool,
         Pair(Bool, NaB) to NaB,
@@ -411,7 +415,7 @@ class DDBuilder(
     )
 
 
-    val orTable = hashMapOf<Pair<BDD, BDD>, BDD.Leaf>(
+    internal val orTable = hashMapOf<Pair<BDD, BDD>, BDD.Leaf>(
         Pair(True, True) to True,
         Pair(True, False) to True,
         Pair(True, Bool) to True,
@@ -444,10 +448,10 @@ class DDBuilder(
     )
 
 
-    val nandTable = hashMapOf<Pair<BDD, BDD>, BDD.Leaf>(
+    internal val nandTable = hashMapOf<Pair<BDD, BDD>, BDD.Leaf>(
         Pair(True, True) to False,
         Pair(True, False) to True,
-        Pair(True, Bool) to True,
+        Pair(True, Bool) to Bool,
         Pair(True, NaB) to NaB,
         Pair(True, InfeasibleB) to InfeasibleB,
 
@@ -477,7 +481,7 @@ class DDBuilder(
     )
 
 
-    val xorTable = hashMapOf<Pair<BDD, BDD>, BDD.Leaf>(
+    internal val xorTable = hashMapOf<Pair<BDD, BDD>, BDD.Leaf>(
         Pair(True, True) to False,
         Pair(True, False) to True,
         Pair(True, Bool) to Bool,
@@ -511,7 +515,7 @@ class DDBuilder(
 
 
     /** the intersect operation on two XBool checks for the possible equality */
-    val intersectTable = hashMapOf(
+    internal val intersectTable = hashMapOf(
         Pair(True, True ) to True,
         Pair(True, False) to NaB,
         Pair(True, Bool) to True,
@@ -535,6 +539,12 @@ class DDBuilder(
         Pair(NaB, Bool) to NaB,
         Pair(NaB, NaB) to NaB,
         Pair(NaB, InfeasibleB) to InfeasibleB,
+
+        Pair(InfeasibleB, True ) to InfeasibleB,
+        Pair(InfeasibleB, False) to InfeasibleB,
+        Pair(InfeasibleB, Bool) to InfeasibleB,
+        Pair(InfeasibleB, NaB) to InfeasibleB,
+        Pair(InfeasibleB, InfeasibleB) to InfeasibleB,
     )
 
     /**
@@ -650,4 +660,9 @@ class DDBuilder(
             r = 0.0,
             xi = hashMapOf(noiseVars.newNoiseVar(symbol) to (max/2.0 - min/2.0))
         )
+
+    /** This method adds a new Boolean variable to the conditions  */
+    @Deprecated("Use boolean instead", ReplaceWith("boolean(varname)"))
+    fun variable(varname: String): BDD =
+        internal(conds.newVariable(varname, this), True, False)
 }

@@ -1,7 +1,9 @@
 package benchmarks
 
-import com.github.tukcps.aadd.*
-import com.github.tukcps.aadd.util.toRoundedString
+import com.github.tukcps.aadd.AADD
+import com.github.tukcps.aadd.BDD
+import com.github.tukcps.aadd.DDBuilder
+import com.github.tukcps.aadd.contains
 import com.github.tukcps.aadd.values.Range
 import kotlin.math.PI
 import kotlin.math.ln
@@ -11,19 +13,16 @@ import kotlin.test.assertTrue
 
 class WaterLevelBenchmark2 {
 
-    // Runtime should be in seconds ...
-    val builder = DDBuilder()
-
     @Test
     @Ignore
     fun runtimeVerificationBenchmarkOutFlowAtBottom() {
-        with(builder) {
+        DDBuilder {
             val gravity = 9.81
             val c = 0.9 // constant for flow speed of the drain
             val areaOfOutflowPipe= kotlin.math.exp(ln(0.5)*2)* PI //A_0
             lpCalls = 0
-            //val start = System.currentTimeMillis()
-            println("==== Stupid water level monitor runtime verification benchmark ====")
+            // val start = System.currentTimeMillis()
+            // println("==== Stupid water level monitor runtime verification benchmark ====")
             // some constants with uncertain value.
             val inrate = real(0.6..1.0, "inrate")
             var level: AADD = real(1.0..11.0, "level")
@@ -31,7 +30,7 @@ class WaterLevelBenchmark2 {
             var dlevel = real(10.0)
             val aux = real(2*gravity) * dlevel
             val outrate = real(- c* areaOfOutflowPipe) * aux.sqrt()
-            var rate = variable("initial direction").ite(inrate, outrate)
+            var rate = boolean("initial direction").ite(inrate, outrate)
             var drate = outrate
             var inrange: BDD = True
             var rlevel: AADD = real(1.0..11.0, (-1).toString())
@@ -45,7 +44,7 @@ class WaterLevelBenchmark2 {
                 // if (time >= 19 && drate == 0.9) drate = 0.5
                 dlevel += drate
 
-                println(" symbolic is: " + level.getRange() + " and has leaves: " + level.numLeaves())
+                // println(" symbolic is: " + level.getRange() + " and has leaves: " + level.numLeaves())
                 // Check the discrete state ...
                 inrange = (level greaterThanOrEquals real(10.0)) and (level lessThanOrEquals real(10.0)) and inrange
                 // ... or better: check with intersect:
@@ -57,15 +56,15 @@ class WaterLevelBenchmark2 {
                 IF(level lessThanOrEquals real(2.0))
                 rate = assign(rate, inrate)
                 END()
-                println("                  feasible paths:  " + inrange.numTrue() + " that match physical data.")
-                println("                  feasible leaves: " + rlevel.numFeasible() + " with Range: " + rlevel)
-                println("                  feasible leaves: " + dlevel.numFeasible() + " with Range: " + dlevel)
+                // println("                  feasible paths:  " + inrange.numTrue() + " that match physical data.")
+                // println("                  feasible leaves: " + rlevel.numFeasible() + " with Range: " + rlevel)
+                // println("                  feasible leaves: " + dlevel.numFeasible() + " with Range: " + dlevel)
                 level += rate
                 rlevel += rate
             }
-            //val ptime = System.currentTimeMillis() - start
-            //println("Ptime: $ptime mSec")
-            println("CspSolver calls: $lpCalls")
+            // val ptime = System.currentTimeMillis() - start
+            // println("Ptime: $ptime mSec")
+            // println("CspSolver calls: $lpCalls")
 
             // Should be ok for all somehow recent computers.
             // - MacPro, 3.7GHz e.g. +- 2000 (depends on temp, etc.)
@@ -77,15 +76,15 @@ class WaterLevelBenchmark2 {
     @Test
     @Ignore
     fun runtimeVerificationBenchmark() {
-        with(builder) {
+        DDBuilder {
             lpCalls = 0
             //val start = System.currentTimeMillis()
-            println("==== Stupid water level monitor runtime verification benchmark ====")
+            // println("==== Stupid water level monitor runtime verification benchmark ====")
             // some constants with uncertain value.
             val outrate = real(-1.0..-0.6, "outrate")
             val inrate = real(0.6..1.0, "inrate")
             var level: AADD = real(1.0..11.0, "level")
-            var rate = variable("initial direction").ite(inrate, outrate)
+            var rate = boolean("initial direction").ite(inrate, outrate)
             var drate = 0.9
             var dlevel = 4.0
             var inrange: BDD = True
@@ -93,14 +92,14 @@ class WaterLevelBenchmark2 {
             for (time in 0 .. 39) {
                 // For discrete fault:
                 // if (time > 22) dlevel = 2.0
-                print("  At time: $time sec. physical water level is: ${dlevel.toRoundedString(3)}")
+                // print("  At time: $time sec. physical water level is: ${dlevel.toRoundedString(3)}")
                 if (dlevel >= 10.0) drate = -.8
                 if (dlevel < 2.0) drate = 0.9
                 // For parametric fault:
                 // if (time >= 19 && drate == 0.9) drate = 0.5
                 dlevel += drate
 
-                println(" symbolic is: " + level.getRange() + " and has leaves: " + level.numLeaves())
+                // println(" symbolic is: " + level.getRange() + " and has leaves: " + level.numLeaves())
                 // Check the discrete state ...
                 inrange = (level greaterThanOrEquals real(dlevel)) and (level lessThanOrEquals real(dlevel)) and inrange
                 // ... or better: check with intersect:
@@ -112,14 +111,14 @@ class WaterLevelBenchmark2 {
                 IF(level lessThanOrEquals real(2.0))
                 rate = assign(rate, inrate)
                 END()
-                println("                  feasible paths:  " + inrange.numTrue() + " that match physical data.")
-                println("                  feasible leaves: " + rlevel.numFeasible() + " with Range: " + rlevel)
+                // println("                  feasible paths:  " + inrange.numTrue() + " that match physical data.")
+                // println("                  feasible leaves: " + rlevel.numFeasible() + " with Range: " + rlevel)
                 level += rate
                 rlevel += rate
             }
-            //val ptime = System.currentTimeMillis() - start
-            //println("Ptime: $ptime mSec")
-            println("CspSolver calls: $lpCalls")
+            // val ptime = System.currentTimeMillis() - start
+            // println("Ptime: $ptime mSec")
+            // println("CspSolver calls: $lpCalls")
 
             // Should be ok for all somehow recent computers.
             // - MacPro, 3.7GHz e.g. +- 2000 (depends on temp, etc.)
@@ -131,19 +130,19 @@ class WaterLevelBenchmark2 {
     @Test
     @Ignore
     fun runtimeVerificationBenchmarkWithoutR() {
-        with(builder) {
+        DDBuilder {
             this.config.noiseSymbolsFlag = true
             this.config.maxSymbols = 4
             this.config.mergeSymbols = 3
             this.config.xiHashMapSize = 10
             lpCalls = 0
-            //val start = System.currentTimeMillis()
-            println("==== Stupid water level monitor runtime verification benchmark ====")
+            // val start = System.currentTimeMillis()
+            // println("==== Stupid water level monitor runtime verification benchmark ====")
             // some constants with uncertain value.
             val outrate = real(-1.0..-0.6, "outrate")
             val inrate = real(0.6..1.0, "inrate")
             var level: AADD = real(1.0..11.0, "level")
-            var rate: AADD = variable("initial direction").ite(inrate, outrate)
+            var rate: AADD = boolean("initial direction").ite(inrate, outrate)
             var drate = 0.9
             var dlevel = 4.0
             var inrange: BDD = True
@@ -151,14 +150,14 @@ class WaterLevelBenchmark2 {
             for (time in 0 .. 39) {
                 // For discrete fault:
                 // if (time > 22) dlevel = 2.0
-                print("  At time: $time sec. physical water level is: ${dlevel.toRoundedString(2)}")
+                // print("  At time: $time sec. physical water level is: ${dlevel.toRoundedString(2)}")
                 if (dlevel >= 10.0) drate = -.8
                 if (dlevel < 2.0) drate = 0.9
                 // For parametric fault:
                 // if (time >= 19 && drate == 0.9) drate = 0.5
                 dlevel += drate
 
-                println(" symbolic is: " + level.getRange() + " and has leaves: " + level.numLeaves())
+                // println(" symbolic is: " + level.getRange() + " and has leaves: " + level.numLeaves())
                 // Check the discrete state ...
                 inrange = (level greaterThanOrEquals real(dlevel)) and (level lessThanOrEquals real(dlevel)) and inrange
                 // ... or better: check with intersect:
@@ -170,14 +169,14 @@ class WaterLevelBenchmark2 {
                 IF(level lessThanOrEquals real(2.0))
                     rate = assign(rate, inrate)
                 END()
-                println("                  feasible paths:  " + inrange.numTrue() + " that match physical data.")
-                println("                  feasible leaves: " + rlevel.numFeasible() + " with Range: " + rlevel)
+                // println("                  feasible paths:  " + inrange.numTrue() + " that match physical data.")
+                // println("                  feasible leaves: " + rlevel.numFeasible() + " with Range: " + rlevel)
                 level += rate
                 rlevel += rate
             }
-            //val ptime = System.currentTimeMillis() - start
-            //println("Ptime: $ptime mSec")
-            println("CspSolver calls: $lpCalls")
+            // val ptime = System.currentTimeMillis() - start
+            // println("Ptime: $ptime mSec")
+            // println("CspSolver calls: $lpCalls")
 
             // Should be ok for all somehow recent computers.
             // - MacPro, 3.7GHz e.g. +- 2000 (depends on temp, etc.)

@@ -35,8 +35,8 @@ fun constrainTo(leaf: AADD.Leaf, range: Range): AADD.Leaf {
         return leaf.clone() as AADD.Leaf
 
     // no complete inclusion, so we create an AADD with range constraints
-    var newMin = max(leaf.min, range.start)
-    var newMax = min(leaf.max, range.endInclusive)
+    val newMin = max(leaf.min, range.start)
+    val newMax = min(leaf.max, range.endInclusive)
     val result = if (newMin == newMax)
         leaf.builder.real(newMin) as AADD.Leaf
     else
