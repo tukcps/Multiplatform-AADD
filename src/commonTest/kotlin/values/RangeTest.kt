@@ -1,6 +1,6 @@
 package values
 
-import com.github.tukcps.aadd.values.Range
+import io.github.tukcps.aadd.values.Range
 import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlin.test.assertEquals

@@ -1,6 +1,6 @@
 package examples
 
-import com.github.tukcps.aadd.*
+import io.github.tukcps.aadd.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

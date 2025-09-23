@@ -1,8 +1,8 @@
 package examples.aaddtests
 
-import com.github.tukcps.aadd.DDBuilder
-import com.github.tukcps.aadd.dao.*
-import com.github.tukcps.aadd.values.AffineForm
+import io.github.tukcps.aadd.DDBuilder
+import io.github.tukcps.aadd.dao.*
+import io.github.tukcps.aadd.values.AffineForm
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -44,9 +44,9 @@ class ToFromJsonTests {
             val aStr = a.toDAO().toJson()
             val jObject = json.decodeFromString<AaddDAO>(string = aStr)
             assertTrue(jObject.value!!.min.isInfinite())
-            assertTrue(jObject.value.max.isInfinite())
-            assertTrue(jObject.value.central.isNaN())
-            assertTrue(jObject.value.r.isInfinite())
+            assertTrue(jObject.value!!.max.isInfinite())
+            assertTrue(jObject.value!!.central.isNaN())
+            assertTrue(jObject.value!!.r.isInfinite())
         }
     }
 
@@ -80,7 +80,7 @@ class ToFromJsonTests {
             conds.newVariable("var1", this)
             conds.newConstraint(AF(1.0, 2.0, 2), "constr2")
             val str = toJson()
-            val expected = "{\"conds\":{\"topIndex\":2,\"indexes\":{\"constr2\":2,\"var1\":1},\"x\":{\"1\":{\"type\":\"com.github.tukcps.jaadd.BDD.Leaf\"},\"2\":{\"type\":\"com.github.tukcps.jaadd.AADD.Leaf\",\"value\":{\"min\":1.0,\"max\":2.0,\"central\":1.5,\"xi\":{\"2\":0.5}}}}},\"noiseVars\":{\"maxIndex\":2,\"names\":{\"1\":\"a\"}}}"
+            val expected = "{\"conds\":{\"topIndex\":2,\"indexes\":{\"constr2\":2,\"var1\":1},\"x\":{\"1\":{\"type\":\"io.github.tukcps.jaadd.BDD.Leaf\"},\"2\":{\"type\":\"io.github.tukcps.jaadd.AADD.Leaf\",\"value\":{\"min\":1.0,\"max\":2.0,\"central\":1.5,\"xi\":{\"2\":0.5}}}}},\"noiseVars\":{\"maxIndex\":2,\"names\":{\"1\":\"a\"}}}"
             JSONAssert.assertEquals(expected, str, JSONCompareMode.LENIENT)
         }
     }
@@ -91,14 +91,14 @@ class ToFromJsonTests {
                 "  \"conds\" : {\n" +
                 "    \"x\" : {\n" +
                 "      \"1\" : {\n" +
-                "        \"type\" : \"com.github.tukcps.jaadd.BDD.Leaf\",\n" +
+                "        \"type\" : \"io.github.tukcps.jaadd.BDD.Leaf\",\n" +
                 "        \"value\": {\n" +
-                "                    \"type\": \"com.github.tukcps.jaadd.values.XBoolImpl\",\n" +
+                "                    \"type\": \"io.github.tukcps.jaadd.values.XBoolImpl\",\n" +
                 "                    \"xBoolEnum\": \"True\"\n" +
                 "        }" +
                 "      },\n" +
                 "      \"2\" : {\n" +
-                "        \"type\" : \"com.github.tukcps.jaadd.AADD.Leaf\",\n" +
+                "        \"type\" : \"io.github.tukcps.jaadd.AADD.Leaf\",\n" +
                 "        \"value\" : {\n" +
                 "          \"min\" : 1.0,\n" +
                 "          \"max\" : 2.0,\n" +
@@ -136,14 +136,14 @@ class ToFromJsonTests {
                 "  \"conds\" : {\n" +
                 "    \"x\" : {\n" +
                 "      \"1\" : {\n" +
-                "        \"type\" : \"com.github.tukcps.jaadd.BDD.Leaf\",\n" +
+                "        \"type\" : \"io.github.tukcps.jaadd.BDD.Leaf\",\n" +
                 "        \"value\": {\n" +
-                "                    \"type\": \"com.github.tukcps.jaadd.values.XBoolImpl\",\n" +
+                "                    \"type\": \"io.github.tukcps.jaadd.values.XBoolImpl\",\n" +
                 "                    \"xBoolEnum\": \"True\"\n" +
                 "                }" +
                 "      },\n" +
                 "      \"2\" : {\n" +
-                "        \"type\" : \"com.github.tukcps.jaadd.AADD.Leaf\",\n" +
+                "        \"type\" : \"io.github.tukcps.jaadd.AADD.Leaf\",\n" +
                 "        \"value\" : {\n" +
                 "          \"min\" : 1.0,\n" +
                 "          \"max\" : 2.0,\n" +
@@ -174,10 +174,10 @@ class ToFromJsonTests {
             Assertions.assertTrue(conds.indexes["var1"] == 1)
             val c = aaddFromJson(
                 "{\n" +
-                        "  \"type\" : \"com.github.tukcps.jaadd.AADD.Internal\",\n" +
+                        "  \"type\" : \"io.github.tukcps.jaadd.AADD.Internal\",\n" +
                         "  \"index\": 1,\n" +
                         "  \"T\": {\n" +
-                        "    \"type\" : \"com.github.tukcps.jaadd.AADD.Leaf\",\n" +
+                        "    \"type\" : \"io.github.tukcps.jaadd.AADD.Leaf\",\n" +
                         "    \"value\": {\n" +
                         "      \"central\": 3.5,\n" +
                         "      \"r\": 5.551115123125784E-16,\n" +
@@ -189,7 +189,7 @@ class ToFromJsonTests {
                         "    }\n" +
                         "  },\n" +
                         "  \"F\": {\n" +
-                        "    \"type\" : \"com.github.tukcps.jaadd.AADD.Leaf\",\n" +
+                        "    \"type\" : \"io.github.tukcps.jaadd.AADD.Leaf\",\n" +
                         "    \"value\": {\n" +
                         "      \"central\": 5.5,\n" +
                         "      \"r\": 9.99200722162641E-16,\n" +

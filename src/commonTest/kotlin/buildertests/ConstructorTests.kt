@@ -1,8 +1,8 @@
 package examples.buildertests
 
-import com.github.tukcps.aadd.AADD
-import com.github.tukcps.aadd.DDBuilder
-import com.github.tukcps.aadd.IDD
+import io.github.tukcps.aadd.AADD
+import io.github.tukcps.aadd.DDBuilder
+import io.github.tukcps.aadd.IDD
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue

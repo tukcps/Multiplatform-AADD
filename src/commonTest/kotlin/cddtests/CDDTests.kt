@@ -1,10 +1,10 @@
 package examples.cddtests
-import com.github.tukcps.aadd.AADD
-import com.github.tukcps.aadd.BDD
-import com.github.tukcps.aadd.DD
-import com.github.tukcps.aadd.DDBuilder
-import com.github.tukcps.aadd.values.AffineForm
-import com.github.tukcps.aadd.values.StateTuple
+import io.github.tukcps.aadd.AADD
+import io.github.tukcps.aadd.BDD
+import io.github.tukcps.aadd.DD
+import io.github.tukcps.aadd.DDBuilder
+import io.github.tukcps.aadd.values.AffineForm
+import io.github.tukcps.aadd.values.StateTuple
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals

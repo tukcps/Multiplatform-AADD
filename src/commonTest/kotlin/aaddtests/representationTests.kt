@@ -1,7 +1,7 @@
 package aaddtests
 
-import com.github.tukcps.aadd.DDBuilder
-import com.github.tukcps.aadd.values.Range
+import io.github.tukcps.aadd.DDBuilder
+import io.github.tukcps.aadd.values.Range
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

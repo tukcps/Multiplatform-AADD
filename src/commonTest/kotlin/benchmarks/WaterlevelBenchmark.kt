@@ -1,6 +1,6 @@
 package benchmarks
-import com.github.tukcps.aadd.AADD
-import com.github.tukcps.aadd.DDBuilder
+import io.github.tukcps.aadd.AADD
+import io.github.tukcps.aadd.DDBuilder
 import kotlin.test.Test
 
 class WaterLevelBenchmark {

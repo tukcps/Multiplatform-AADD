@@ -1,9 +1,9 @@
 package aaddtests
 
-import com.github.tukcps.aadd.*
-import com.github.tukcps.aadd.functions.log
-import com.github.tukcps.aadd.functions.pow
-import com.github.tukcps.aadd.values.*
+import io.github.tukcps.aadd.*
+import io.github.tukcps.aadd.functions.log
+import io.github.tukcps.aadd.functions.pow
+import io.github.tukcps.aadd.values.*
 import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlin.test.assertEquals

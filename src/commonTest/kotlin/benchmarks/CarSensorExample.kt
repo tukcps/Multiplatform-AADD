@@ -1,7 +1,7 @@
 @file:Suppress("unused", "UnusedVariable")
 
 package examples.benchmarks
-import com.github.tukcps.aadd.DDBuilder
+import io.github.tukcps.aadd.DDBuilder
 import kotlin.test.Test
 
 class CarSensorExample {

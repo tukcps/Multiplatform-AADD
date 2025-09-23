@@ -2,8 +2,8 @@
 
 package examples
 
-import com.github.tukcps.aadd.*
-import com.github.tukcps.aadd.values.Range
+import io.github.tukcps.aadd.*
+import io.github.tukcps.aadd.values.Range
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertSame

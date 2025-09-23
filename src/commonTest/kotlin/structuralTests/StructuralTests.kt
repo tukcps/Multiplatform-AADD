@@ -1,6 +1,6 @@
 package examples.structuralTests
 
-import com.github.tukcps.aadd.DDBuilder
+import io.github.tukcps.aadd.DDBuilder
 import kotlin.test.*
 
 

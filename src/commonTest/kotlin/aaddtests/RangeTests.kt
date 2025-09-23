@@ -1,8 +1,8 @@
 package aaddtests
 
-import com.github.tukcps.aadd.values.Range
-import com.github.tukcps.aadd.values.ceil
-import com.github.tukcps.aadd.values.floor
+import io.github.tukcps.aadd.values.Range
+import io.github.tukcps.aadd.values.ceil
+import io.github.tukcps.aadd.values.floor
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

@@ -1,8 +1,8 @@
 package aaddtests
 
-import com.github.tukcps.aadd.*
-import com.github.tukcps.aadd.values.AffineForm
-import com.github.tukcps.aadd.values.Range
+import io.github.tukcps.aadd.*
+import io.github.tukcps.aadd.values.AffineForm
+import io.github.tukcps.aadd.values.Range
 import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlin.test.assertEquals

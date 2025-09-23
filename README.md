@@ -25,6 +25,7 @@ To learn more:
 - Zivkovic et al., IEEE TCAD 38/10 2019;  https://ieeexplore.ieee.org/document/8428606
 - Zivkovic et al., DATE 2019; http://dx.doi.org/10.23919/DATE.2019.8715278
 
+For a complex project that uses AADD check SysMD Notebook on Github: https://github.com/tukcps/SysMD 
 
 > For purely Boolean problems, optimized BDD packages or a SAT solver are likely better suited.
 
@@ -39,7 +40,7 @@ The development environment is:
 - Gradle 7.8+ as build tool. 
 
 The Gradle build tool automatically downloads all dependencies.
-The multi platform version includes a simple LP solver (which is ok as most LP problems in AADD are small ones, where the overhead for starting a complex solver is expensive).
+The multi-platform version includes a simple LP solver (which is ok as most LP problems in AADD are small ones, where the overhead for starting a complex solver is expensive).
 For the JVM platforms, other solvers for LP/MILP problems like OjAlgo will be used in the next updates.
 
 To include the AADD library in an application, add the following dependency to your Gradle dependencies: 
@@ -68,7 +69,7 @@ Representations.
 To create variables/constants, the builder must be instantiated. 
 Then, its methods can be used to create new variables and constants, e.g., in Kotlin: 
 ```
-   import com.github.tukcps.aadd.*
+   import io.github.tukcps.aadd.*
 
    fun main() {
       val bulder = DDBuilder() 	

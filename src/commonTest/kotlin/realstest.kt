@@ -1,13 +1,13 @@
 package examples
 
-import com.github.tukcps.aadd.values.IntegerRange
-import com.github.tukcps.aadd.values.Range
+import io.github.tukcps.aadd.Real
+import io.github.tukcps.aadd.values.IntegerRange
+import io.github.tukcps.aadd.values.Range
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
 class RealsTest {
     @Test
-    // TODO wieso failen die Tests ?
      fun testRealsAdd() {
         val a = Range(1.0 .. 2.0)
         val b = Range(2.0 .. 3.0)

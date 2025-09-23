@@ -1,6 +1,6 @@
 package values
 
-import com.github.tukcps.aadd.values.XBool
+import io.github.tukcps.aadd.values.XBool
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

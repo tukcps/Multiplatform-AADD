@@ -2,11 +2,11 @@
 
 package aaddtests
 
-import com.github.tukcps.aadd.*
-import com.github.tukcps.aadd.functions.floor
-import com.github.tukcps.aadd.functions.log
-import com.github.tukcps.aadd.functions.pow
-import com.github.tukcps.aadd.values.*
+import io.github.tukcps.aadd.*
+import io.github.tukcps.aadd.functions.floor
+import io.github.tukcps.aadd.functions.log
+import io.github.tukcps.aadd.functions.pow
+import io.github.tukcps.aadd.values.*
 import kotlin.math.exp
 import kotlin.math.ln
 import kotlin.test.Test

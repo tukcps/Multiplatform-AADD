@@ -1,8 +1,8 @@
 package solvertests
-import com.github.tukcps.aadd.AADD
-import com.github.tukcps.aadd.DDBuilder
+import io.github.tukcps.aadd.AADD
+import io.github.tukcps.aadd.DDBuilder
 import kotlin.test.Test
-import com.github.tukcps.aadd.lpsolver.*
+import io.github.tukcps.aadd.lpsolver.*
 import kotlin.math.ulp
 import kotlin.test.assertEquals
 

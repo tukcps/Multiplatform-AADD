@@ -2,10 +2,10 @@
 
 package bddtests
 
-import com.github.tukcps.aadd.BDD
-import com.github.tukcps.aadd.DDBuilder
-import com.github.tukcps.aadd.functions.numInternalNodes
-import com.github.tukcps.aadd.values.XBool
+import io.github.tukcps.aadd.BDD
+import io.github.tukcps.aadd.DDBuilder
+import io.github.tukcps.aadd.functions.numInternalNodes
+import io.github.tukcps.aadd.values.XBool
 import kotlin.test.*
 
 

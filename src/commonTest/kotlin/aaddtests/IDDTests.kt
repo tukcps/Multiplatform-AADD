@@ -1,9 +1,9 @@
 package examples.aaddtests
 
-import com.github.tukcps.aadd.BDD
-import com.github.tukcps.aadd.DDBuilder
-import com.github.tukcps.aadd.IDD
-import com.github.tukcps.aadd.values.IntegerRange
+import io.github.tukcps.aadd.BDD
+import io.github.tukcps.aadd.DDBuilder
+import io.github.tukcps.aadd.IDD
+import io.github.tukcps.aadd.values.IntegerRange
 import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertTrue

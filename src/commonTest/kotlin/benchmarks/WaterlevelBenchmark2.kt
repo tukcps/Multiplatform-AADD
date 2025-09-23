@@ -1,10 +1,10 @@
 package benchmarks
 
-import com.github.tukcps.aadd.AADD
-import com.github.tukcps.aadd.BDD
-import com.github.tukcps.aadd.DDBuilder
-import com.github.tukcps.aadd.contains
-import com.github.tukcps.aadd.values.Range
+import io.github.tukcps.aadd.AADD
+import io.github.tukcps.aadd.BDD
+import io.github.tukcps.aadd.DDBuilder
+import io.github.tukcps.aadd.contains
+import io.github.tukcps.aadd.values.Range
 import kotlin.math.PI
 import kotlin.math.ln
 import kotlin.test.Ignore

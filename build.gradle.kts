@@ -1,12 +1,17 @@
-group = "com.github.tukcps"
-version = "0.1.10"
+group = "io.github.tukcps"
+version = "0.1.12"
 
 plugins {
-    id("org.jetbrains.kotlin.multiplatform") version "2.1.20"
-    kotlin("plugin.serialization") version "2.1.20"
+    id("org.jetbrains.kotlin.multiplatform") version "2.2.20"
+    kotlin("plugin.serialization") version "2.2.20"
     id("idea")
     id("org.jetbrains.dokka") version "2.0.0"
     id("maven-publish")
+    signing
+}
+
+subprojects {
+    apply(plugin = "org.jetbrains.dokka")
 }
 
 repositories {
@@ -15,10 +20,7 @@ repositories {
 
 kotlin {
     jvmToolchain(21)
-
-    jvm {
-        withJava()
-    }
+    jvm {}
 
     val hostOs = System.getProperty("os.name")
     val procArch = System.getProperty("os.arch")
@@ -54,15 +56,6 @@ kotlin {
 
         isLinux -> {
             when {
-
-                isArm64 -> linuxArm64("native") {
-                    binaries {
-                        sharedLib {
-                            baseName = "native"
-                        }
-                    }
-                }
-
                 isX64 -> linuxX64("native") {
                     binaries {
                         sharedLib {
@@ -122,23 +115,106 @@ kotlin {
     }
 }
 
+val javadocJar by tasks.creating(Jar::class) {
+    group = JavaBasePlugin.DOCUMENTATION_GROUP
+    description = "Assembles Javadoc JAR"
+    archiveClassifier.set("javadoc")
+    from(tasks.named("dokkaGeneratePublicationHtml"))
+}
+
 publishing {
-    repositories {
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/tukcps/Multiplatform-AADD")
-            credentials {
-                username = System.getenv("GITHUB_USER") ?: "enter-github-username"
-                password = System.getenv("GITHUB_TOKEN") ?: "enter-github-token"
+    publications {
+        create<MavenPublication>("aadd") {
+            groupId = "io.github.tukcps"
+            artifactId = "aadd"
+            version = project.version.toString()
+
+            artifact(tasks["jvmJar"])
+            artifact(tasks["sourcesJar"])
+            artifact(tasks["javadocJar"])
+            pom{
+                groupId = project.group.toString()
+                artifactId = project.name
+                version = project.version.toString()
+
+                pom {
+                    name.set(project.name)
+                    description.set("Affine Arithmetic Decision Diagram Library for Kotlin Multiplatform")
+                    url.set("https://github.com/tukcps/Multiplatform-AADD")
+                    licenses {
+                        license {
+                            name.set("Apache-2.0")
+                            url.set("https://opensource.org/licenses/Apache-2.0")
+                        }
+                    }
+                    developers {
+                        developer {
+                            id.set("heermann")
+                            name.set("Hagen Heermann")
+                            organization.set("University of Kaiserslautern-Landau")
+                            organizationUrl.set("https://github.com/tukcps/")
+                        }
+                        developer {
+                            id.set("kwasigroch")
+                            name.set("Sören Kwasigroch")
+                            organization.set("University of Kaiserslautern-Landau")
+                            organizationUrl.set("https://github.com/tukcps/")
+                        }
+                        developer {
+                            id.set("zivkovic")
+                            name.set("Carna Zivkovic")
+                            organization.set("University of Kaiserslautern-Landau")
+                            organizationUrl.set("https://github.com/tukcps/")
+                        }
+                        developer {
+                            id.set("grimm")
+                            name.set("Christoph Grimm")
+                            organization.set("University of Kaiserslautern-Landau")
+                            organizationUrl.set("https://github.com/tukcps/")
+                        }
+                        developer {
+                            id.set("ratzke")
+                            name.set("Axel Ratzke")
+                            organization.set("University of Kaiserslautern-Landau")
+                            organizationUrl.set("https://github.com/tukcps/")
+                        }
+                        developer {
+                            id.set("herzog")
+                            name.set("Moritz Herzog")
+                            organization.set("University of Kaiserslautern-Landau")
+                            organizationUrl.set("https://github.com/tukcps/")
+                        }
+                    }
+                    scm {
+                        url.set("https://github.com/tukcps/Multiplatform-AADD.git")
+                        connection.set("scm:git:git://github.com/tukcps/Multiplatform-AADD.git")
+                        developerConnection.set("scm:git:git://github.com/tukcps/Multiplatform-AADD.git")
+                    }
+                    issueManagement {
+                        url.set("https://github.com/tukcps/Multiplatform-AADD/issues")
+                    }
+                }
             }
         }
     }
-    publications {
-        create<MavenPublication>("gpr"){
-            from(components["kotlin"])
-            groupId = "com.github.tukcps"
-            artifactId = "multiplatform-aadd"
-            version = "0.1.10"
+    repositories {
+        maven("https://cpsgit.informatik.uni-kl.de/api/v4/projects/152/packages/maven") {
+            name = "GitLab"
+            credentials(HttpHeaderCredentials::class) {
+                name = "Deploy-Token"
+                value = System.getenv("DEPLOY_TOKEN")
+            }
+            authentication {
+                create<HttpHeaderAuthentication>("header")
+            }
         }
     }
+}
+
+signing {
+    val signingKey = "${System.getenv("SIGNING_KEY")}"
+    val signingPassphrase = "${System.getenv("SIGNING_PASSPHRASE")}"
+
+    useInMemoryPgpKeys(signingKey, signingPassphrase)
+    sign(publishing.publications["aadd"])
 }

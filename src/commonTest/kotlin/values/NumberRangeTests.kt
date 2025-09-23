@@ -1,6 +1,6 @@
 package examples.values
 import kotlin.test.*
-import com.github.tukcps.aadd.values.*
+import io.github.tukcps.aadd.values.*
 
 class NumberRangeTests {
 

@@ -3,9 +3,9 @@
 package aaddtests
 
 
-import com.github.tukcps.aadd.*
-import com.github.tukcps.aadd.DDBuilder
-import com.github.tukcps.aadd.values.*
+import io.github.tukcps.aadd.*
+import io.github.tukcps.aadd.DDBuilder
+import io.github.tukcps.aadd.values.*
 import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlin.test.assertEquals
