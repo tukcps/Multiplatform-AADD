@@ -6,6 +6,8 @@ package aaddtests
 import io.github.tukcps.aadd.*
 import io.github.tukcps.aadd.DDBuilder
 import io.github.tukcps.aadd.values.*
+import io.github.tukcps.aadd.values.real.AffineForm
+import io.github.tukcps.aadd.values.real.RealRange
 import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlin.test.assertEquals
@@ -85,7 +87,7 @@ class AADDTutorialKotlinAsTestWithoutRWithOriginalForms {
                 piOut += (setVal - isVal) * 0.5
                 isVal = piOut
             }
-            assertTrue(isVal.getRange() in Range(0.99 .. 1.1))
+            assertTrue(isVal.getRange() in RealRange(0.99..1.1))
         }
     }
 

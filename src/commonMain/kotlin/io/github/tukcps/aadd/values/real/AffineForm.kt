@@ -1,16 +1,23 @@
-package io.github.tukcps.aadd.values
+package io.github.tukcps.aadd.values.real
 
 import io.github.tukcps.aadd.DDBuilder
 import io.github.tukcps.aadd.DDInternalError
 import io.github.tukcps.aadd.util.minusUlp
 import io.github.tukcps.aadd.util.plusUlp
 import io.github.tukcps.aadd.util.plusMinusUlp
+import io.github.tukcps.aadd.values.BoundKind
+import io.github.tukcps.aadd.values.integer.IntegerRange
+import io.github.tukcps.aadd.values.real.math.RoundingMath
+import io.github.tukcps.aadd.values.real.math.IEEE754RoundingMath
+import io.github.tukcps.aadd.values.real.math.Rounding
+import kotlin.collections.iterator
 import kotlin.math.*
 
-
 /**
- * An Affine Form. The main constructor is private as it is only for use by de-serialization.
- * Deserialization requires a default-builder that is a mandatory parameter for all other constructors.
+ * ## Affine Form
+ *
+ * An Affine Form. The main constructor is private and only sets the states without any checks.
+ * use AffineForm.buildAF.
  * @param builder: The factory class that builds affine forms and AADD
  * @param central: The central value of the affine form
  * @param xi The noise variables of the affine form; if it is an empty set, we only use min/max.
@@ -18,46 +25,14 @@ import kotlin.math.*
  * Note that the affine form also has an inherited range that holds min/max values of interval arithmetic
  * computations that are used to reduce over-approximation in particular for non-linear operations.
  */
-class AffineForm(
-    var builder: DDBuilder,
-    range: ClosedRange<Double> = -Double.MAX_VALUE .. Double.MAX_VALUE,
+class AffineForm private constructor(
+    val builder: DDBuilder,
+    min: Double,
+    max: Double,
     var central: Double,
     var r: Double,
     val xi: HashMap<Int, Double> = HashMap(300, 0.75F),
-) : Range(range) {
-    // Ensure some invariants and canonical representation for exceptions
-    init {
-        when {
-            // for NaN or any other input for which no reasonable processing is possible,
-            // we set the result to Reals including +/- Infinity.
-            central.isNaN() || r.isNaN() || radius.isNaN() -> {
-                xi.clear()
-                central = Double.NaN
-                r = Double.POSITIVE_INFINITY
-            }
-
-            // for Infinite radius, use interval arithmetic and drop noise symbols xi.
-            radius.isInfinite() -> {
-                xi.clear()
-                central = Double.NaN
-                r = Double.POSITIVE_INFINITY
-            }
-
-            // Something is really wrong; possibly a bug in code, if negative r is requested
-            r < 0 -> throw DDInternalError("constructor of AffineForm called with negative r; r must be > 0")
-        }
-
-        // Update min and max to the best approximation of IA and AA
-        if (xi.isNotEmpty()) {
-            min = max(min, central-radius.plusUlp())
-            max = min(max, central+radius.plusUlp())
-        }
-        // Bring scalars into canonical representation
-        if (min == max) {
-            central = min
-            xi.clear()
-        }
-    }
+) : RealRange(min, max) {
 
     /**
      * Creates a representation of a scalar value with r = 0 and no xi.
@@ -66,7 +41,7 @@ class AffineForm(
      * @param scalar the scalar value that is represented.
      */
     constructor(builder: DDBuilder, scalar: Double):
-            this(builder, range = scalar .. scalar, central = scalar, r = 0.0)
+            this(builder, min = scalar, max = scalar, central = scalar, r = 0.0)
 
     /**
      * Creates a representation of a range without noise symbols.
@@ -76,11 +51,7 @@ class AffineForm(
      * @param max the maximum of the range.
      */
     internal constructor(builder: DDBuilder, min: Double, max: Double):
-            this(builder,
-                range   = min..max,
-                central = Double.NaN,
-                r       = Double.POSITIVE_INFINITY
-            )
+            this(builder, min = min, max = max, central = Double.NaN, r = Double.POSITIVE_INFINITY)
 
     /**
      * Creates a range representation that uses, if possible, an affine form
@@ -88,13 +59,14 @@ class AffineForm(
      * @param range the range to be represented
      * @param i the noise symbol to be used; if null, a new noise symbol is generated
      */
-    constructor(builder: DDBuilder, range: ClosedRange<Double>, i: Int):
-            this(builder, central = 0.0, r = 0.0, range = range) {
-        central = if (min.isFinite() && max.isFinite()) max/2.0 + min/2.0 else 0.0
-        if ( i == -1)
-            throw DDInternalError("-1 as marker for generating new noise symbol is deprecated.")
-        if (max != min)
-            xi [i] = (max - min) / 2.0
+    constructor(builder: DDBuilder, range: ClosedRange<Double>, i: Int): this(builder,
+        min = range.start,
+        max = range.endInclusive,
+        central = if (range.start.isFinite() && range.endInclusive.isFinite())
+            range.start/2.0 + range.endInclusive/2.0 else 0.0,
+        r = 0.0
+    ) {
+        if (max != min) xi [i] = (max - min) / 2.0
     }
 
     /**
@@ -102,9 +74,13 @@ class AffineForm(
      * @param builder the builder with the table of noise symbols
      * @param range the range to be represented
      */
-    constructor(builder: DDBuilder, range: ClosedRange<Double>):
-            this(builder, central = 0.0, r = 0.0, range = range) {
-        central = if (min.isFinite() && max.isFinite()) max/2.0 + min/2.0 else 0.0
+    constructor(builder: DDBuilder, range: ClosedRange<Double>): this(builder,
+        min = range.start,
+        max = range.endInclusive,
+        central = if (range.start.isFinite() && range.endInclusive.isFinite())
+            range.start/2.0 + range.endInclusive/2.0 else 0.0,
+        r = 0.0
+    ) {
         if (max != min)
             xi [builder.noiseVars.newNoiseVar()] = (max - min) / 2.0
     }
@@ -115,9 +91,13 @@ class AffineForm(
      * @param range the range to be represented
      * @param i the noise symbol to be used as a string
      */
-    constructor(builder: DDBuilder, range: ClosedRange<Double>, i: String):
-            this(builder, central = 0.0, r = 0.0, range = range) {
-        central = if (min.isFinite() && max.isFinite()) max/2.0 + min/2.0 else 0.0
+    constructor(builder: DDBuilder, range: ClosedRange<Double>, i: String): this(builder,
+        min = range.start,
+        max = range.endInclusive,
+        central = if (range.start.isFinite() && range.endInclusive.isFinite())
+            range.start/2.0 + range.endInclusive/2.0 else 0.0,
+        r = 0.0,
+    ) {
         if (max != min)
             xi [builder.noiseVars.newNoiseVar(i)] = (max - min) / 2.0
     }
@@ -126,7 +106,7 @@ class AffineForm(
      * Creates an affine form as a clone of an existing affine form.
      */
     constructor(builder: DDBuilder, af: AffineForm):
-            this(builder, af, af.central, af.r, HashMap(af.xi))
+            this(builder, af.min, af.max, af.central, af.r, HashMap(af.xi))
 
     /**
      * Creates an affine form as a clone of an existing affine form,
@@ -134,21 +114,19 @@ class AffineForm(
      * smaller than a fixed threshold, when a flag is set.
      */
     constructor(af: AffineForm): this(
-        builder = af.builder,
-        range = af,
-        central = af.central,
-        r = af.r,
+        builder = af.builder, min = af.min, max = af.max,
+        central = af.central, r = af.r,
         xi = if(af.builder.config.thresholdFlag){
             val xiCopy = HashMap(af.xi)
-            for (entries in af.xi){
-                if (entries.key >= 10000000 && abs(entries.value) <= abs(af.builder.config.threshold)) {
-                    xiCopy.remove(entries.key)
+            for ((key, value) in af.xi){
+                if (key >= 10000000 && abs(value) <= abs(af.builder.config.threshold)) {
+                    xiCopy.remove(key)
                 }
             }
             xiCopy
         } else {
             HashMap(af.xi)
-        },
+        }
     )
 
     /**
@@ -158,23 +136,21 @@ class AffineForm(
         get() {
             if (isEmpty()) return 0.0
             var rad = 0.0
-            for (v in xi.values) {
-                rad += abs(v); rad += rad.ulp
-            }
-            return rad+r
+            for (v in xi.values)
+                rad = math.add(rad, abs(v), Rounding.UP)
+            return math.add(rad, r, Rounding.UP)
         }
 
-    override fun clone(): AffineForm {
-        if (isEmpty()) return this
-        else return AffineForm(builder, Range(min .. max), central, r, xi)
-    }
+    override fun clone(): AffineForm =
+        if (isEmpty()) this
+        else AffineForm(builder, min, max, central, r, xi)
 
-    override fun copy(min: Double?, max: Double?): AffineForm {
+    fun copy(min: Double?, max: Double?, r: Double? = null): AffineForm {
         if (isEmpty()) return this
         else  {
             val lb: Double = min?:this.min
             val ub: Double = max?:this.max
-            return AffineForm(builder, Range(lb .. ub), central, r, xi)
+            return AffineForm(builder, lb, ub, central, r?:this.r, xi)
         }
     }
 
@@ -229,26 +205,28 @@ class AffineForm(
      * @return the joined range as affine form.
      */
     fun join(other: AffineForm): AffineForm {
-        val nc = (central + other.central) / 2
-        var nr = abs(central - other.central)
-        nr = (nr + 2 * nr.ulp) / 2
-        nr += r
-        nr += nr.ulp
-        nr += other.r
-        nr += nr.ulp
+        var (newCentral, centralErr) = math.addRounded(central, other.central)
+        newCentral /= 2
+        var nr = abs(math.sub(central, other.central, Rounding.UP))
+        nr = math.div(nr, 2.0, Rounding.UP)
+        nr = math.add(nr, r, Rounding.UP)
+        nr = math.add(nr, other.r, Rounding.UP)
+        nr = math.add(nr, centralErr, Rounding.UP)
         val nxi = HashMap<Int, Double>()
         for (i in xi.keys+other.xi.keys) {
             val xi = xi.getOrElse(i){0.0}
             val yi = other.xi.getOrElse(i){0.0}
             if (xi * yi > 0) {
                 nxi[i] = min(abs(xi), abs(yi)) * sign(xi)
-                nr += abs(xi - yi); nr += nr.ulp
+                val dif = abs(math.sub(xi, yi, Rounding.UP))
+                nr = math.add(nr, dif, Rounding.UP)
             } else {
-                nr += abs(xi); nr += nr.ulp
-                nr += abs(yi); nr += nr.ulp //TODO: store value of nr as noise symbol and make sure r is zero?
+                nr = math.add(nr, abs(xi), Rounding.UP)
+                nr = math.add(nr, abs(yi), Rounding.UP)
+                //TODO: store value of nr as noise symbol and make sure r is zero?
             }
         }
-        return AffineForm(builder, this as Range join other, nc, nr, nxi)
+        return buildAF(builder, this as RealRange join other, newCentral, nr, nxi)
     }
 
     /** Adds two affine forms   */
@@ -259,8 +237,8 @@ class AffineForm(
             this.isZero() -> return other
             other.isZero() -> return this
         }
-        val nc = central + other.central
-        var err = nc.ulp
+        var (newCentral, errCentral) = math.addRounded(central, other.central)
+        errCentral = abs(errCentral)
         val nts = HashMap<Int, Double>(2 * this.builder.config.xiHashMapSize)
         for (i in xi.keys + other.xi.keys) {
             val v1 = xi.getOrElse(i) { 0.0 }
@@ -271,19 +249,13 @@ class AffineForm(
             ) {
                 this.builder.noiseVars.addUsed()
             }
-            val sum = v1 + v2
-            err += sum.ulp
+            val sum =math.add(v1, v2, Rounding.AWAY)
             nts[i] = sum
         }
-        var nr = r + other.r
-        if (this.builder.config.noiseSymbolsFlag) {
-            err += err.ulp
-            addNonlinearNoise(GarbageVarMapping.roundingPLUS, err, nts, AffineForm(other))
-        } else {
-            nr += err
-            nr += nr.ulp
-        }
-        val result = AffineForm(builder, this as Range + other, nc, nr, nts)
+        var nr = math.add(r, other.r, Rounding.UP)
+        nr = math.add(nr, errCentral, Rounding.UP)
+        addNonlinearNoise(GarbageVarMapping.roundingPLUS, errCentral, nts, AffineForm(other))
+        val result = buildAF(builder, this as RealRange + other as RealRange, newCentral, nr, nts)
         result.reduceNoiseSymbols()
         return result
     }
@@ -298,36 +270,32 @@ class AffineForm(
             this.isZero() -> return -other
             other.isZero() -> return this
         }
-        val nc = central - other.central    // new central value
-        var err = nc.ulp*2                  // rounding errors
         val nts = HashMap<Int, Double>(2 * this.builder.config.xiHashMapSize)    // new noise terms
-        var nSum = 0.0
+        var (newCentral, errNewCentral) = math.subRounded(central, other.central)    // new central value
+        errNewCentral = abs(errNewCentral)
+        var sumOfNoiseTerms = 0.0
         for (i in xi.keys + other.xi.keys) {
             val v1 = xi.getOrElse(i){0.0}
             val v2 = other.xi.getOrElse(i){0.0}
             if (i >= this.builder.noiseVars.getBeginIndexGarbage() && abs(v1) >= builder.config.threshold && abs(v2) >= builder.config.threshold){
                 this.builder.noiseVars.addUsed()
             }
-            val dif = v1 - v2
-            nSum += abs(dif)
-            err += dif.ulp
+            val dif = math.sub(v1, v2, Rounding.AWAY)
+            sumOfNoiseTerms = math.add(sumOfNoiseTerms, abs(dif), Rounding.UP)
             if (dif != 0.0)
                 nts[i] = dif
         }
-        val nRadius = Range(((nc-nSum-r-other.r-err) .. (nc+nSum+r+other.r+err)))
-        val nRange = (this as Range - other as Range)
-        val smallestRange = nRadius intersect nRange
-        var nr = r + other.r
+        val nRadius = RealRange(((newCentral - sumOfNoiseTerms - r - other.r - errNewCentral)..(newCentral + sumOfNoiseTerms + r + other.r + errNewCentral)))
+        val nRealRange = (this as RealRange - other as RealRange)
+        val smallestRange = nRadius intersect nRealRange
+        var nr = math.add(r, other.r, Rounding.UP)
         if (this.builder.config.noiseSymbolsFlag){
-            err += err.ulp
-            addNonlinearNoise(GarbageVarMapping.roundingMINUS, err, nts, AffineForm(other))
+            addNonlinearNoise(GarbageVarMapping.roundingMINUS, errNewCentral, nts, AffineForm(other))
         }
         else {
-            nr += nr.ulp
-            nr += err
-            nr += nr.ulp
+            nr = math.add(nr, errNewCentral, Rounding.UP)
         }
-        val result = AffineForm(builder, smallestRange, nc, nr, nts)
+        val result = buildAF(builder, smallestRange, newCentral, nr, nts)
         result.reduceNoiseSymbols()
         return result
     }
@@ -338,24 +306,25 @@ class AffineForm(
             isEmpty() -> return builder.AFEmpty
             isReals() -> return builder.AFReals
             other.isNaN() -> return builder.AFEmpty
-            other == 0.0  -> return this
             other == Double.POSITIVE_INFINITY -> return AffineForm(builder, Double.POSITIVE_INFINITY)
             other == Double.NEGATIVE_INFINITY -> return AffineForm(builder, Double.NEGATIVE_INFINITY)
         }
-        val nc = central + other
-        val nts = HashMap(xi)
-        val err = 2 * nc.ulp
-        var nr = r
+        val newNoiseTerms = HashMap(xi)
+        val (newCentral, err) = math.addRounded(central, other)
+        val newR = math.add(r, abs(err), Rounding.UP)
+
         if (this.builder.config.noiseSymbolsFlag) {
-            addNonlinearNoise(GarbageVarMapping.roundingSCALARPLUS, err, nts, builder.AFEmpty)
+            addNonlinearNoise(GarbageVarMapping.roundingSCALARPLUS, err, newNoiseTerms, builder.AFEmpty)
         }
-        else {
-            nr += 2 * nc.ulp // noise symbol modeling quantization error.
-        }
-        val result = AffineForm(builder, this as Range + Range(other), nc, nr, nts)
+        val result = buildAF(builder, this as RealRange + RealRange(other), newCentral, newR, newNoiseTerms)
         result.reduceNoiseSymbols()
         return result
     }
+
+    override val maxKind: BoundKind
+        get() = TODO("Not yet implemented")
+    override val minKind: BoundKind
+        get() = TODO("Not yet implemented")
 
     /** Adds a (possibly negative) scalar to an affine form. */
     override operator fun minus(other: Double): AffineForm = plus(-other)
@@ -371,8 +340,8 @@ class AffineForm(
             other.isNaN()  -> return builder.AFEmpty
             this.isEmpty() -> return builder.AFEmpty
             this.isOne()   -> return AffineForm(builder, other)
-            other == 0.0 -> return AffineForm(builder, other)
-            other == 1.0 -> return this // AffineForm(builder, this.copy(min, max + max.ulp))
+            other == 0.0   -> return AffineForm(builder, 0.0)
+            other == 1.0   -> return AffineForm(builder, this)
         }
         val nts = HashMap<Int, Double>(this.builder.config.xiHashMapSize)
         var fpArithmeticR = 0.0 // Uncertainty due to FP operations
@@ -387,9 +356,9 @@ class AffineForm(
         if (this.builder.config.noiseSymbolsFlag){
             addNonlinearNoise(GarbageVarMapping.roundingSCALARTIMES, fpArithmeticR, nts, builder.AFEmpty)
         } else {
-            nR += nR.ulp + fpArithmeticR
+            nR = math.add(nR, fpArithmeticR, Rounding.UP)
         }
-        val result = AffineForm(builder, this as Range * Range(other), nCentral, nR, nts)
+        val result = buildAF(builder, this as RealRange * RealRange(other), nCentral, nR, nts)
         if (this.builder.config.originalFormsFlag){
             val base1 = this.builder.noiseVars.newOriginalForm(AffineForm(this), AffineForm(this), builder.AFEmpty)
             addOriginalFormsMapping(result,base1)
@@ -408,11 +377,11 @@ class AffineForm(
         val nr = r
         val nts = HashMap<Int, Double>(this.builder.config.xiHashMapSize)
         xi.keys.forEach { nts[it] = -xi[it]!! }
-        return AffineForm(builder, -Range(this), nc, nr, nts)
+        return buildAF(builder, -RealRange(this), nc, nr, nts)
     }
 
     /**
-     * Multiplication. Uses the simpler approximation proposed by Stolfi et al
+     * Multiplication. Uses the simpler approximation proposed by Stolfi et al.
      * instead of the more precise but costlier version. Computes interval product
      * as well and keeps the intersection of the results, minimizing error propagation.
      */
@@ -425,7 +394,7 @@ class AffineForm(
             other.isOne()                      -> return this
             this.isReals() || other.isReals()  -> return builder.AFReals
             min.isInfinite() || max.isInfinite()|| other.min.isInfinite() || other.max.isInfinite()
-                                               -> return AffineForm(builder, this as Range * other as Range)
+                                               -> return AffineForm(builder, this as RealRange * other as RealRange)
         }
 
         if (this.builder.config.noiseSymbolsFlag){
@@ -478,22 +447,21 @@ class AffineForm(
                 }
             }
 
-            if(!contained){
-                nts[newGarbageKey]=noise
-            }
+            if(!contained){ nts[newGarbageKey]=noise }
 
-            /*        val newGarbageKey = this.builder.noiseVars.newGarbageVar(GarbageVarMapping.TIMES, this, other)
-                    nts[newGarbageKey] = noise*/
+            /* val newGarbageKey = this.builder.noiseVars.newGarbageVar(GarbageVarMapping.TIMES, this, other)
+               nts[newGarbageKey] = noise*/
 
             if (this.builder.config.roundingErrorMappingFlag){
-                val roundingGarbageKey = this.builder.noiseVars.newGarbageVar(GarbageVarMapping.roundingTIMES, AffineForm(this), AffineForm(other))
+                val roundingGarbageKey = this.builder.noiseVars.newGarbageVar(GarbageVarMapping.roundingTIMES,
+                    AffineForm(this), AffineForm(other))
                 nts[roundingGarbageKey] = fpArithmeticR
             }
             else {
                 nts[builder.noiseVars.newGarbageVar()] = fpArithmeticR
             }
 
-            val result = AffineForm(builder, this as Range * other as Range, c, nr, nts)
+            val result = buildAF(builder, this as RealRange * other as RealRange, c, nr, nts)
             //if one of the affine forms is scalar, only the other one needs to update it´s original form
             if (builder.config.originalFormsFlag && base1.first != builder.AFEmpty){
                 if (isScalar()&&!other.isScalar()) {
@@ -520,7 +488,7 @@ class AffineForm(
             result.reduceNoiseSymbols()
             return result
         } else {
-            if (!isFinite()) return AffineForm(builder, Range(min..max), 0.0, Double.POSITIVE_INFINITY, hashMapOf())
+            if (!isFinite()) return buildAF(builder, RealRange(min..max), 0.0, Double.POSITIVE_INFINITY, hashMapOf())
             val c = central * other.central
             val noise = abs(central) * other.r + abs(other.central) * r + radius * other.radius
             val nts = HashMap<Int, Double>()
@@ -534,7 +502,7 @@ class AffineForm(
                 fpArithmeticR += nts[it]!!.ulp
             }
 
-            return AffineForm(builder, this as Range * other as Range, c, noise+fpArithmeticR, nts)
+            return buildAF(builder, this as RealRange * other as RealRange, c, noise+fpArithmeticR, nts)
         }
     }
 
@@ -546,17 +514,15 @@ class AffineForm(
         nr += nr.ulp + nc.ulp + central.ulp
         val nts = HashMap(xi)
         for (i in xi.keys) {
-            val nval = xi[i]!! * alpha
-            nr += nval.ulp
+            val nval = math.mul(xi[i]!!, alpha, Rounding.AWAY)
             nts[i] = xi[i]!! * alpha
         }
-
-        var nMin = min * alpha + delta
-        nMin -= nMin.ulp
-        var nMax = max * alpha + delta
-        nMax += nMax.ulp
-        return AffineForm(builder, Range(min(nMin - noise, nMax - noise),
-            max(nMin + noise, nMax + noise)), nc, nr, nts)
+        val nMin = math.add(math.mul(min, alpha, Rounding.AWAY), delta, Rounding.AWAY)
+        val nMax = math.add(math.mul(max, alpha, Rounding.AWAY), delta, Rounding.AWAY)
+        return buildAF(builder, RealRange(
+            min(nMin - noise, nMax - noise),
+            max(nMin + noise, nMax + noise)
+        ), nc, nr, nts)
     }
 
     enum class GarbageVarMapping{
@@ -589,9 +555,7 @@ class AffineForm(
                 GarbageVarMapping.EXP -> GarbageVarMapping.roundingEXP
                 GarbageVarMapping.INV -> GarbageVarMapping.roundingINV
                 GarbageVarMapping.SQRT -> GarbageVarMapping.roundingSQRT
-                else -> {
-                    error("Missing rounding error type in affine(alpha, delta, noise, fu) function of AffineForm.kt")
-                }
+                else -> { error("Missing rounding error type in affine(alpha, delta, noise, fu) function of AffineForm.kt") }
             }
             val newRoundingKey = this.builder.noiseVars.newGarbageVar(roundingFU, AffineForm(this), builder.AFEmpty)
             nts[newRoundingKey] = rounding
@@ -600,12 +564,11 @@ class AffineForm(
             nts[builder.noiseVars.newGarbageVar()] = rounding
         }
 
-        var nMin = min * alpha + delta
-        nMin -= nMin.ulp
-        var nMax = max * alpha + delta
-        nMax += nMax.ulp
-        val result =  AffineForm(builder, Range(min(nMin - noise, nMax - noise),
-            max(nMin + noise, nMax + noise)), nc, nr, nts)
+        val nMin = math.add(math.mul(min, alpha, Rounding.AWAY), delta, Rounding.AWAY)
+        val nMax = math.add(math.mul(max, alpha, Rounding.AWAY), delta, Rounding.AWAY)
+        val result =  buildAF(builder, RealRange(
+            min(nMin - noise, nMax - noise), max(nMin + noise, nMax + noise)
+        ), nc, nr, nts)
         result.reduceNoiseSymbols()
         return result
     }
@@ -641,8 +604,10 @@ class AffineForm(
         nMin -= nMin.ulp
         var nMax = max * alpha + delta
         nMax += nMax.ulp
-        val result =  AffineForm(builder, Range(min(nMin - noise, nMax - noise),
-            max(nMin + noise, nMax + noise)), nc, nr, nts)
+        val result =  buildAF(builder, RealRange(
+            min(nMin - noise, nMax - noise),
+            max(nMin + noise, nMax + noise)
+        ), nc, nr, nts)
         result.reduceNoiseSymbols()
         return result
     }
@@ -687,8 +652,10 @@ class AffineForm(
         var nMax = max * alpha + delta
         nMax += nMax.ulp
 
-        val result = AffineForm(builder, Range(min(nMin - noise, nMax - noise),
-            max(nMin + noise, nMax + noise)), nc, nr, nts)
+        val result = buildAF(builder, RealRange(
+            min(nMin - noise, nMax - noise),
+            max(nMin + noise, nMax + noise)
+        ), nc, nr, nts)
         result.reduceNoiseSymbols()
         return result
     }
@@ -699,15 +666,15 @@ class AffineForm(
         return aux
     }
 
-    private fun addNonlinearNoise(errorType: GarbageVarMapping, err: Double, nts: HashMap<Int,Double>, other: AffineForm):HashMap<Int,Double> {
-        if (this.builder.config.roundingErrorMappingFlag){
-            val newGarbageKey = this.builder.noiseVars.newGarbageVar(errorType, this, other)
-            nts[newGarbageKey] = err
+    private fun addNonlinearNoise(errorType: GarbageVarMapping, err: Double, nts: HashMap<Int,Double>, other: AffineForm) {
+        if (this.builder.config.noiseSymbolsFlag) {
+            if (this.builder.config.roundingErrorMappingFlag) {
+                val newGarbageKey = this.builder.noiseVars.newGarbageVar(errorType, this, other)
+                nts[newGarbageKey] = err
+            } else {
+                nts[builder.noiseVars.newGarbageVar()] = err
+            }
         }
-        else {
-            nts[builder.noiseVars.newGarbageVar()] = err
-        }
-        return nts
     }
 
     private fun addOriginalFormsMapping(result: AffineForm, base1: Pair<AffineForm,AffineForm>){
@@ -789,7 +756,7 @@ class AffineForm(
         var r = abs(lb - ub) / 2.0
         r += r.ulp
         val xi: HashMap<Int, Double> = HashMap() // not being used
-        val result =  AffineForm(builder, lb .. ub, c, r, xi)
+        val result =  buildAF(builder, lb .. ub, c, r, xi)
         return result
     }
 
@@ -803,7 +770,7 @@ class AffineForm(
         r += r.ulp
         val xi: HashMap<Int, Double> = HashMap() // not being used
 
-        return AffineForm(builder, lb .. ub, c, r, xi)
+        return buildAF(builder, lb .. ub, c, r, xi)
     }
 
     /**
@@ -815,7 +782,7 @@ class AffineForm(
      * ceiling function for AFs, also converts to IntegerRange
      * @return IntegerRange
      */
-    fun ceiltoIntRange() : IntegerRange = IntegerRange(ceil(this.max).toLong())
+    fun ceilToIntRange() : IntegerRange = IntegerRange(ceil(this.max).toLong())
 
     /** Exponentiation */
     override fun exp(): AffineForm {
@@ -833,7 +800,7 @@ class AffineForm(
 
         if(builder.scheme==DDBuilder.ApproximationScheme.Chebyshev && max-min>0.000000001 ) {
             alpha = (fMax- fMin)/(max-min)
-            var touchingPoint = ln(alpha)
+            val touchingPoint = ln(alpha)
             delta = (fMin + alpha -  alpha * (min + touchingPoint)) / 2.0
             noise = abs((alpha - fMin - alpha * (touchingPoint-min )) / 2.0)
         }
@@ -842,27 +809,7 @@ class AffineForm(
             aux = affine(alpha, delta, noise, GarbageVarMapping.EXP)
             aux.reduceNoiseSymbols()
         }
-        //pythonVisualApprox(alpha,delta,noise,"np.exp(x)")
-        /*if (aux.min.compareTo(fMin) > 0) {
-            val d = aux.min - fMin
-            var e = d
-            // NOTE: PLOP uses central + d, but I think that's a typo/bug, as
-            // we decrease min, so it doesn't make sense to increase central.
-            if (this.builder.config.noiseSymbolsFlag){
-                addNonlinearNoise(aux, d)
-                e = 0.0
-            }
-            return AffineForm(builder, Range(fMin, aux.max), aux.central - d, aux.r + e, aux.xi)
-        } else if (aux.min.compareTo(0.0) < 0) {
-            val d = Double.MIN_VALUE - aux.min
-            var e = d
-            if (this.builder.config.noiseSymbolsFlag){
-                addNonlinearNoise(aux,d)
-                e = 0.0
-            }
-            return AffineForm(builder, Range(Double.MIN_VALUE, aux.max), aux.central + d, aux.r + e, aux.xi )
-        }*/
-        return AffineForm(builder, Range(fMin, fMax), aux.central , aux.r, aux.xi )
+        return buildAF(builder, RealRange(fMin, fMax), aux.central , aux.r, aux.xi )
     }
 
     /**
@@ -870,8 +817,8 @@ class AffineForm(
      */
     override fun pow(other : Double): AffineForm {
         when {
-            isZero()  -> return this
-            isOne()   -> return this 
+            isZero()  -> return this // 0^other = Zero
+            isOne()   -> return this  // 1^other = One
             isEmpty() -> return builder.AFEmpty
             isReals() -> return builder.AFReals
             other == 1.0 -> return this
@@ -904,7 +851,7 @@ class AffineForm(
                     //pythonVisualApprox(alpha,delta,noise,"np.power(x,$other)")
                     return if(builder.config.noiseSymbolsFlag){
                         affine(alpha, delta, noise, GarbageVarMapping.POW, AffineForm(builder, other))
-                    } else{
+                    } else {
                         affine(alpha, delta, noise)
                     }
 
@@ -928,7 +875,7 @@ class AffineForm(
             aux = affine(alpha, delta, noise, GarbageVarMapping.POW, AffineForm(builder, other))
         }
         //pythonVisualApprox(alpha,delta,noise,"np.power(x,$other)")
-        return AffineForm(builder, Range(iaMin,iaMax),aux.central,aux.r,aux.xi)
+        return buildAF(builder, RealRange(iaMin, iaMax), aux.central, aux.r, aux.xi)
     }
 
     /** Exponentiation */
@@ -999,7 +946,7 @@ class AffineForm(
                 res.xi[this.builder.noiseVars.newGarbageVar()] = e
                 e = 0.0
             }
-            res = AffineForm(builder, Range(iaMin,iaMax),res.central+ diffToMax/2,res.r+ e,res.xi)
+            res = buildAF(builder, RealRange(iaMin, iaMax),res.central+ diffToMax/2,res.r+ e,res.xi)
         }
         if(res.min>iaMin){
             val diffToMin= res.min-iaMin
@@ -1008,9 +955,9 @@ class AffineForm(
                 res.xi[this.builder.noiseVars.newGarbageVar()] = e
                 e = 0.0
             }
-            return AffineForm(builder, Range(iaMin,iaMax),res.central- diffToMin/2,res.r+ e,res.xi)
+            return buildAF(builder, RealRange(iaMin, iaMax),res.central- diffToMin/2,res.r+ e,res.xi)
         }
-        return AffineForm(builder, Range(iaMin,iaMax),res.central,res.r,res.xi)
+        return buildAF(builder, RealRange(iaMin, iaMax),res.central,res.r,res.xi)
     }
 
     /**
@@ -1025,7 +972,7 @@ class AffineForm(
         ub += ub.ulp
         r += r.ulp
         val xi: HashMap<Int, Double> = HashMap() // not being used
-        return AffineForm(builder, lb..ub, c, r, xi)
+        return buildAF(builder, lb..ub, c, r, xi)
     }
 
     override fun invFloor() : AffineForm {
@@ -1038,7 +985,7 @@ class AffineForm(
         r += r.ulp
         val xi: HashMap<Int, Double> = HashMap() // not being used
 
-        return AffineForm(builder, lb..ub, c, r, xi)
+        return buildAF(builder, lb..ub, c, r, xi)
     }
 
     /**
@@ -1087,12 +1034,10 @@ class AffineForm(
         }
         noise += (noise.ulp + alpha.ulp + delta.ulp) + (u+l).ulp + (u-l).ulp
 
-        val af: AffineForm
-        if (this.builder.config.noiseSymbolsFlag){
-            af = affine(alpha, delta, max(0.0, noise), GarbageVarMapping.SQRT)
-        }
-        else {
-            af = affine(alpha, delta, max(0.0, noise))
+        val af: AffineForm = if (this.builder.config.noiseSymbolsFlag){
+            affine(alpha, delta, max(0.0, noise), GarbageVarMapping.SQRT)
+        } else {
+            affine(alpha, delta, max(0.0, noise))
         }
         //pythonVisualApprox(alpha,delta,noise,"np.sqrt(x)")
 
@@ -1112,7 +1057,7 @@ class AffineForm(
       * sqrt-Root as a piece-wise approximated AADD
       * @param extraUncertainty maximal overapproximation in the individual intervals. Default: 1
       * @return the AADD with the piece-wise approximation from the 'this' AffineForm
-      * TODO piecwise stuff
+      * TODO piecewise stuff
       */
 
      fun sqrt(extraUncertainty: Double = 1.0, extraIntervals: Int = -1): AADD {
@@ -1162,45 +1107,10 @@ class AffineForm(
             af = affine(alpha, delta, noise, GarbageVarMapping.LOG)
             af.reduceNoiseSymbols()
         }
-        af.min = l - l.ulp
-        af.max = u + l.ulp
-
-        //pythonVisualApprox(alpha,delta,noise,"np.log(x)")
-        return af
-    }
-
-    /**
-     * logarithm of a number using a specified base
-     */
-    fun log(base : Double): AffineForm {
-        when {
-            isEmpty() -> return builder.AFEmpty
-            isReals() -> return builder.AFReals
-            // isScalar() -> return AffineForm(builder, ln(min).plusMinusUlp())
-            min <= 0.0 && max.isFinite()
-                      -> return AffineForm(builder, Double.NEGATIVE_INFINITY.. (ln(max / ln(base)).plusUlp()))
-        }
-        val l = (ln(min) / ln(base)).minusUlp()
-        val u = (ln(max) / ln(base)).plusUlp()
-        // It prevents however the division by 0 or near-0.
-        // use min range approximation for small intervals
-        val alpha = if ((max-min) < 0.00001 || builder.scheme==DDBuilder.ApproximationScheme.MinRange){
-            1/(max*ln(base))
-        } else {(u - l) / (max - min)}
-        val touchingPoint = 1 / (alpha *ln(base))
-        val ys = (touchingPoint - min) * alpha + l
-        val logxs = ln(touchingPoint)/ln(base)
-        val delta = if ((max-min) < 0.00001|| builder.scheme==DDBuilder.ApproximationScheme.MinRange)
-            (ln(min*max)-min/max-1)/2
-        else(logxs + l-alpha*(min+touchingPoint)) / 2
-        val noise = if ((max-min) < 0.00001|| builder.scheme==DDBuilder.ApproximationScheme.MinRange)
-            (abs(ln(max/min)+min/max-1)/2).plusUlp()
-        else
-            (abs(logxs - l - alpha * (touchingPoint - min)  ) / 2).plusUlp()
-        val af =  affine(alpha, delta, noise)
         af.min = l
         af.max = u
-        //pythonVisualApprox(alpha,delta,noise,"np.log(x)/np.log($base)")
+
+        //pythonVisualApprox(alpha,delta,noise,"np.log(x)")
         return af
     }
 
@@ -1218,7 +1128,7 @@ class AffineForm(
     override fun inv(): AffineForm {
         when {
             isEmpty() -> return builder.AFEmpty
-            maxIsInf && minIsInf -> return builder.AFReals
+            max.isInfinite() && min.isInfinite() -> return builder.AFReals
             isScalar() -> return if (central == 0.0) builder.AFEmpty
                 else AffineForm(builder, (1/central).minusUlp() .. (1/central).plusUlp())
             min == 0.0 -> return AffineForm(builder, (1/max).minusUlp(), Double.POSITIVE_INFINITY)
@@ -1252,10 +1162,8 @@ class AffineForm(
             Pair(true,true)->{
                 val base1 = this.builder.noiseVars.newOriginalForm(AffineForm(this), AffineForm(this), builder.AFEmpty)
                 af = affine(alpha, delta, max(0.0, noise), GarbageVarMapping.INV, base1)
-                af.min = min(1.0/max, 1/min)  //* min and max must be adapted before result is mapped to its original form */
-                af.min -= 2.0 * af.min.ulp
-                af.max = max(1.0/max, 1/min)
-                af.max += 2.0 * af.max.ulp
+                af.min = min(1.0/max, 1/min).minusUlp().minusUlp()
+                af.max = max(1.0/max, 1/min).plusUlp().plusUlp()
                 addOriginalFormsMapping(af,base1)
                 af.reduceNoiseSymbols()
                 return af
@@ -1267,168 +1175,12 @@ class AffineForm(
                 af = affine(alpha, delta, max(0.0, noise))
             }
         }
-        af.min = min(1.0/max, 1/min)
-        af.min -= 2.0 * af.min.ulp
-        af.max = max(1.0/max, 1/min)
-        af.max += 2.0 * af.max.ulp
+        af.min = min(1.0/max, 1/min).minusUlp().minusUlp()
+        af.max = max(1.0/max, 1/min).plusUlp().plusUlp()
 
         af.reduceNoiseSymbols()
         return af
     }
-
-    /**
-     * absolute value define with abs(x)=if(x<0) return -x
-     * taking the longes subinterval if 0.0 is contained and restraining the min max values
-     */
-    fun abs(): AffineForm{
-        // in that cause the interval can only be reduced and the longest overlapping of corralation be used
-        if(contains(0.0)){
-            val highValue= max(max,-min)
-            val res : AffineForm
-            val neg = this * -1.0
-            res = if (central<0.0) AffineForm(builder, 0.0 .. highValue, neg.central, neg.r, neg.xi)
-            else AffineForm(builder, 0.0 .. highValue, central,r,xi)
-
-            return res
-        }else{
-            return if (min>0) this
-            else this * -1.0
-        }
-    }
-
-    /**
-     * computation of sin on the interval on this
-     * If the range does not include an extrema the best linear function close to
-     * 9 equal distant sample on sin is computed with the least square method and scaled with the affine method
-     */
-    fun sin():AffineForm{
-        when {
-            isEmpty()  -> return builder.AFEmpty
-            isReals()  -> return AffineForm(builder, -1.0 .. 1.0)
-            isScalar() -> return AffineForm(builder, sin(central).plusMinusUlp())
-        }
-        // ruling out some interval width that makes linear approximation uncorrelated to the actual direvation
-        if (max - min > PI - 0.2)
-            return AffineForm(builder,  Range(-1.0 .. 1.0), 0.0, 1.0, HashMap())
-        val periodeK = floor(max / (2 * PI))
-        // is the interval on the monotone rising part of sin (considered the periodicty ) or on the monotone falling part?
-        if (min - periodeK * 2 * PI > -PI / 2-10.0.pow(-6)  && max - periodeK * 2 * PI < PI / 2 +10.0.pow(-6) || min - periodeK * 2 * PI > PI / 2-10.0.pow(-6)  && max - periodeK * 2 * PI < 3 * PI / 2 + 10.0.pow(-6) ) {
-            val numSamples = 9
-            //val f0 = DoubleArray(numSamples) { _ -> 1.0 }
-            val f1 = DoubleArray(numSamples) { i -> min + i * (max - min) / (numSamples - 1) }
-            var sumF1 = 0.0
-            var squareSumF1 = 0.0
-            //val f = arrayOf(f0, f1)
-            val y = DoubleArray(numSamples) { i -> sin(f1[i]) }
-            var sumY = 0.0
-            var sumXY = 0.0
-            for (i in f1.indices) {
-                // F.transpose*F
-                sumF1 += f1[i]
-                squareSumF1 += f1[i] * f1[i]
-                //F.transpose*y
-                sumY += y[i]
-                sumXY += f1[i] * y[i]
-            }
-
-            val FtxF0 = DoubleArray(2)
-            val FtxF1 = DoubleArray(2)
-            val FtxF = arrayOf(FtxF0, FtxF1)
-            FtxF[0][0] = numSamples * 1.0
-            FtxF[0][1] = sumF1
-            FtxF[1][0] = sumF1
-            FtxF[1][1] = squareSumF1
-            val det = 1 / (FtxF[0][0] * FtxF[1][1] - FtxF[0][1] * FtxF[1][0])
-            val inverse0 = DoubleArray(2)
-            val inverse1 = DoubleArray(2)
-            val inverse = arrayOf(inverse0, inverse1)
-            inverse[0][0] = det * FtxF[1][1]
-            inverse[0][1] = -det * FtxF[0][1]
-            inverse[1][0] = -det * FtxF[1][0]
-            inverse[1][1] = det * FtxF[0][0]
-            // should be the approximation of alpha*x+delta
-            val delta = inverse[0][0] * sumY + inverse[0][1] * sumXY
-            val alpha = inverse[1][0] * sumY + inverse[1][1] * sumXY
-
-            val caseLessPIHalv = min - periodeK * 2 * PI > -PI / 2-10.0.pow(-6)  && max - periodeK * 2 * PI < PI / 2 +10.0.pow(-6)
-            val maxValue = if(caseLessPIHalv)
-                if(max>PI/2.0) PI/2.0
-                else max
-            else if (min<PI/2.0) PI/2.0
-            else min
-            val minValue = if(caseLessPIHalv)
-                if(min<-PI/2.0) -PI/2.0
-                else min
-            else if(max>3*PI/2.0) 3*PI/2.0
-            else max
-            val noiseMax = max(0.0, (sin(maxValue) - (alpha * maxValue + delta)))
-            val noiseMin = max(0.0, ((alpha * minValue + delta) - sin(minValue)))
-            val noise = max(noiseMax, noiseMin)
-            //println("max: " + maxValue+" "+ max + " sin(max): " + sin(maxValue) + " approx(max): " + (alpha * maxValue + delta) + "+ noise: " + noise)
-            //println("min: " + minValue+" "+ min + " sin(min): " + sin(minValue) + " approx(min): " + (alpha * minValue + delta) + "- noise: " + noise)
-            val res = affine(alpha, delta, noise)
-
-            return AffineForm(builder,  Range(min(sin(min),sin(max)),max(sin(min),sin(max))), res.central, res.r, res.xi)
-        } else return AffineForm(builder,  Range(-1.0 .. 1.0), 0.0, 1.0, HashMap())
-
-    }
-
-    fun cos(): AffineForm {
-        return this.plus(PI/2.0).sin()
-    }
-
-    /**
-     * Strictly monotonous growing, -1 .. 1 -> -PI/2 .. +PI/2
-     */
-    fun arcsin(): AffineForm {
-        when {
-            isEmpty() -> return builder.AFEmpty
-            isReals() -> return AffineForm(builder, asin(-1.0).minusUlp() .. asin(1.0).plusUlp())
-            isScalar() -> return AffineForm(builder, asin(central).plusMinusUlp())
-        }
-        val lb = max(min, -1.0)
-        val ub = min(max, 1.0)
-
-        val f = Range(asin(min), asin(max))
-        /** Use the first four terms of the Taylor series of arcsin to approximate the function*/
-        val alpha1 = 1 + central.pow(2.0).times(1.0/6.0) + central.pow(4.0).times(3.0/40.0) + central.pow(6.0).times(15.0/336.0)
-        val alpha2 = 1 + lb.pow(2.0).times(1.0/6.0) + lb.pow(4.0).times(3.0/40.0) + lb.pow(6.0).times(15.0/336.0)
-        val alpha3 = 1 + ub.pow(2.0).times(1.0/6.0) + ub.pow(4.0).times(3.0/40.0) + ub.pow(6.0).times(15.0/336.0)
-
-        /** Choose the largest alpha to avoid under-approximation*/
-        val alpha = max(max(alpha1,alpha2),alpha3)
-
-        val noiseMax = max(0.0, (asin(ub)- ub * alpha))
-        val noiseMin = max(0.0, (min * alpha - asin(min)))
-        val noise = max(noiseMax, noiseMin)
-
-        val res = affine(alpha, 0.0, noise)
-
-        return AffineForm(builder,  Range(min(asin(lb),asin(ub)),max(asin(lb),asin(ub))), res.central, res.r, res.xi)
-    }
-
-    /**
-     * arccos implementation; strictly monotonous falling, -1..1 -> 0 .. PI
-     */
-    fun arccos(): AffineForm = -(this.arcsin().minus(PI/2.0)) /* arccos(x) = PI/2 - arcsin(x) */
-
-    /**
-     * Comparison of affine forms:
-     *  - We compare the range of this and other.
-     *  - If this is for sure larger that the other, we return 1,
-     *  - If the other is for sure larger that this, we return -1,
-     *  - else we return 0.
-     *
-     *  Note that this comparison is uncertain for the result 0 as a a more
-     *  accurate result might turn 0 to -1 or 1 by solving constraint systems.
-     *  @param other, the affine form with which we compare this
-     *  @return 1 if this > other, -1 if this < other, 0 else.
-     */
-    operator fun compareTo(other: AffineForm) = when {
-            (this.min > other.max)  -> 1
-            (other.min < this.max)  -> -1
-            else  -> 0
-        }
 
 
     /**
@@ -1443,11 +1195,71 @@ class AffineForm(
         }
         return str
     }
-}
 
-/** extension functions by Jack */
-fun ceil(input : AffineForm) : AffineForm = input.ceil()
-fun floor(input : AffineForm) : AffineForm = input.floor()
-fun log(base : Double, arg : AffineForm) : AffineForm = arg.log(base)
-fun pow(base : AffineForm, exp : Double) : AffineForm = base.pow(exp)
-fun pow(base : AffineForm, exp : AffineForm) : AffineForm = base.pow(exp)
+    companion object {
+        val math: RoundingMath = IEEE754RoundingMath
+
+        /**
+         * Builds an (extended) Affine Form with canonical representation of special cases.
+         * Parameters are the states of an Affine Form.
+         * @param builder the builder
+         * @param range closed range for the IA part
+         * @param central central value of the AA part
+         * @param r IA noise term of the Affine Form
+         * @param xi Hashmap with the noise variables (index to Double)
+         */
+        fun buildAF(
+            builder: DDBuilder,
+            range: ClosedRange<Double> = -Double.MAX_VALUE .. Double.MAX_VALUE,
+            central: Double,
+            r: Double,
+            xi: HashMap<Int, Double> = HashMap(300, 0.75F)
+        ): AffineForm {
+            var newCentral: Double = central
+            var newR: Double = r
+            var newMax = range.endInclusive
+            var newMin = range.start
+
+            // Compute radius to check for problems later
+            var radius = 0.0
+            xi.forEach {
+                radius = math.add(abs(it.value), radius, Rounding.UP)
+            }
+            radius = math.add(newR, radius, Rounding.UP)
+
+            // Ensure some invariants and canonical representation for special cases
+            when {
+                // for NaN or any other input for which no reasonable processing is possible,
+                // we set the result to Reals including +/- Infinity.
+                central.isNaN() || r.isNaN() || radius.isNaN() -> {
+                    xi.clear()
+                    newCentral = Double.NaN
+                    newR = Double.POSITIVE_INFINITY
+                }
+
+                // for Infinite radius, use interval arithmetic and drop noise symbols xi.
+                radius.isInfinite() -> {
+                    xi.clear()
+                    newCentral = Double.NaN
+                    newR = Double.POSITIVE_INFINITY
+                }
+
+                // Something is really wrong; possibly a bug in code, if negative r is requested
+                r < 0 -> throw DDInternalError("Constructor of AffineForm called with negative r; r must be > 0")
+            }
+
+            // Update min and max to the best approximation of IA and AA
+            if (xi.isNotEmpty()) {
+                newMin = max(range.start, math.sub(central, radius, Rounding.DOWN))
+                newMax = min(range.endInclusive, math.add(central, radius, Rounding.UP))
+            }
+
+            // Bring scalars into canonical representation
+            if (range.start == range.endInclusive) {
+                newCentral = range.start
+                xi.clear()
+            }
+            return AffineForm(builder, newMin, newMax, newCentral, newR, xi)
+        }
+    }
+}

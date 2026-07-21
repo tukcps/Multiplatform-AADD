@@ -1,6 +1,6 @@
-package values
+package values.real
 
-import io.github.tukcps.aadd.values.Range
+import io.github.tukcps.aadd.values.real.RealRange
 import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlin.test.assertEquals
@@ -9,13 +9,13 @@ import kotlin.math.max
 import kotlin.math.min
 
 
-class RangeTest {
-    val a = Range(-1.0, 2.0)
-    val b = Range(2.0, 3.0)
+class RealRangeTest {
+    val a = RealRange(-1.0, 2.0)
+    val b = RealRange(2.0, 3.0)
 
     /** A real is the range +-MAX_VALUE. It is identified by isReal() */
     @Test fun realTest() {
-        val real = Range(Range.Reals)
+        val real = RealRange(RealRange.Reals)
         assertEquals(Double.NEGATIVE_INFINITY, real.min)
         assertEquals(Double.POSITIVE_INFINITY, real.max)
         assertTrue(real.isReals())

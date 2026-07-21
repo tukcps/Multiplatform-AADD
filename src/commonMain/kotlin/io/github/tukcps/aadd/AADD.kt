@@ -6,10 +6,10 @@ import io.github.tukcps.aadd.DD.Companion.LEAF_INDEX
 import io.github.tukcps.aadd.lpsolver.*
 import io.github.tukcps.aadd.DD.Status
 import io.github.tukcps.aadd.functions.intersect
-import io.github.tukcps.aadd.values.AffineForm
-import io.github.tukcps.aadd.values.IntegerRange
+import io.github.tukcps.aadd.values.real.AffineForm
+import io.github.tukcps.aadd.values.integer.IntegerRange
 import io.github.tukcps.aadd.values.NumberRange
-import io.github.tukcps.aadd.values.Range
+import io.github.tukcps.aadd.values.real.RealRange
 import io.github.tukcps.aadd.functions.constrainTo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -18,7 +18,12 @@ import kotlinx.coroutines.withContext
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
-import io.github.tukcps.aadd.pwl.relu
+import io.github.tukcps.aadd.values.BoundKind
+import io.github.tukcps.aadd.values.real.arccos
+import io.github.tukcps.aadd.values.real.arcsin
+import io.github.tukcps.aadd.values.real.cos
+import io.github.tukcps.aadd.values.real.log
+import io.github.tukcps.aadd.values.real.sin
 
 typealias Real = AADD
 typealias Integer = IDD
@@ -37,20 +42,22 @@ typealias Bool = BDD
 sealed class AADD: DD<AffineForm>, NumberRange<Double> {
 
     final override val min: Double get() =  when(this) {
-        is Leaf -> value.min
+        is Leaf -> max(value.min, solverMin)
         is Internal -> min(T.min, F.min)
     }
 
     final override val max: Double get() = when(this) {
-        is Leaf -> value.max
+        is Leaf -> min(value.max, solverMax)
         is Internal -> max(T.max, F.max)
     }
 
     final override fun isZero(): Boolean = this.min == 0.0 && this.max == 0.0
     final override fun isOne(): Boolean = this.min == 1.0 && this.max == 1.0
 
-    override val minIsInf: Boolean get() = min.isInfinite()
-    override val maxIsInf: Boolean get() = max.isInfinite()
+    val minIsInf: Boolean get() = min.isInfinite()
+    val maxIsInf: Boolean get() = max.isInfinite()
+    override val minKind: BoundKind get() = getRange().minKind
+    override val maxKind: BoundKind get() = getRange().maxKind
 
     /**
      * An internal node that has an index, a true-, and a false edge that lead to an AADD each.
@@ -75,29 +82,19 @@ sealed class AADD: DD<AffineForm>, NumberRange<Double> {
     class Leaf(
         override var builder: DDBuilder,
         override val value: AffineForm,
-        override var status: Status = Status.NotSolved
+        override var status: Status = Status.NotSolved,
+        var solverMin: Double = Double.NEGATIVE_INFINITY,
+        var solverMax: Double = Double.POSITIVE_INFINITY
     ) : AADD(), DD.Leaf<AffineForm> {
         override val index: Int get() = LEAF_INDEX
-
         val central get() = value.central
         val r get() = value.r
         val radius get()= value.radius
-
         override fun contains(value: Double) = this.value.contains(value)
     }
 
-    override fun copy(min: Double?, max: Double?): AADD = when(this) {
-        is Leaf -> {
-            if (min == null || max == null || min <= max)
-                builder.leaf(value.copy(min, max))
-            else
-                builder.Empty
-        }
-        is Internal -> builder.internal(index, T.copy(min, max), F.copy(min, max))
-    }
-
-    fun copy(min: Double?, max: Double?, r: Double?): AADD = when(this) {
-        is Leaf -> builder.leaf(value.copy(min, max).also { value.r = r?:value.r })
+    fun copy(min: Double?, max: Double?, r: Double? = null): AADD = when(this) {
+        is Leaf -> builder.leaf(value.copy(min, max, r?:value.r))
         is Internal -> builder.internal(index, T.copy(min, max), F.copy(min, max))
     }
 
@@ -105,12 +102,6 @@ sealed class AADD: DD<AffineForm>, NumberRange<Double> {
     override fun clone(): AADD = when(this) {
         is Internal -> builder.internal(index, T.clone(), F.clone())
         is Leaf ->  builder.leaf(value.clone(), status)
-    }
-
-
-    fun relu(split_threshold : Double = 0.1) : AADD = when(this){
-        is Internal -> builder.internal(index,T.relu(),F.relu())
-        is Leaf -> relu(value,builder,split_threshold)
     }
 
     /** Method that returns a brief String representation of the NumberRange interface */
@@ -136,7 +127,7 @@ sealed class AADD: DD<AffineForm>, NumberRange<Double> {
      * @param function operator to be applied on this AADD, returning the result. This remains unchanged.
      * @return result of operation.
      */
-    private fun apply(function: (Leaf) -> AADD): AADD = when(this) {
+    fun apply(function: (Leaf) -> AADD): AADD = when(this) {
         is Leaf -> if (isInfeasible) builder.Infeasible else function(this)
         is Internal -> builder.internal(index, T.apply(function), F.apply(function))
     }
@@ -148,7 +139,7 @@ sealed class AADD: DD<AffineForm>, NumberRange<Double> {
     override fun log(): AADD = this.apply  { x: Leaf -> builder.leaf(x.value.log()) }
     override fun log(other: NumberRange<Double>): AADD = this.apply  { x: Leaf -> builder.leaf(x.value.log(other)) }
     /** piece-wise linear definition of abs() over all nodes */
-    fun abs(): AADD = this.apply { x:Leaf-> x.lessThan(0.0).ite(x * -1.0,x) }
+    fun abs(): AADD = this.apply { x:Leaf-> x.lessThan(0.0).ite(-x, x) }
     fun ceil() : AADD = this.apply { x : Leaf -> builder.leaf(x.value.ceil()) }
     fun invCeil() : AADD = this.apply { x : Leaf -> builder.leaf(x.value.invCeil()) }
     fun floor() : AADD = this.apply { x : Leaf -> builder.leaf(x.value.floor()) }
@@ -260,14 +251,14 @@ sealed class AADD: DD<AffineForm>, NumberRange<Double> {
     infix fun intersect(other: ClosedRange<Double>): AADD {
         getRange()
         return this.apply(builder.leaf(AffineForm(builder, other))) { a: Leaf, b: ClosedRange<Double> ->
-            constrainTo(a, Range(b))
+            constrainTo(a, RealRange(b))
         }
     }
 
     override infix fun intersect(other: NumberRange<Double>): AADD {
         getRange()
         return this.apply(builder.leaf(AffineForm(builder, other))) { a: Leaf, b: NumberRange<Double> ->
-            constrainTo(a, Range(b))
+            constrainTo(a, RealRange(b))
         }
     }
 
@@ -275,7 +266,7 @@ sealed class AADD: DD<AffineForm>, NumberRange<Double> {
     infix fun constrainTo(other: NumberRange<Double>): AADD  {
         getRange()
         val result = this.apply(other) {
-            a: Leaf, b: NumberRange<Double> -> constrainTo(a, Range(b))
+            a: Leaf, b: NumberRange<Double> -> constrainTo(a, RealRange(b))
         }
         return result
     }
@@ -329,7 +320,6 @@ sealed class AADD: DD<AffineForm>, NumberRange<Double> {
      * Calculates nth square root
      */
     fun sqrt(exp : AffineForm): AADD = this.apply { x: Leaf -> builder.leaf(x.value.root(exp)) }
-    override fun root(other: NumberRange<Double>) = this.apply { x: Leaf -> builder.leaf(x.value.root(builder.real(other))) }
     fun root(other: AADD): AADD = this.apply(other) { x: Leaf, y: Leaf -> builder.leaf(x.value.root(y.value)) }
 
     /** Logarithm for non-e base */
@@ -353,7 +343,7 @@ sealed class AADD: DD<AffineForm>, NumberRange<Double> {
      * ceiling function for AADDs, also converts to IntegerRange
      * @return IntegerRange
      */
-    open fun ceiltoIntRange() : IntegerRange = IntegerRange(kotlin.math.ceil(getRange().min).toLong(), kotlin.math.ceil(getRange().max).toLong())
+    open fun ceilToIntRange() : IntegerRange = IntegerRange(kotlin.math.ceil(getRange().min).toLong(), kotlin.math.ceil(getRange().max).toLong())
 
     /** floor function for AADDs */
     open fun floorAsLong() : Long  = kotlin.math.floor(this.getRange().min).toLong()
@@ -441,9 +431,7 @@ sealed class AADD: DD<AffineForm>, NumberRange<Double> {
         TODO("Not yet implemented")
     }
 
-
     override fun sqr(): NumberRange<Double> = times(this)
-
 
     /**
      * This method computes the Range of an AADD considering
@@ -454,14 +442,12 @@ sealed class AADD: DD<AffineForm>, NumberRange<Double> {
      *  all leaves, but also keeps the min/max values in each leaf and sets the status of the leaf.
      *  This is done recursively and in a concurrent way by calling the function computeBounds.
      */
-    fun getRange(): Range {
+    fun getRange(): RealRange {
         val height = height()
         val indexes = IntArray(height)
         val signs = BooleanArray(height)
-        val r = runBlocking {
-            computeBounds(indexes, signs, 0)
-        }
-        return r
+        runBlocking { computeBounds(indexes, signs, 0) }
+        return RealRange(min, max)
     }
 
     /**
@@ -470,22 +456,22 @@ sealed class AADD: DD<AffineForm>, NumberRange<Double> {
      * For each leaf, it calls callLPSolver to compute bounds.
      * The method is called by getRange.
      */
-    private suspend fun computeBounds(indexes: IntArray, ge: BooleanArray, len: Int): Range {
+    private suspend fun computeBounds(indexes: IntArray, ge: BooleanArray, len: Int): RealRange {
         when (this) {
             is Leaf -> {
-                if (value.isEmpty()) return Range.Empty
+                if (value.isEmpty()) return RealRange.Empty
                 if (value.isFinite()
                     && indexes.isNotEmpty()
                     && value.radius > builder.config.lpCallTh
                     && status == Status.NotSolved
                 )
                     callLPSolver(indexes, ge, len)
-                return if (value.isEmpty()) Range.Empty
-                else Range(value)
+                return if (value.isEmpty()) RealRange.Empty
+                else RealRange(value)
             }
             is Internal -> {
                 if (!isBoolCond()) {
-                    var result: Range = Range.Empty
+                    var result: RealRange = RealRange.Empty
                     indexes[len] = index
                     withContext(Dispatchers.Default) {
                         val resT = async {
@@ -504,7 +490,6 @@ sealed class AADD: DD<AffineForm>, NumberRange<Double> {
             }
         }
     }
-
 
     private fun callLPSolver(indexes: IntArray, ge: BooleanArray,len: Int){
         require(len>=0){"len of arrays must be >=1"}
@@ -529,9 +514,9 @@ sealed class AADD: DD<AffineForm>, NumberRange<Double> {
         }
 
         /* Create noise symbol constraints -1 <= epsilon <= 1*/
-        for(variable in variables) {
-            val upperNoiseConstraint = LpConstraint(LpExpression(mapOf(variable.value to 1.0)), LpConstraintSign.LESS_OR_EQUAL ,1.0 ) // x <= 1.0
-            val lowerNoiseConstraint = LpConstraint(LpExpression(mapOf(variable.value to 1.0)), LpConstraintSign.GREATER_OR_EQUAL , -1.0 )// x >= -1.0
+        for((_, variable) in variables) {
+            val upperNoiseConstraint = LpConstraint(LpExpression(mapOf(variable to 1.0)), LpConstraintSign.LESS_OR_EQUAL ,1.0 ) // x <= 1.0
+            val lowerNoiseConstraint = LpConstraint(LpExpression(mapOf(variable to 1.0)), LpConstraintSign.GREATER_OR_EQUAL , -1.0 )// x >= -1.0
             constraints.add(upperNoiseConstraint)
             constraints.add(lowerNoiseConstraint)
         }
@@ -540,9 +525,8 @@ sealed class AADD: DD<AffineForm>, NumberRange<Double> {
         for(i in 0 until len) {
             val condition = builder.conds.getConstraint(indexes[i])!!
             val coefficientVarMap = mutableMapOf<LpVariable,Double>()
-            for(symbol in condition.value.xi) {
-                val symbolKey = symbol.key
-                coefficientVarMap[variables[symbolKey]!!] = symbol.value
+            for((symbolKey, value1) in condition.value.xi) {
+                coefficientVarMap[variables[symbolKey]!!] = value1
             }
             // Case none inverted
             if(ge[i]) {
@@ -558,9 +542,8 @@ sealed class AADD: DD<AffineForm>, NumberRange<Double> {
 
         /* Create the optimization function which is the leaf on which this function is called */
         val coefficientVarMap = mutableMapOf<LpVariable,Double>() // Map of the LpVariable object to its coefficient in the leaf affine form
-        for(symbol in value.xi) {
-            val symbolKey = symbol.key
-            coefficientVarMap[variables[symbolKey]!!] = symbol.value
+        for((symbolKey, value1) in value.xi) {
+            coefficientVarMap[variables[symbolKey]!!] = value1
         }
 
         val optfMaximize = LpFunction(LpExpression(coefficientVarMap,value.central+value.r),LpFunctionOptimization.MAXIMIZE)
@@ -582,25 +565,25 @@ sealed class AADD: DD<AffineForm>, NumberRange<Double> {
             if(minSolution == Unbounded) throw UnboundedException()
 
             status = Status.Feasible
-            value.max = min(value.max, (maxSolution as Solved).functionValue)
+            solverMax = min(value.max, (maxSolution as Solved).functionValue)
 
 
             // TODO fix this crappy lp solver and its min objective function issue
             //value.min = (minSolution as Solved).functionValue
             var computedMinSolution = value.central - value.r
 
-            for(symbolValue in (minSolution as Solved).variablesValues) {
-                if(value.xi.contains(symbolValue.key.name.toInt())) {
-                    computedMinSolution += value.xi[symbolValue.key.name.toInt()]!! * symbolValue.value
+            for((key, value1) in (minSolution as Solved).variablesValues) {
+                if(value.xi.contains(key.name.toInt())) {
+                    computedMinSolution += value.xi[key.name.toInt()]!! * value1
                 }
             }
-            value.min = max(value.min, computedMinSolution)
+            solverMin = max(value.min, computedMinSolution)
             // TODO end
 
         } catch(e:NoSolutionException) {
             status = Status.Infeasible
-            value.max = builder.AFEmpty.max
-            value.min = builder.AFEmpty.min
+            solverMax = builder.AFEmpty.max
+            solverMin = builder.AFEmpty.min
         } catch(e:UnboundedException){
             throw RuntimeException("AADD-Error: unbounded solution; maybe numerical issue in Simplex. Check Simplex cutoff & other params.")
         }
@@ -637,7 +620,7 @@ sealed class AADD: DD<AffineForm>, NumberRange<Double> {
                         if (value.max < 0.0) return builder.True
                     }
                 }
-                return if (op === ">=" || op === ">") builder.internal(
+                return if (op == ">=" || op == ">") builder.internal(
                     builder.conds.newConstraint(value),
                     builder.True,
                     builder.False
@@ -684,14 +667,6 @@ sealed class AADD: DD<AffineForm>, NumberRange<Double> {
      * Do Not Delete this function its required to utilise the super toIteFunction as the native objects don't know
      * the super functions!
      * */
-    override fun toIteString() : String {return super.toIteString()}
-
+    @Suppress("RedundantOverride")
+    override fun toIteString() : String { return super.toIteString() }
 }
-
-
-/** Overloaded contains operation for allowing "AADD in range" notation */
-operator fun ClosedFloatingPointRange<Double>.contains(other: AADD): Boolean =
-    when (other) {
-        is AADD.Leaf       -> other.max <= endInclusive && other.min >= start
-        is AADD.Internal   -> this.contains(other.T) || this.contains(other.F)
-    }

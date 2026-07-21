@@ -1,12 +1,12 @@
 package values
 
 import io.github.tukcps.aadd.DDBuilder
-import io.github.tukcps.aadd.values.AffineForm
+import io.github.tukcps.aadd.values.real.AffineForm
 import kotlin.test.*
 import kotlin.math.exp
 import kotlin.math.ln
 import kotlin.math.sqrt
-import io.github.tukcps.aadd.values.log
+import io.github.tukcps.aadd.values.real.log
 
 
 class AffineFormFunctionsTestWithOriginalForms {

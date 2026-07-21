@@ -6,11 +6,16 @@ import io.github.tukcps.aadd.DD.Companion.LEAF_INDEX
 import io.github.tukcps.aadd.values.XBool
 
 /**
- * The class BDD implements an ROBDD that models the interaction between discrete
- * and continuous variables.
- * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- * !!! IT IS NOT INTENDED TO BE USED AS A HIGH-PERFORMANCE BDD LIBRARY !!!
- * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ *
+ * ## BDD_A
+ *
+ * The class BDD implements an ROBDD that specifically models the interaction
+ * between discrete and continuous variables.
+ *
+ * ---
+ *      IT IS NOT INTENDED TO BE USED AS A HIGH-PERFORMANCE BDD LIBRARY
+ * ---
+ *
  * It is derived from the superclass DD that is used for BDD, IDD, AADD, StrDD.
  * BDD is a sealed abstract class and has two internal concrete classes:
  * - BDD.Internal

@@ -1,8 +1,10 @@
 package aaddtests
 
 import io.github.tukcps.aadd.*
-import io.github.tukcps.aadd.values.AffineForm
-import io.github.tukcps.aadd.values.Range
+import io.github.tukcps.aadd.functions.contains
+import io.github.tukcps.aadd.values.real.AffineForm
+import io.github.tukcps.aadd.values.real.AffineForm.Companion.buildAF
+import io.github.tukcps.aadd.values.real.RealRange
 import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlin.test.assertEquals
@@ -20,7 +22,7 @@ class AADDIntersectTestsWithOriginalForms {
         with(builder){
             this.config.originalFormsFlag = true
             val a = real(1.0 .. 3.0)
-            val b = a.constrainTo(Range(1.2 .. 2.2))
+            val b = a.constrainTo(RealRange(1.2 .. 2.2))
             // println("a=$a intersect [1.2, 2.2] as AADD is: $b")
             // println("a's range computed by LP solver is: " + b)  // getRange calls the LP solver.
             assertEquals(1.2, b.getRange().min, 0.001)
@@ -36,7 +38,7 @@ class AADDIntersectTestsWithOriginalForms {
             this.config.originalFormsFlag = true
             // println("=== Testing: Intersection of AADD with wider interval (min, max) ===")
             val a = real(1.0 .. 3.0)
-            val b = a.constrainTo(Range(0.5 .. 4.0))
+            val b = a.constrainTo(RealRange(0.5 .. 4.0))
             // println("a=$a intersect [0.5, 4] is: $b")
             // println("b's range computed by LP is:" + b.getRange())
             assertEquals(1.0, b.getRange().min, 0.001)
@@ -52,7 +54,7 @@ class AADDIntersectTestsWithOriginalForms {
             this.config.originalFormsFlag = true
             // println("=== Testing: Intersection of AADD with Range ===")
             val a = real(1.5..3.0, "a")
-            val c = a.constrainTo(Range(0.9..2.2))
+            val c = a.constrainTo(RealRange(0.9..2.2))
             // println("a = $a")
             // println("a intersect b = $c")
             // println("with range:" + c.getRange())
@@ -84,7 +86,7 @@ class AADDIntersectTestsWithOriginalForms {
         DDBuilder{
             this.config.originalFormsFlag = true
             val a = real(-50.0 .. 50.0)
-            val r = Range(0.0 .. 50.0)
+            val r = RealRange(0.0 .. 50.0)
             val c = a.constrainTo(r)
             assertEquals(0.0, c.getRange().min, 0.00001)
             assertEquals(50.0, c.getRange().max, 0.00001)
@@ -205,9 +207,7 @@ class AADDIntersectTestsWithOriginalForms {
     fun intersectRangeWithNoSensitivities() {
         DDBuilder {
             this.config.originalFormsFlag = true
-            val af = AffineForm(this, central = 10.0, r = 1.0, xi=hashMapOf(), range = 9.0 .. 11.0 )
-            af.min = 9.0
-            af.max = 11.0
+            val af = buildAF(this, central = 10.0, r = 1.0, xi=hashMapOf(), range = 9.0 .. 11.0 )
             assertEquals(0, af.xi.size)
             val b: AADD.Leaf = leaf(af)
             assertEquals(0, b.value.xi.size)

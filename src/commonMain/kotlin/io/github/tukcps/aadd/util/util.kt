@@ -1,9 +1,10 @@
 package io.github.tukcps.aadd.util
 
-import io.github.tukcps.aadd.values.Range
+import io.github.tukcps.aadd.values.real.RealRange
+import kotlin.math.nextDown
+import kotlin.math.nextUp
 import kotlin.math.pow
 import kotlin.math.roundToInt
-import kotlin.math.ulp
 
 /**
  * Not nice, but for MP
@@ -18,11 +19,9 @@ fun Double.toRoundedString(numOfDec: Int): String {
  * Converts a Double value into a Range that includes the value
  * @return Range with this+/-1 ulp
  */
-fun Double.plusMinusUlp() = Range(this.minusUlp() ..this.plusUlp())
-fun Double.plusUlp() = this + this.ulp
-fun Double.minusUlp() =
-    if (this.isInfinite())  this // Infinite - something would be NaN !
-    else this - this.ulp
+fun Double.plusMinusUlp() = RealRange(this.minusUlp() ..this.plusUlp())
+fun Double.plusUlp() = if (this.isFinite()) this.nextUp() else this
+fun Double.minusUlp() = if (this.isFinite()) this.nextDown() else this
 
 /** Function converting a String of a us represented real number
  * TODO: ISO conformity check

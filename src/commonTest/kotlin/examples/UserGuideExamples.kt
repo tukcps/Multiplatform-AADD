@@ -16,7 +16,7 @@ class HelloBDD {
             val b = boolean("b")
             val a = boolean("a")
             val f = (a and b) or c
-            // println("f = $f")
+            println("f = $f")
             assertEquals(3, f.height())
         }
     }

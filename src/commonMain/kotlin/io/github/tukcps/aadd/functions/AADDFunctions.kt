@@ -1,55 +1,59 @@
 package io.github.tukcps.aadd.functions
 
 import io.github.tukcps.aadd.AADD
+import io.github.tukcps.aadd.AADD.Internal
+import io.github.tukcps.aadd.AADD.Leaf
 import io.github.tukcps.aadd.DDBuilder
-import io.github.tukcps.aadd.values.AffineForm
-import io.github.tukcps.aadd.values.Range
+import io.github.tukcps.aadd.pwl.relu
+import io.github.tukcps.aadd.values.real.AffineForm
+import io.github.tukcps.aadd.values.NumberRange
+import io.github.tukcps.aadd.values.integer.IntegerRange
+import io.github.tukcps.aadd.values.real.RealRange
+import io.github.tukcps.aadd.values.real.root
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
 
-fun power(a: AADD.Leaf, b: AADD.Leaf): AADD = a.builder.leaf( (b.value*a.value.log()).exp())
+fun power(a: Leaf, b: Leaf): AADD = a.builder.leaf( (b.value*a.value.log()).exp())
 
 /** Intersection of a leaf and an interval returns a leaf.*/
-fun constraintTo(leaf: AADD.Leaf, range: ClosedFloatingPointRange<Double>) =
-    constrainTo(leaf, Range(range))
+fun constraintTo(leaf: Leaf, range: ClosedFloatingPointRange<Double>) =
+    constrainTo(leaf, RealRange(range))
 
 /**
  * Intersection of a leaf and an interval returns a leaf.
  */
-fun constrainTo(leaf: AADD.Leaf, range: Range): AADD.Leaf {
+fun constrainTo(leaf: Leaf, realRange: RealRange): Leaf {
 
     // Scalars
-    if (leaf.isScalar() && leaf.min in range) return leaf.builder.real(leaf.min) as AADD.Leaf
-    if (range.isScalar() && range.start in leaf.getRange()) return leaf.builder.real(range.start) as AADD.Leaf
+    if (leaf.isScalar() && leaf.min in realRange) return leaf.builder.real(leaf.min) as Leaf
+    if (realRange.isScalar() && realRange.start in leaf.getRange()) return leaf.builder.real(realRange.start) as Leaf
 
     // range is in this, so we return range as new AF
-    if ((leaf.min < range.start) && (range.endInclusive < leaf.max)) {
-        return if (leaf.value.xi.isEmpty()) leaf.builder.real(range.min .. range.max)
-        else leaf.copy(range.start, range.endInclusive) as AADD.Leaf
+    if ((leaf.min < realRange.start) && (realRange.endInclusive < leaf.max)) {
+        return if (leaf.value.xi.isEmpty()) leaf.builder.real(realRange.min .. realRange.max)
+        else leaf.copy(realRange.start, realRange.endInclusive) as Leaf
     }
 
     // complete inclusion of this in range; we return this
-    if ((range.start <= leaf.min) && range.endInclusive >= leaf.max)
-        return leaf.clone() as AADD.Leaf
+    if ((realRange.start <= leaf.min) && realRange.endInclusive >= leaf.max)
+        return leaf.clone() as Leaf
 
     // no complete inclusion, so we create an AADD with range constraints
-    val newMin = max(leaf.min, range.start)
-    val newMax = min(leaf.max, range.endInclusive)
+    val newMin = max(leaf.min, realRange.start)
+    val newMax = min(leaf.max, realRange.endInclusive)
     val result = if (newMin == newMax)
-        leaf.builder.real(newMin) as AADD.Leaf
+        leaf.builder.real(newMin) as Leaf
     else
-        leaf.copy(newMin, newMax) as AADD.Leaf
+        leaf.copy(newMin, newMax) as Leaf
     return result
 }
-
-
 
 /**
  * Intersection of two AADDLeaves returns an AADD or a Leaf
  */
-fun intersect(a: AADD.Leaf, b: AADD.Leaf): AADD {
+fun intersect(a: Leaf, b: Leaf): AADD {
     // If this is just a range ...
     val result: AADD
     if (a.value.xi.isEmpty()) result = b constrainTo a.value
@@ -73,9 +77,6 @@ fun intersect(a: AADD.Leaf, b: AADD.Leaf): AADD {
     return result
 }
 
-
-
-/**  Extension Functions developed by Jack **/
 fun ceil(input : AADD) : AADD = input.ceil()
 fun invCeil(input : AADD) : AADD = input.invCeil()
 fun floor(input : AADD) : AADD = input.floor()
@@ -117,11 +118,11 @@ fun sum_i(builder: DDBuilder, i : Int = 0, N : Int, list: MutableList<AADD>) : A
 
     try {
         for (index in i..N)
-            sum = sum + list[index]
+            sum += list[index]
     }
     catch(ioobe : IndexOutOfBoundsException) {
-        println("i = " + i)
-        println("N = " + N)
+        println("i = $i")
+        println("N = $N")
         println("message = "+ ioobe.message)
         println("cause = " + ioobe.cause)
         ioobe.printStackTrace()
@@ -131,3 +132,28 @@ fun sum_i(builder: DDBuilder, i : Int = 0, N : Int, list: MutableList<AADD>) : A
 }
 
 fun sum_i(builder: DDBuilder, N : Int, list: MutableList<AADD>) : AADD = sum_i(builder, 0, N, list)
+
+fun AADD.root(other: NumberRange<Double>) =
+    this.apply { x: Leaf -> builder.leaf(x.value.root(builder.real(other))) }
+
+fun AADD.relu(splitThreshold : Double = 0.1) : AADD = when(this){
+    is Internal -> builder.internal(index,T.relu(),F.relu())
+    is Leaf -> relu(value, builder, splitThreshold)
+}
+
+/**
+ * Calls LP solver and returns the resulting range as IntegerRange.
+ */
+fun AADD.toIntegerRange(): IntegerRange {
+    val range = getRange()
+    return IntegerRange(range.min, range.max)
+}
+
+
+/** Overloaded contains operation for allowing "AADD in range" notation */
+operator fun ClosedFloatingPointRange<Double>.contains(other: AADD): Boolean =
+    when (other) {
+        is AADD.Leaf       -> other.max <= endInclusive && other.min >= start
+        is AADD.Internal   -> this.contains(other.T) || this.contains(other.F)
+    }
+

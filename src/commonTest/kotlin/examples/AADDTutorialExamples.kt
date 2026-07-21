@@ -3,7 +3,7 @@
 package examples
 
 import io.github.tukcps.aadd.*
-import io.github.tukcps.aadd.values.Range
+import io.github.tukcps.aadd.values.real.RealRange
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertSame
@@ -13,15 +13,15 @@ class AADDTutorialExamples {
     @Test
     fun instantiation() {
         DDBuilder{
-            val r = Range(1.0, 2.0)
+            val r = RealRange(1.0, 2.0)
             val scalar   = real(1.0)
             val range    = real(2.0..3.0, "r")
             val real     = Reals
             val empty    = Empty
-            // println("scalar   = $scalar")
-            // println("interval = $range")
-            // println("real     = $real")
-            // println("empty    = $empty")
+            println("scalar   = $scalar")
+            println("interval = $range")
+            println("real     = $real")
+            println("empty    = $empty")
         }
     }
 
@@ -143,7 +143,7 @@ class AADDTutorialExamples {
             IF((x * y) greaterThan x.exp())
                 x = assign(x, x - real(1.5))
             END()
-            println("x=$x" + " intersect -0.2..2=${x.constrainTo(Range(-0.2 .. 2.0))}")
+            println("x=$x" + " intersect -0.2..2=${x.constrainTo(RealRange(-0.2 .. 2.0))}")
             //display(x, "AADD x")
         }
     }

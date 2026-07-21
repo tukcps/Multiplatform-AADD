@@ -5,27 +5,40 @@ import kotlin.math.max
 
 
 /**
- * The interface DDcond implements a decision diagram as base class template leaf types.
+ * ## DD - Decision Diagrams, common interface
+ *
+ * The interface DD specifies a decision diagram as base class template leaf types.
  * It is the base class from which different kinds of DD are inherited.
  * It provides the basic framework, but not the leaves.
  * This involves in particular the management of the conditions and
  * index that are common for AADD and BDD.
  *
- * The DD is ordered via the index that also identifies a condition.
- * The index of leaves is Integer.MAXVALUE = LEAF_INDEX
- * The index of other nodes grows from 0 (the root) with increasing height of the graph.
- * Modified name to DDc to avoid conflicts with v2.x.
+ * - The DD is ordered via the index that also identifies a condition.
+ * - The index of leaves is Integer.MAXVALUE = LEAF_INDEX
+ * - The index of other nodes grows from 0 (the root) with increasing height of the graph.
  */
 sealed interface DD<ValueType: Any> {
 
     /** Reference to the factory of all DD and AffineForm objects. */
     var builder: DDBuilder
+
+    /**
+     * Index via which the condition associated with an internal node can be
+     * retrieved.
+     */
     val index: Int
 
+    /**
+     * A leaf of a decision diagram that has a value of type ValueType.
+     */
     sealed interface Leaf<ValueType : Any>: DD<ValueType> {
         val value: ValueType
     }
 
+    /**
+     * An internal node of a decision diagram that has two leaves.
+     * The condition is accessed via index.
+     */
     sealed interface Internal<ValueType : Any>: DD<ValueType> {
         val T: DD<ValueType>
         val F: DD<ValueType>
@@ -78,6 +91,10 @@ sealed interface DD<ValueType: Any> {
         else
             false
 
+    /**
+     * Each index is associated with a condition that is represented by a DD.
+     * @return Condition from builder
+     */
     fun getCondition(): DD<*> {
         return builder.conds.x[index]
             ?:throw DDInternalError("Index without a condition.")

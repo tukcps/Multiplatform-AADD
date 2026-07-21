@@ -1,22 +1,28 @@
+@file:Suppress("LocalVariableName")
+
 package io.github.tukcps.aadd
 
 import io.github.tukcps.aadd.DD.Status
 import io.github.tukcps.aadd.values.*
+import io.github.tukcps.aadd.values.real.AffineForm
+import io.github.tukcps.aadd.values.integer.IntegerRange
+import io.github.tukcps.aadd.values.real.RealRange
 import kotlinx.serialization.json.Json
 
 /**
  * ### DDBuilder
  *
  * The class DDBuilder implements a factory for creating
- * instances of the classes AADD, BDD, AffineForm.
+ * instances of the classes AADD, IDD, BDD.
  *
- * _Public API:_
+ * The  _Public API:_ hides the implementation and its classes behind an API
+ * that addresses its semantics:
  *
- * - number (...) creates a representation of a maybe unknown number.
- * - real (...) creates a representation of a maybe unknown Real number.
- * - integer (...) creates a representation of a maybe unknown Integer number.
- * - string (...) creates a representation of a maybe unknown String.
- * - boolean (...) creates a representation of a maybe unknown Boolean value.
+ * - `number (...)` creates a representation of a maybe unknown number.
+ * - `real (...)` creates a representation of a maybe unknown Real number.
+ * - `integer (...)` creates a representation of a maybe unknown Integer number.
+ * - `string (...)` creates a representation of a maybe unknown String.
+ * - `boolean (...)` creates a representation of a maybe unknown Boolean value.
  *
  * where the parameters (...) can be literals or value ranges of suitable base types (Double, Long).
  *
@@ -349,18 +355,22 @@ class DDBuilder(
     val InfeasibleB = BDD.Leaf(this, XBool.NaB, Status.Infeasible)
 
     /** AffineForm Constants */
-    val AFReals  = AffineForm(this, Range.Reals.min, Range.Reals.max)
-    val AFEmpty = AffineForm(this, Range.Empty.min, Range.Empty.max)
+    val AFReals  = AffineForm(this, RealRange.Reals.min, RealRange.Reals.max)
+    val AFEmpty = AffineForm(this, RealRange.Empty.min, RealRange.Empty.max)
 
     /** AADD Constants */
     val Reals = AADD.Leaf(this, AFReals, Status.NotSolved)
     val Empty = AADD.Leaf(this, AFEmpty, Status.NotSolved)
     val Infeasible = AADD.Leaf(this, AFEmpty, Status.Infeasible)
+    val RealZero = AADD.Leaf(this, AffineForm(this, 0.0))
+    val RealOne = AADD.Leaf(this, AffineForm(this, 1.0))
 
     /** IDD Constants */
     val EmptyIntegerRange = IDD.Leaf(this, IntegerRange.Empty, Status.NotSolved)
     val Integers = IDD.Leaf(this, IntegerRange())
     val InfeasibleI = IDD.Leaf(this, IntegerRange.Empty, Status.Infeasible)
+    val IntegerRangeZero = IDD.Leaf(this, IntegerRange(0))
+    val IntegerRangeOne = IDD.Leaf(this, IntegerRange(1))
 
     /** StrDD Constants */
     val Strings = StrDD.Leaf(this, "")
@@ -546,123 +556,4 @@ class DDBuilder(
         Pair(InfeasibleB, NaB) to InfeasibleB,
         Pair(InfeasibleB, InfeasibleB) to InfeasibleB,
     )
-
-    /**
-     * Graveyard ...
-     * Below here: Deprecated; will be dropped in v0.2
-     */
-    /** Creates a new AADD leaf with an affine form as value.  */
-    @Deprecated("Replace with real(value)", ReplaceWith("real(value)"))
-    fun scalar(value: Double): AADD = AADD.Leaf(this, AffineForm(this, value), Status.NotSolved)
-
-
-    /** Creates a new AADD leaf with an affine form as a value.  */
-    @Deprecated("Replace with real(min .. max, index)", replaceWith = ReplaceWith("real(min .. max, index)"))
-    fun range(min: Double, max: Double, index: Int): AADD {
-        require(min <= max) { "min must be less or equal than max; range expected" }
-        require(index > 0) { "index must be > 0 or null" }
-        return leaf(AffineForm(this, min .. max, index), Status.NotSolved)
-    }
-
-    @Deprecated("Replace with real(min .. max, id)", replaceWith = ReplaceWith("real(min .. max, id)"))
-    fun range(min: Double, max: Double, id: String): AADD {
-        require(min <= max) { "min must be less than or equal  max; range expected" }
-        @Suppress("DEPRECATION")
-        return if (( min > -Double.MAX_VALUE) && ( max < Double.MAX_VALUE))
-            leaf(AF(min, max, id), Status.NotSolved)
-        else
-            Reals
-    }
-
-    @Deprecated("Replace with real(min .. max)", replaceWith = ReplaceWith("real(min..max)"))
-    fun range(min: Double, max: Double) = real(min .. max)
-
-    @Deprecated("Replace with real(r, id", ReplaceWith("real(r, id)"))
-    fun range(r: ClosedRange<Double>, id: String) : AADD {
-        require(r.start <= r.endInclusive) { "min must be less than or equal max; range expected" }
-        @Suppress("DEPRECATION")
-        return if (( r.start >= -Double.MAX_VALUE) && ( r.endInclusive <= Double.MAX_VALUE))
-            leaf(AF(r.start, r.endInclusive, id), Status.NotSolved)
-        else
-            Reals
-    }
-
-    @Deprecated("Replace with real(r)", ReplaceWith("real(r)"))
-    fun range(r: ClosedRange<Double>) : AADD = leaf(AffineForm(this, r), Status.NotSolved)
-
-    @Deprecated("Replace with real(r, id)", ReplaceWith("""real(r, id.toString())"""))
-    fun range(r: ClosedRange<Double>, id: Int) : AADD {
-        require(r.start <= r.endInclusive) { "min must be less than or equal max; range expected" }
-        return leaf(AffineForm(this, r, id), Status.NotSolved)
-    }
-
-    @Deprecated("Replace with integer(value)", ReplaceWith("integer(value)"))
-    fun scalar(value: Long): IDD {
-        return leaf(value .. value)
-    }
-
-    /** Creates a new IDD leaf that represents a range of long values. */
-    @Deprecated("Replace with integer(min .. max)", ReplaceWith("integer(min .. max)"))
-    fun rangeIDD(min: Long, max: Long): IDD {
-        require(min <= max) { "min must be less than or equal max" }
-        return leaf(IntegerRange(min, max))
-    }
-
-    @Deprecated("Replace with integer(r)", ReplaceWith("integer(r)"))
-    fun rangeIDD(r: ClosedRange<Long>) : IDD =
-        leaf(IntegerRange(r.start, r.endInclusive))
-
-    @Deprecated("Replace with integer(init)", ReplaceWith("integer(init)"))
-    fun rangeIDD(init: IntegerRange) : IDD {
-        return leaf(IntegerRange(init.min, init.max))
-    }
-
-    @Deprecated("Replace with integer(min .. max)", ReplaceWith("integer(min .. max)"))
-    fun range(min: Long, max: Long): IDD =
-        if(min<=max) leaf(IntegerRange(min,max)) else throw DDException("min must be less than or equal to max")
-
-    @Deprecated("Replace with integer(r)", ReplaceWith("integer(r)"))
-    fun range(r: ClosedRange<Long>) : IDD = leaf(IntegerRange(r.start, r.endInclusive))
-
-    @Suppress("unused")
-    @Deprecated("Replace with either Reals or Empty, depending on desired semantics. ")
-    var AFRealsNaN = AffineForm(this, Range.Empty, central = Double.NEGATIVE_INFINITY, r = Double.POSITIVE_INFINITY)
-    @Suppress("unused")
-    @Deprecated("Replaces with either Reals or Empty, depending on desired semantics. ")
-    val RealsNaN = AADD.Leaf(this, AFEmpty, Status.NotSolved)
-
-    /** Creates an affine form with the given min and max values. Uses a single noise symbol. */
-    @Deprecated("Replace with AffineForm constructor", replaceWith = ReplaceWith("AffineForm(this, min..max, symbol)"))
-    fun AF(min: Double, max: Double, symbol: Int): AffineForm =
-        AffineForm(this,  min .. max, symbol)
-
-    @Deprecated("Replace with Affine Form constructor", ReplaceWith("AffineForm(this, scalar)"))
-    fun AF(scalar: Double): AffineForm = AffineForm(this, scalar)
-
-    @Deprecated("Replace with AffineForm(...)")
-    fun AF(range: ClosedRange<Double>, central: Double, r: Double, xi: HashMap<Int, Double>): AffineForm =
-        AffineForm(this, range, central, r, HashMap(xi))
-
-    /** Builds an affine form with affine form that has a single noise term with a new, unnamed noise symbol. */
-    @Deprecated("Replace with Affine form constructor")
-    fun AF(range: ClosedRange<Double>, noiseSymbol: Int): AffineForm =
-        AffineForm(this, range, noiseSymbol)
-
-    /**
-     * Creates an affine form with the given min and max values. Uses a single, new noise symbol.
-     *  TODO: Move code to proper Affine Form constructor ! !
-     */
-    @Deprecated("Replace with Affine form constructor")
-    fun AF(min: Double, max: Double, symbol: String): AffineForm =
-        AffineForm(this,
-            min .. max,
-            central = if (min.isFinite() && max.isFinite()) (max/2.0 + min/2.0) else Double.NaN,
-            r = 0.0,
-            xi = hashMapOf(noiseVars.newNoiseVar(symbol) to (max/2.0 - min/2.0))
-        )
-
-    /** This method adds a new Boolean variable to the conditions  */
-    @Deprecated("Use boolean instead", ReplaceWith("boolean(varname)"))
-    fun variable(varname: String): BDD =
-        internal(conds.newVariable(varname, this), True, False)
 }

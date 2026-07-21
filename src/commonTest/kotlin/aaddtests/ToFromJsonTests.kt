@@ -2,7 +2,7 @@ package examples.aaddtests
 
 import io.github.tukcps.aadd.DDBuilder
 import io.github.tukcps.aadd.dao.*
-import io.github.tukcps.aadd.values.AffineForm
+import io.github.tukcps.aadd.values.real.AffineForm
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -44,9 +44,9 @@ class ToFromJsonTests {
             val aStr = a.toDAO().toJson()
             val jObject = json.decodeFromString<AaddDAO>(string = aStr)
             assertTrue(jObject.value!!.min.isInfinite())
-            assertTrue(jObject.value!!.max.isInfinite())
-            assertTrue(jObject.value!!.central.isNaN())
-            assertTrue(jObject.value!!.r.isInfinite())
+            assertTrue(jObject.value.max.isInfinite())
+            assertTrue(jObject.value.central.isNaN())
+            assertTrue(jObject.value.r.isInfinite())
         }
     }
 

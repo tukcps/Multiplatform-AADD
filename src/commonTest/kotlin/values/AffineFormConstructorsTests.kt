@@ -1,7 +1,7 @@
 package examples.values
 
 import io.github.tukcps.aadd.DDBuilder
-import io.github.tukcps.aadd.values.AffineForm
+import io.github.tukcps.aadd.values.real.AffineForm
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

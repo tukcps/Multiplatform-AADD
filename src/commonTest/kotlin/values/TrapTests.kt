@@ -2,8 +2,8 @@ package values
 
 import io.github.tukcps.aadd.*
 import io.github.tukcps.aadd.DDBuilder
-import io.github.tukcps.aadd.values.AffineForm
-import io.github.tukcps.aadd.values.Range
+import io.github.tukcps.aadd.values.real.AffineForm
+import io.github.tukcps.aadd.values.real.RealRange
 import kotlin.test.*
 
 /**
@@ -18,14 +18,14 @@ class TrapTests {
     @Test
     fun constantsTest() {
         DDBuilder {
-            val x = Range.Reals
-            assertTrue(x.maxIsInf)
-            assertTrue(x.minIsInf)
+            val x = RealRange.Reals
+            assertTrue(x.max.isInfinite())
+            assertTrue(x.min.isInfinite())
             assertTrue(x.min < x.max)
 
             val afReals = AFReals
-            assertTrue(afReals.maxIsInf)
-            assertTrue(afReals.minIsInf)
+            assertTrue(afReals.max.isInfinite())
+            assertTrue(afReals.min.isInfinite())
             assertTrue(afReals.min < afReals.max)
             assertTrue(!afReals.isFinite())
             assertTrue(!afReals.isFinite())
@@ -110,8 +110,8 @@ class TrapTests {
     fun realsCloned() {
         DDBuilder {
             val af = AFReals.clone()
-            assertTrue(af.maxIsInf)
-            assertTrue(af.minIsInf)
+            assertTrue(af.max.isInfinite())
+            assertTrue(af.min.isInfinite())
 
             val a = Reals
             val b = a.clone()
@@ -165,22 +165,22 @@ class TrapTests {
     fun timesRealsTest() {
         DDBuilder {
             val c = AFReals * AffineForm(this, 2.0..3.0,)
-            assertTrue(c.maxIsInf)
-            assertTrue(c.minIsInf)
+            assertTrue(c.max.isInfinite())
+            assertTrue(c.min.isInfinite())
 
             val d = AFReals * AFReals
-            assertTrue(d.maxIsInf)
-            assertTrue(d.r == Double.POSITIVE_INFINITY)
-            assertTrue(d.minIsInf)
+            assertTrue(d.max.isInfinite())
+            assertEquals(d.r, Double.POSITIVE_INFINITY)
+            assertTrue(d.min.isInfinite())
 
             val f = Reals * real(2.0..3.0)
             assertTrue(f.maxIsInf)
-            assertTrue( (f as AADD.Leaf).value.r == Double.POSITIVE_INFINITY)
+            assertEquals((f as AADD.Leaf).value.r, Double.POSITIVE_INFINITY)
             assertTrue(f.minIsInf)
 
             val i = Reals * Reals
             assertTrue(i.maxIsInf)
-            assertTrue( (i as AADD.Leaf).value.r == Double.POSITIVE_INFINITY)
+            assertEquals((i as AADD.Leaf).value.r, Double.POSITIVE_INFINITY)
             assertTrue(i.minIsInf)
         }
     }

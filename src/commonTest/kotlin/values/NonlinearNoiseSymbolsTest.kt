@@ -1,8 +1,9 @@
 package examples.values
 
 import io.github.tukcps.aadd.DDBuilder
-import io.github.tukcps.aadd.values.AffineForm
-import io.github.tukcps.aadd.values.Range
+import io.github.tukcps.aadd.values.real.AffineForm
+import io.github.tukcps.aadd.values.real.AffineForm.Companion.buildAF
+import io.github.tukcps.aadd.values.real.RealRange
 import kotlin.math.PI
 import kotlin.math.exp
 import kotlin.math.ln
@@ -120,7 +121,7 @@ class NonlinearNoiseSymbolsTest {
             val terms = HashMap<Int, Double>()
             terms[1] = 2.0
             terms[2] = 1.0
-            val lgr = AffineForm(this, Range.Reals,10.0, 0.0, terms)
+            val lgr = buildAF(this, RealRange.Reals,10.0, 0.0, terms)
 
             val a = lgr.times(af1)
             val al = 7.0 * 1.0
@@ -166,7 +167,7 @@ class NonlinearNoiseSymbolsTest {
             val terms = HashMap<Int, Double>()
             terms[1] = 2.0
             terms[2] = 1.0
-            val lgr = AffineForm(this, Range.Reals, 10.0, 0.0, terms)
+            val lgr = buildAF(this, RealRange.Reals, 10.0, 0.0, terms)
 
             val a = lgr.times(-af1)
             val au = 7.0 * -1.0
@@ -227,7 +228,7 @@ class NonlinearNoiseSymbolsTest {
             val terms = HashMap<Int, Double>()
             terms[1] = 2.0
             terms[2] = 1.0
-            val lgr = AffineForm(this, Range.Reals,10.0, 0.0, terms)
+            val lgr = buildAF(this, RealRange.Reals,10.0, 0.0, terms)
 
             val a = lgr.log()
             val b = lgr.log()
@@ -262,7 +263,7 @@ class NonlinearNoiseSymbolsTest {
 
             val terms = HashMap<Int, Double>()
             terms[2] = 0.5
-            val rst = AffineForm(this, Range(1.1, 1.9), 1.5, 0.0, terms)
+            val rst = buildAF(this, RealRange(1.1, 1.9), 1.5, 0.0, terms)
 
             val a = rst.exp()
             val b = rst.exp()
@@ -296,7 +297,7 @@ class NonlinearNoiseSymbolsTest {
             val terms = HashMap<Int, Double>()
             terms[1] = 2.0
             terms[2] = 1.0
-            val lgr = AffineForm(this, Range.Reals,10.0, 0.0, terms)
+            val lgr = buildAF(this, RealRange.Reals,10.0, 0.0, terms)
 
             val a = lgr.inv()
             val b = lgr.inv()
@@ -380,7 +381,7 @@ class NonlinearNoiseSymbolsTest {
             val terms = HashMap<Int, Double>()
             terms[1] = 2.0
             terms[2] = 1.0
-            val lgr = AffineForm(this, Range.Reals,10.0, 0.0, terms)
+            val lgr = buildAF(this, RealRange.Reals,10.0, 0.0, terms)
 
             val a = lgr.times(af1)
             val al = 7.0 * 1.0
@@ -426,7 +427,7 @@ class NonlinearNoiseSymbolsTest {
             val terms = HashMap<Int, Double>()
             terms[1] = 2.0
             terms[2] = 1.0
-            val lgr = AffineForm(this, Range.Reals, 10.0, 0.0, terms)
+            val lgr = buildAF(this, RealRange.Reals, 10.0, 0.0, terms)
 
             val a = lgr.times(-af1)
             val au = 7.0 * -1.0
@@ -487,7 +488,7 @@ class NonlinearNoiseSymbolsTest {
 
             val terms = HashMap<Int, Double>()
             terms[2] = 0.5
-            val rst = AffineForm(this, Range(1.1, 1.9), 1.5, 0.0, terms)
+            val rst = buildAF(this, RealRange(1.1, 1.9), 1.5, 0.0, terms)
 
             val a = rst.exp()
             val b = rst.exp()
@@ -523,7 +524,7 @@ class NonlinearNoiseSymbolsTest {
             val terms = HashMap<Int, Double>()
             terms[1] = 2.0
             terms[2] = 1.0
-            val lgr = AffineForm(this, Range.Reals,10.0, 0.0, terms)
+            val lgr = buildAF(this, RealRange.Reals,10.0, 0.0, terms)
 
             val a = lgr.inv()
             val b = lgr.inv()
@@ -594,7 +595,7 @@ class NonlinearNoiseSymbolsTest {
             val terms = HashMap<Int, Double>()
             terms[1] = 2.0
             terms[2] = 1.0
-            val lgr = AffineForm(this, Range.Reals, 10.0, 0.0, terms)
+            val lgr = buildAF(this, RealRange.Reals, 10.0, 0.0, terms)
 
             val a = lgr.log()
             val b = lgr.log()

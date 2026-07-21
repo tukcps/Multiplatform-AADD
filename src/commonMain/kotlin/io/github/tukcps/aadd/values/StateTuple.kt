@@ -2,6 +2,7 @@ package io.github.tukcps.aadd.values
 
 import io.github.tukcps.aadd.CDDVariableError
 import io.github.tukcps.aadd.DDBuilder
+import io.github.tukcps.aadd.values.real.AffineForm
 
 /**
  * A class that represents the Cartesian product of a set of AADDs and BDDs for a single path through the set.
@@ -17,7 +18,7 @@ class StateTuple(
      * The key is a string that is the id of the specific variable
      * The value is an affine form that represents the value range of this specific variable in this context
      * */
-    private val continuousMap: MutableMap<String,AffineForm> = hashMapOf(),
+    private val continuousMap: MutableMap<String, AffineForm> = hashMapOf(),
 
     /**
      *  A hashmap that saves all the discrete variables that are represented in this tuple
@@ -60,7 +61,7 @@ class StateTuple(
     /**
      * Simple getter that returns a copy of the continuous variables map
      * */
-    fun getContinuousValues():MutableMap<String,AffineForm>
+    fun getContinuousValues():MutableMap<String, AffineForm>
     {
         return continuousMap.toMutableMap()
     }
@@ -118,7 +119,7 @@ class StateTuple(
      * @param id : The id of the continuous variable to be updated, must be equal to the id used in the continuousMap
      * @param value : The new value it should be updated to
      * */
-    fun updateContinuousVariable(id:String,value:AffineForm)
+    fun updateContinuousVariable(id:String,value: AffineForm)
     {
         if(exists(id)) continuousMap[id] = value
         else throw CDDVariableError("Update of continuous variable $id failed. Does not exist")

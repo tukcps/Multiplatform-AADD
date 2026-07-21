@@ -1,7 +1,13 @@
 package io.github.tukcps.aadd.functions
 
 import io.github.tukcps.aadd.IDD
-import io.github.tukcps.aadd.values.IntegerRange
+import io.github.tukcps.aadd.IDD.Leaf
+import io.github.tukcps.aadd.values.NumberRange
+import io.github.tukcps.aadd.values.integer.IntegerRange
+import io.github.tukcps.aadd.values.integer.root
+
+fun IDD.root(other: NumberRange<Long>): IDD =
+    this.apply { x: Leaf -> builder.leaf(x.value.root(other)) }
 
 
 /** Intersection of a leaf and an Interval returns a leaf */
@@ -16,11 +22,7 @@ fun div(a: IDD.Leaf, b: IDD.Leaf): IDD = a.builder.leaf(a.value / b.value)
 fun contains(a: IDD.Leaf, value: Long) = a.value.contains(value)
 fun pow(base: IDD.Leaf, exp: IDD.Leaf): IDD = base.pow(exp.value)
 fun sqrt(input : IDD.Leaf, n: IDD.Leaf) : IDD = input.root(n.value)
-
-
-/**  Extension Functions developed by Jack **/
 fun sqr(input : IDD) : IDD = input.sqr()
-
 fun sqrt(input : IDD) : IDD = input.sqrt()
 fun sqrt(input : IDD, n: IDD) : IDD = input.root(n)
 
@@ -41,5 +43,3 @@ fun pow(base : IDD, exp : Long) : IDD = base.pow(exp)
  * @param exponent = the exponential power that the base is being raised to.
  */
 fun pow(base : IDD, exp : IDD) : IDD = base.pow(exp)
-
-// eof

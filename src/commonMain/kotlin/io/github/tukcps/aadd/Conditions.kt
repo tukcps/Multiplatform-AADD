@@ -1,10 +1,12 @@
 package io.github.tukcps.aadd
 
-import io.github.tukcps.aadd.values.AffineForm
-import io.github.tukcps.aadd.values.IntegerRange
+import io.github.tukcps.aadd.values.real.AffineForm
+import io.github.tukcps.aadd.values.integer.IntegerRange
 
 
 /**
+ * ## Conditions
+ *
  * The conditions that refer to each index of a BDD or AADD.
  * The class assigns each index a condition (x), and the track the top and bottom indexes.
  * States of Boolean decision variables including X for unknown and AF for a constraint.

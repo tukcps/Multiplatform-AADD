@@ -35,9 +35,9 @@ It implements *Affine Arithmetic Decision Diagrams* (AADD) for various platforms
 binary shared libraries (for use from C/C++, ...), and the Java Virtual Machine platform.
 
 The development environment is:
-- Kotlin v2.1+ which compiles to Java 19+ Byte code or various binary platforms, 
+- Kotlin v2.4+ which compiles to Java 21+ Byte code or various binary platforms, 
 - Kotlin test for unit testing, 
-- Gradle 7.8+ as build tool. 
+- Gradle 8.5+ as build tool. 
 
 The Gradle build tool automatically downloads all dependencies.
 The multi-platform version includes a simple LP solver (which is ok as most LP problems in AADD are small ones, where the overhead for starting a complex solver is expensive).
@@ -141,24 +141,24 @@ DDBUilder{
 
 ### AADD and BDD combined and DSL
 
-Imagine the following program: 
+Imagine the following program, e.g., in Kotlin: 
 ```
-    var a = local.range(-1.0, 1.0)
+    var a = Real(-1.0, 1.0) // precondition: a has a value in -1..1
     if (a > 0.0) 
-        a=a+10.0 
+        a = a + 10.0 
     else 
-        a = a-10.0
-    println("a = "+a)
+        a = a - 10.0
+    println("a = "+a)       // Now, a is either (0..1] + 10 , or [-1 ..0] - 10.0
 ```
 We can symbolically execute it by using IF, ELSE, END and assignS.
 With the help of the class DDBuilder that provides DSL features, we can write
 ```
     DDBuilder {
-         var a = range(-1.0, 1.0)
-         IF(a greaterOrEquals 0.0) 
-             a=a.assignS(a+10.0) 
-         ELSE()
-             a=a.assignS(a-10.0)
+         var a = Real(-1.0, 1.0)
+         IF(a greaterOrEquals 0.0)  // Macro that saves condition
+             a=a.assignS(a+10.0)    // Condition is considered by solver
+         ELSE()                     // Condition is negated
+             a=a.assignS(a-10.0)    // Negated condition is considered by solver 
          END ()
          println("a = "+a)
     }
@@ -166,7 +166,9 @@ With the help of the class DDBuilder that provides DSL features, we can write
 More complete documentation is in the folder doc. 
 
 ### Multiplatform Utilization
-The `jAADD` library has been converted into a Multiplatform Project, enabling the generation of a shared C library. This library can then be used within C++/C code projects. Here's how the workflow operates:
+The `AADD` library is a Multiplatform Project, enabling the generation of a shared C library. 
+Such a shared library can be used within C++/C code projects. 
+Here's how the workflow operates:
 
 1. **Build the Project**: 
    - Use Gradle to build the project as usual. This process will generate a shared library:

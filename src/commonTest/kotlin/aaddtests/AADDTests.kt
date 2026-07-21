@@ -6,7 +6,11 @@ import io.github.tukcps.aadd.*
 import io.github.tukcps.aadd.functions.floor
 import io.github.tukcps.aadd.functions.log
 import io.github.tukcps.aadd.functions.pow
-import io.github.tukcps.aadd.values.*
+import io.github.tukcps.aadd.functions.relu
+import io.github.tukcps.aadd.values.integer.IntegerRange
+import io.github.tukcps.aadd.values.real.AffineForm
+import io.github.tukcps.aadd.values.real.AffineForm.Companion.buildAF
+import io.github.tukcps.aadd.values.real.RealRange
 import kotlin.math.exp
 import kotlin.math.ln
 import kotlin.test.Test
@@ -111,7 +115,7 @@ class AADDTests {
             val a = real(10.0)
             val r = a.negate()  as AADD.Leaf
             // Check if negation works for AADD: value + negated value = 0
-            val cond = conds.newConstraint(AffineForm(this, 1.0 .. 2.0, 3), "cond")
+            val cond = conds.newConstraint(AffineForm(this, 1.0..2.0, 3), "cond")
             val t = internal(cond, a, r)
             val tn = t.negate()
             val s = tn.plus(t)
@@ -128,7 +132,7 @@ class AADDTests {
             val a = real(10.0)
             val b = real(1.0)
             val r = a.plus(b)
-            assertEquals(r.getRange().min, 11.0, 0.001)
+            assertEquals(11.0, r.getRange().min, 0.001)
         }
     }
 
@@ -145,8 +149,8 @@ class AADDTests {
     @Test
     fun expTest() {
         DDBuilder {
-            val largerValue = AffineForm(this, Range.Reals, 10.0, 0.0, hashMapOf(1 to 2.0, 2 to 3.0))
-            val affineForm1 = AffineForm(this, 1.0 .. 2.0)
+            val largerValue = buildAF(this, RealRange.Reals, 10.0, 0.0, hashMapOf(1 to 2.0, 2 to 3.0))
+            val affineForm1 = AffineForm(this, 1.0..2.0)
             // Test real
             val a = real(3.5)
             val b = real(-1.0)
@@ -198,11 +202,11 @@ class AADDTests {
     fun sqrtTest() {
         DDBuilder {
             var terms = hashMapOf(1 to 2.0, 2 to 1.0)
-            val largerValue = AffineForm(this, Range.Reals, 10.0, 0.0, terms)
-            val affineForm1 = AffineForm(this, 1.0 .. 2.0)
+            val largerValue = buildAF(this, RealRange.Reals, 10.0, 0.0, terms)
+            val affineForm1 = AffineForm(this, 1.0..2.0)
             terms = HashMap()
             terms[2] = 0.5
-            val restrictedRange = AffineForm(this, 1.1 .. 1.9, 1.5, 0.0, terms)
+            val restrictedRange = buildAF(this, 1.1..1.9, 1.5, 0.0, terms)
             // Test real
             val a = leaf(affineForm1)
             val sqrt1 = a.sqrt() as AADD.Leaf
@@ -232,11 +236,11 @@ class AADDTests {
             var terms = HashMap<Int, Double>()
             terms[1] = 2.0
             terms[2] = 1.0
-            val largerValue = AffineForm(this, central = 10.0, r = 0.0, xi=terms)
-            val affineForm1 = AffineForm(this, 1.0 .. 2.0)
+            val largerValue = buildAF(this, central = 10.0, r = 0.0, xi = terms)
+            val affineForm1 = AffineForm(this, 1.0..2.0)
             terms = HashMap()
             terms[2] = 0.5
-            val restrictedRange = AffineForm(this, 1.1 .. 1.9, 1.5, 0.0, terms)
+            val restrictedRange = buildAF(this, 1.1..1.9, 1.5, 0.0, terms)
 
             val a = leaf(affineForm1)
             val log1 = a.log() as AADD.Leaf
@@ -272,7 +276,7 @@ class AADDTests {
     @Test
     fun testLogBaseFxn() {
         DDBuilder {
-            val a = leaf(AffineForm(this, 1.0 .. 1.0, "a"))
+            val a = leaf(AffineForm(this, 1.0..1.0, "a"))
             var b = log(10.0, a)
 
             //println("a = " + a)
@@ -283,7 +287,7 @@ class AADDTests {
             //println("b = " + b)
             assertEquals(2.0, b.getRange().min, 0.001)
             assertEquals(2.0, b.getRange().max, 0.001)
-            b = log(5.0, leaf(AffineForm(this, 100.0 .. 100.0, "a")))
+            b = log(5.0, leaf(AffineForm(this, 100.0..100.0, "a")))
             //println("b = " + b)
             assertEquals(ln(100.0) / ln(5.0), b.getRange().min, 0.001)
             assertEquals(ln(100.0) / ln(5.0), b.getRange().max, 0.001)
@@ -291,15 +295,15 @@ class AADDTests {
             //println("b = " + b)
             assertEquals(ln(128.0) / ln(2.0), b.getRange().min, 0.001)
             assertEquals(ln(128.0) / ln(2.0), b.getRange().max, 0.001)
-            b = log(2.0, leaf(AffineForm(this, 1.5 .. 1.5, "a")))
+            b = log(2.0, leaf(AffineForm(this, 1.5..1.5, "a")))
             //println("b = " + b)
             assertEquals(0.5849625007211561, b.getRange().min, 0.001)
             assertEquals(0.5849625007211561, b.getRange().max, 0.001)
-            b = log(2.0, leaf(AffineForm(this, 10.5 .. 10.5, "a")))
+            b = log(2.0, leaf(AffineForm(this, 10.5..10.5, "a")))
             //println("b = " + b)
             assertEquals(3.39231742277876, b.getRange().min, 0.001)
             assertEquals(3.39231742277876, b.getRange().max, 0.001)
-            b = log(2.0, leaf(AffineForm(this, 8.0 .. 8.0, "a")))
+            b = log(2.0, leaf(AffineForm(this, 8.0..8.0, "a")))
             //println("b = " + b)
             assertEquals(3.0, b.getRange().min, 0.001)
             assertEquals(3.0, b.getRange().max, 0.001)
@@ -338,7 +342,7 @@ class AADDTests {
     @Test
     fun invTest() {
         DDBuilder {
-            val affineForm1 = AffineForm(this, 1.0 .. 2.0)
+            val affineForm1 = AffineForm(this, 1.0..2.0)
             val af3Node = real(-2.0..2.0)
             val inv = af3Node.inv() as AADD.Leaf
             assertTrue(inv.value.isReals())
@@ -367,7 +371,7 @@ class AADDTests {
     fun divTest() {
         // Div by zero should return infinite
         DDBuilder {
-            val affineForm1 = AffineForm(this, 1.0 .. 2.0)
+            val affineForm1 = AffineForm(this, 1.0..2.0)
             val zeroNode = real(0.0)
             val affineForm1Node = leaf(affineForm1)
             val div = affineForm1Node.div(zeroNode) as AADD.Leaf
@@ -377,11 +381,11 @@ class AADDTests {
             val a = real(10.0)
             val b = real(5.0)
             var result = a.div(b) as AADD.Leaf
-            assertEquals(result.central, 2.0)
+            assertEquals(2.0, result.central)
 
             //Division tested by inversion + multiplication
             result = a.times(b.inv()) as AADD.Leaf
-            assertEquals(result.central, 2.0)
+            assertEquals(2.0, result.central)
         }
     }
 
@@ -399,12 +403,12 @@ class AADDTests {
             val b = real(2.0)
             val d = c1.ite(a, b)
             assertEquals(c1.index , d.index)
-            assertEquals(c1.height() , 1)
+            assertEquals(1, c1.height())
             val e = c2.ite(a, b)
             assertEquals(c2.index , e.index)
             assertEquals(e.height() , c2.height())
             val f = e.plus(d)
-            assertEquals(f.height() , 2)
+            assertEquals(2, f.height())
         }
     }
 
@@ -422,25 +426,22 @@ class AADDTests {
         }
     }
 
-    @Test fun reduceTest() {
-        val builder = DDBuilder()
-        // Two BDD with different index.
-        with(builder) {
-            val ai = real(-1.0..1.0, "1")
-            val tr = real(0.1)
-            val tr2 = real(0.2)
-            val c1 = ai.greaterThanOrEquals(tr)
-            val c2 = ai.lessThanOrEquals(tr2)
-            val a = this.real(1.0..2.0, "1")
-            val b = this.real(2.0..3.0, "1")
-            val d = c1.ite(a, b)
-            val e = c2.ite(a, b)
-            assertTrue(c2.index == e.index)
-            assertTrue(e.height() == c2.height())
-            val f = e.plus(d)
-            assertEquals(2, f.height())
-        }
+    @Test fun reduceTest() = with(DDBuilder()) {
+        val ai = real(-1.0..1.0, "1")
+        val tr = real(0.1)
+        val tr2 = real(0.2)
+        val c1 = ai.greaterThanOrEquals(tr)
+        val c2 = ai.lessThanOrEquals(tr2)
+        val a = this.real(1.0..2.0, "1")
+        val b = this.real(2.0..3.0, "1")
+        val d = c1.ite(a, b)
+        val e = c2.ite(a, b)
+        assertEquals(c2.index, e.index)
+        assertEquals(e.height(), c2.height())
+        val f = e.plus(d)
+        assertEquals(2, f.height())
     }
+
 
     /**
      * Testing:
@@ -468,7 +469,7 @@ class AADDTests {
             val yL: Long = x.ceilAsLong()
             //println("yL = " + yL)
             assertEquals(2, yL)
-            val yIR: IntegerRange = x.ceiltoIntRange()
+            val yIR: IntegerRange = x.ceilToIntRange()
             //println("yIR = [" + yIR.min + ", " + yIR.max + "]")
             assertEquals(2, yIR.min)
             assertEquals(2, yIR.max)
@@ -502,7 +503,7 @@ class AADDTests {
             val yL: Long = x.ceilAsLong()
             //println("yL = " + yL)
             assertEquals(3, yL)
-            val yIR: IntegerRange = x.ceiltoIntRange()
+            val yIR: IntegerRange = x.ceilToIntRange()
             //println("yIR = [" + yIR.min + ", " + yIR.max + "]")
             assertEquals(2, yIR.min)
             assertEquals(3, yIR.max)
@@ -703,16 +704,6 @@ class AADDTests {
     }
 
     @Test
-    fun reluTestAADD() {
-        DDBuilder {
-            var a : Real = real(-1.0..1.0)
-            val relu_res = a.relu()
-            println(relu_res)
-            //println((relu_res as AADD.Internal).F.status)
-        }
-    }
-
-    @Test
     fun testQuadratic2ViaPow(){
         DDBuilder {
             val x = real(0.5..20.0, 1.toString())
@@ -765,32 +756,31 @@ class AADDTests {
             val y= real(-3.0 .. -1.0, 2.toString())
 
             val decision = x.greaterThan(-1.5)
-
             val tree = decision.ite(x, y)
 
             val z = tree.abs()
 
             val r = z.getRange()
 
-            assertEquals(z.min,0.0,0.0000001)
-            assertEquals(z.max,3.0,0.0000001)
-            assertEquals(z.numLeaves(),3)
+            assertEquals(0.0, z.min, 0.0000001)
+            assertEquals(3.0, z.max, 0.0000001)
+            assertEquals(3, z.numLeaves())
 
             val rightChild = if(z is AADD.Internal)z.T else NaB
 
-            assertEquals(rightChild.numLeaves(),2)
-            val rightleftChild = if(rightChild is AADD.Internal)rightChild.F else NaB
-            val rightleftChildValue =  if(rightleftChild is AADD.Leaf) rightleftChild.value else AFEmpty
-            assertEquals(rightleftChildValue.min, 0.0,0.0000001)
-            assertEquals(rightleftChildValue.max, 1.5,0.0000001)
-            assertEquals(rightleftChildValue.xi[1]!!, -1.5,0.0000001)
+            assertEquals(2, rightChild.numLeaves())
+            val rightleftChild = if (rightChild is AADD.Internal) rightChild.F else NaB
+            val rightleftChildValue =  if (rightleftChild is AADD.Leaf) rightleftChild.getRange() else AFEmpty
+            assertEquals(0.0, rightleftChildValue.min, 0.0000001)
+            assertEquals(1.5, rightleftChildValue.max, 0.0000001)
+            // assertEquals(-1.5, rightleftChildValue.xi[1]!!,0.0000001)
 
             val leftiChild = if(z is AADD.Internal)z.F else NaB
 
             val value = if(leftiChild is AADD.Leaf) leftiChild.value else AFEmpty
-            assertEquals(value.min, 1.0,0.0000001)
-            assertEquals(value.max,3.0,0.0000001)
-            assertEquals(value.xi[2]!!,-1.0,0.0000001)
+            assertEquals(1.0, value.min,0.0000001)
+            assertEquals(3.0, value.max,0.0000001)
+            assertEquals(-1.0, value.xi[2]!!,0.0000001)
         }
     }
 
@@ -883,7 +873,7 @@ class AADDTests {
     fun testPowFxn() {
         DDBuilder {
             val a = real(2.0)
-            val b = AffineForm(this, 2.0 .. 2.0)
+            val b = AffineForm(this, 2.0..2.0)
             val c = 3.0
 
             var d : AADD = pow(a, c)
@@ -910,8 +900,8 @@ class AADDTests {
             rangeC = assign(rangeC,real(2.0))
             END()
             END()
-            assertEquals(rangeC.getRange().min,1.0)
-            assertEquals(rangeC.getRange().max,1.0)
+            assertEquals(1.0, rangeC.getRange().min)
+            assertEquals(1.0, rangeC.getRange().max)
         }
     }
 

@@ -4,7 +4,10 @@ import io.github.tukcps.aadd.*
 import io.github.tukcps.aadd.DDBuilder
 import io.github.tukcps.aadd.functions.log
 import io.github.tukcps.aadd.functions.pow
-import io.github.tukcps.aadd.values.*
+import io.github.tukcps.aadd.values.integer.IntegerRange
+import io.github.tukcps.aadd.values.real.AffineForm
+import io.github.tukcps.aadd.values.real.AffineForm.Companion.buildAF
+import io.github.tukcps.aadd.values.real.RealRange
 import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlin.test.assertEquals
@@ -148,8 +151,8 @@ internal class AADDTestsWithoutRWithOriginalForms {
             val terms = HashMap<Int, Double>()
             terms[1] = 2.0
             terms[2] = 1.0
-            val largerValue = AffineForm(this, Range.Reals, 10.0, 0.0, terms)
-            val affineForm1 = AffineForm(this, 1.0 .. 2.0)
+            val largerValue = buildAF(this, RealRange.Reals, 10.0, 0.0, terms)
+            val affineForm1 = AffineForm(this, 1.0..2.0)
             // Test real
             val a = real(3.5)
             val b = real(-1.0)
@@ -206,11 +209,11 @@ internal class AADDTestsWithoutRWithOriginalForms {
             var terms = HashMap<Int, Double>()
             terms[1] = 2.0
             terms[2] = 1.0
-            val largerValue = AffineForm(this, Range.Reals, 10.0, 0.0, terms)
-            val affineForm1 = AffineForm(this, 1.0 .. 2.0)
+            val largerValue = buildAF(this, RealRange.Reals, 10.0, 0.0, terms)
+            val affineForm1 = AffineForm(this, 1.0..2.0)
             terms = HashMap()
             terms[2] = 0.5
-            val restrictedRange = AffineForm(this, 1.1 .. 1.9, 1.5, 0.0, terms)
+            val restrictedRange = buildAF(this, 1.1..1.9, 1.5, 0.0, terms)
             // Test real
             val a = leaf(affineForm1)
             val sqrt1 = a.sqrt() as AADD.Leaf
@@ -242,11 +245,11 @@ internal class AADDTestsWithoutRWithOriginalForms {
             var terms = HashMap<Int, Double>()
             terms[1] = 2.0
             terms[2] = 1.0
-            val largerValue = AffineForm(this, Range.Reals, 10.0, 0.0, terms)
-            val affineForm1 = AffineForm(this, 1.0 .. 2.0)
+            val largerValue = buildAF(this, RealRange.Reals, 10.0, 0.0, terms)
+            val affineForm1 = AffineForm(this, 1.0..2.0)
             terms = HashMap()
             terms[2] = 0.5
-            val restrictedRange = AffineForm(this, 1.1 .. 1.9, 1.5, 0.0, terms)
+            val restrictedRange = buildAF(this, 1.1..1.9, 1.5, 0.0, terms)
 
             val a = leaf(affineForm1)
             val log1 = a.log() as AADD.Leaf
@@ -378,7 +381,7 @@ internal class AADDTestsWithoutRWithOriginalForms {
         DDBuilder {
             this.config.noiseSymbolsFlag = true
             this.config.originalFormsFlag = true
-            val affineForm1 = AffineForm(this, 1.0 .. 2.0)
+            val affineForm1 = AffineForm(this, 1.0..2.0)
             val zeroNode = real(0.0)
             val affineform1Node = leaf(affineForm1)
             val div = affineform1Node.div(zeroNode) as AADD.Leaf
@@ -485,7 +488,7 @@ internal class AADDTestsWithoutRWithOriginalForms {
             val yL: Long = x.ceilAsLong()
             //println("yL = " + yL)
             assertEquals(2, yL)
-            val yIR: IntegerRange = x.ceiltoIntRange()
+            val yIR: IntegerRange = x.ceilToIntRange()
             //println("yIR = [" + yIR.min + ", " + yIR.max + "]")
             assertEquals(2, yIR.min)
             assertEquals(2, yIR.max)
@@ -521,7 +524,7 @@ internal class AADDTestsWithoutRWithOriginalForms {
             val yL: Long = x.ceilAsLong()
             //println("yL = " + yL)
             assertEquals(3, yL)
-            val yIR: IntegerRange = x.ceiltoIntRange()
+            val yIR: IntegerRange = x.ceilToIntRange()
             //println("yIR = [" + yIR.min + ", " + yIR.max + "]")
             assertEquals(2, yIR.min)
             assertEquals(3, yIR.max)

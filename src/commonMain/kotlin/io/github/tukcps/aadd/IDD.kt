@@ -2,10 +2,10 @@ package io.github.tukcps.aadd
 
 import io.github.tukcps.aadd.DD.Companion.LEAF_INDEX
 import io.github.tukcps.aadd.DD.Status
-import io.github.tukcps.aadd.values.IntegerRange
+import io.github.tukcps.aadd.values.BoundKind
+import io.github.tukcps.aadd.values.integer.IntegerRange
 import io.github.tukcps.aadd.values.NumberRange
 import io.github.tukcps.aadd.values.XBool
-import io.github.tukcps.aadd.values.XBoolImpl
 import kotlinx.serialization.Serializable
 import kotlin.math.abs
 import kotlin.math.min
@@ -21,7 +21,7 @@ import kotlin.math.min
  */
 @Suppress("EXPERIMENTAL_IS_NOT_ENABLED")
 @Serializable
-sealed class IDD: DD<IntegerRange>, NumberRange<Long>{
+sealed class IDD: DD<IntegerRange>, NumberRange<Long> {
 
     abstract override var builder: DDBuilder
     abstract override val index: Int
@@ -29,12 +29,10 @@ sealed class IDD: DD<IntegerRange>, NumberRange<Long>{
 
     abstract override fun clone(): IDD
 
-    // TODO general addition of the json serializers
-
     override val min: Long get() = getRange().min
     override val max: Long get() = getRange().max
-    override val maxIsInf: Boolean get() = getRange().maxIsInf
-    override val minIsInf: Boolean get() = getRange().minIsInf
+    override val minKind: BoundKind get() = getRange().minKind
+    override val maxKind: BoundKind get() = getRange().maxKind
 
     final override fun isZero(): Boolean = min == 0L && max == 0L
     final override fun isOne(): Boolean = max == 1L && min == 1L
@@ -71,20 +69,17 @@ sealed class IDD: DD<IntegerRange>, NumberRange<Long>{
      * @param f operator to be applied on this IDD, returning the result. This remains unchanged.
      * @return result of operation.
      */
-    private fun apply(f: (Leaf) -> IDD): IDD = when (this) {
+    fun apply(f: (Leaf) -> IDD): IDD = when (this) {
         is Leaf -> if (isInfeasible) builder.InfeasibleI else f(this)
         is Internal -> builder.internal(index, T.apply(f), F.apply(f))
     }
 
-    fun negate(): IDD = this.apply { x: Leaf -> builder.leaf(-x.value) }
     fun power2(): IDD = this.apply { x: Leaf -> builder.leaf(x.value.power2()) }
     override fun exp(): IDD = this.apply { x: Leaf -> builder.leaf(x.value.exp()) }
     override fun sqr(): IDD = this.apply { x: Leaf -> builder.leaf(x.value.sqr()) }
     override fun sqrt(): IDD = this.apply { x: Leaf -> builder.leaf(x.value.sqrt()) }
-    override fun root(other: NumberRange<Long>): IDD = this.apply { x: Leaf -> builder.leaf(x.value.root(other)) }
     override fun log(): IDD = this.apply { x: Leaf -> builder.leaf(x.value.log()) }
     override fun log(other: NumberRange<Long>): IDD = this.apply { x: Leaf -> builder.leaf(x.value.log(other)) }
-    fun inv(): IDD = this.apply { x: Leaf -> builder.leaf(x.value.inv()) }
 
     /**
      * Applies a function with two parameters on the IDD
@@ -144,20 +139,13 @@ sealed class IDD: DD<IntegerRange>, NumberRange<Long>{
         return  when (other) {
             builder.NaB -> builder.EmptyIntegerRange //Integers//EmptyIntegerRange//builder.InfeasibleI
             builder.False -> builder.leaf(IntegerRange(0))
-            builder.True -> return clone()
+            builder.True -> clone()
             else -> {
-                //if (g === builder.NaB) return builder.InfeasibleI
-                // Guess Axel's fix to jacks code fixing the recursion issue
-                // TODO compare with commit
-                // Recursion, with new node that has
-                // the *largest* indices.
                 val idx = min(index, other.index)
                 if (index <= other.index && this is Internal) {
-                    // idx = index
                     fT = T
                     fF = F
                 } else {
-                    // idx = g.index
                     fF = this
                     fT = fF
                 }
@@ -308,7 +296,7 @@ sealed class IDD: DD<IntegerRange>, NumberRange<Long>{
                 // return if (op === ">=" || op === ">") builder.internal(builder.conds.newConstraint(value), builder.True, builder.False)
                 // else builder.internal(builder.conds.newConstraint(value), builder.False, builder.True)
                 // as long as we do not have an ILP solver, we can just keep it as an unknown boolean variable. Hence, no constraint, just a variable.
-                return if (op === ">=" || op === ">") builder.internal(
+                return if (op == ">=" || op == ">") builder.internal(
                     builder.conds.newVariable("", builder),
                     builder.True,
                     builder.False
@@ -333,8 +321,7 @@ sealed class IDD: DD<IntegerRange>, NumberRange<Long>{
     /** Overridden operator "in" that allows us to check "Long .. Long in IDD" -> Boolean */
     operator fun contains(x: ClosedRange<Long>): Boolean = when(this) {
         is Leaf -> {
-            if (x.start > value.max) false
-            else x.endInclusive >= value.min
+            x.start <= value.max && x.endInclusive >= value.min
         }
         is Internal -> T.contains(x) || F.contains(x)
     }
@@ -365,10 +352,6 @@ sealed class IDD: DD<IntegerRange>, NumberRange<Long>{
                 else -> builder.internal(index, T.evaluate(), F.evaluate())
             }
         }
-    }
-
-    override fun copy(min: Long?, max: Long?): NumberRange<Long> {
-        TODO("Not yet implemented")
     }
 
     override fun join(other: NumberRange<Long>): NumberRange<Long> {

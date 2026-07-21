@@ -2,14 +2,18 @@ package values
 
 import io.github.tukcps.aadd.AADD
 import io.github.tukcps.aadd.DDBuilder
-import io.github.tukcps.aadd.values.AffineForm
-import io.github.tukcps.aadd.values.Range
+import io.github.tukcps.aadd.values.real.AffineForm
+import io.github.tukcps.aadd.values.real.log
+import io.github.tukcps.aadd.values.real.RealRange
 import kotlin.math.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import io.github.tukcps.aadd.pwl.relu
+import io.github.tukcps.aadd.values.real.AffineForm.Companion.buildAF
+import io.github.tukcps.aadd.values.real.abs
+import kotlin.test.assertNotEquals
 
 class AffineFormTest {
 
@@ -17,7 +21,7 @@ class AffineFormTest {
 
     /** A real is the range +-MAX_VALUE. It is identified by isReal() */
     @Test fun realTest() {
-        DDBuilder{
+        DDBuilder {
             val real = AFReals
             assertEquals(Double.NEGATIVE_INFINITY, real.min)
             assertEquals(Double.POSITIVE_INFINITY, real.max)
@@ -74,7 +78,7 @@ class AffineFormTest {
             // Restricted range through manual min/max values
             terms = HashMap()
             terms[2] = 0.5
-            val rst = AffineForm(this, 1.1.. 1.9, 1.5, 0.0, terms)
+            val rst = buildAF(this, 1.1.. 1.9, 1.5, 0.0, terms)
 
             val sum = af1 + rst
             assertEquals(3.0, sum.central, precision)
@@ -94,10 +98,10 @@ class AffineFormTest {
             val af3 = AffineForm(this, Double.POSITIVE_INFINITY)
             val sum1 = af3 + af1
             val sum2 = af1 + af3
-            assertTrue(af3.maxIsInf)
-            assertTrue(sum1.minIsInf)
-            assertEquals(sum2.min, Double.POSITIVE_INFINITY)
-            assertEquals(sum2.max, Double.POSITIVE_INFINITY)
+            assertTrue(af3.max.isInfinite())
+            assertTrue(sum1.min.isInfinite())
+            assertEquals(Double.POSITIVE_INFINITY, sum2.min)
+            assertEquals(Double.POSITIVE_INFINITY, sum2.max)
             assertEquals(sum1, sum2)
         }
     }
@@ -129,10 +133,10 @@ class AffineFormTest {
             terms[1]=0.5
 
             // Non-overlapping case: Result is an Empty set.
-            val empty = AffineForm(this, Range(0.0, 0.5), 1.5, 0.0, terms)
+            val empty = buildAF(this, RealRange(0.0, 0.5), 1.5, 0.0, terms)
             assertTrue(empty.isEmpty())
 
-            val restrict = AffineForm(this, Range(1.2,1.8),1.5,0.0, terms)
+            val restrict = buildAF(this, RealRange(1.2,1.8),1.5,0.0, terms)
             assertEquals(1.2, restrict.min, precision)
             assertEquals(1.8, restrict.max, precision)
         }
@@ -157,10 +161,10 @@ class AffineFormTest {
             val terms = HashMap<Int, Double>()
             terms[1] = 2.0
             terms[2] = 1.0
-            val lgr = AffineForm(this, Range.Reals, 10.0, 0.0, terms)
+            val lgr = buildAF(this, RealRange.Reals, 10.0, 0.0, terms)
 
             val terms2 = hashMapOf(1 to -2.0, 3 to 1.0)
-            val af3 = AffineForm(this, Range.Reals,10.0, 0.0, terms2)
+            val af3 = buildAF(this, RealRange.Reals,10.0, 0.0, terms2)
             val mult: AffineForm = lgr.times(af3)
             assertTrue(mult.isRange())
             assertEquals(100.0, mult.central, precision)
@@ -181,7 +185,7 @@ class AffineFormTest {
             val terms = HashMap<Int, Double>()
             terms[1] = 2.0
             terms[2] = 1.0
-            val lgr = AffineForm(this, Range.Reals,10.0, 0.0, terms)
+            val lgr = buildAF(this, RealRange.Reals,10.0, 0.0, terms)
 
             val scl = AffineForm(this, 1.0)
 
@@ -219,7 +223,7 @@ class AffineFormTest {
             val terms = HashMap<Int, Double>()
             terms[1] = 2.0
             terms[2] = 1.0
-            val lgr = AffineForm(this, Range.Reals,10.0, 0.0, terms)
+            val lgr = buildAF(this, RealRange.Reals,10.0, 0.0, terms)
 
             val scl = AffineForm(this, 1.0)
 
@@ -256,19 +260,31 @@ class AffineFormTest {
     }
 
     @Test
+    fun testUnaryMinus() {
+        DDBuilder {
+            val v = AffineForm(this, 1.0..2.0, 1)
+            val vm = -v
+            assertEquals(-2.0, vm.min)
+            assertEquals(-1.0, vm.max)
+            assertEquals(0.5, vm.radius)
+            assertEquals(0.0, vm.r)
+        }
+    }
+
+    @Test
     fun testAbs(){
         DDBuilder{
-            val x= AffineForm(this, -2.0 .. 1.0,1)
-            val y= AffineForm(this, 0.5 .. 2.5,2)
+            val x= AffineForm(this, -2.0 .. 1.0, 1)
+            val y= AffineForm(this, 0.5 .. 2.5, 2)
             val z1 = x.abs()
             val z2 = y.abs()
 
-            assertEquals(0.0,z1.min,precision)
-            assertEquals(2.0,z1.max,precision)
-            assertEquals(-1.5,z1.xi[1]!!,precision)
+            assertEquals(0.0, z1.min, precision)
+            assertEquals(2.0, z1.max,precision)
+            assertEquals(-1.5, z1.xi[1]!!,precision)
 
-            assertEquals(0.5,z2.min,precision)
-            assertEquals(2.5,z2.max,precision)
+            assertEquals(0.5, z2.min,precision)
+            assertEquals(2.5, z2.max,precision)
             assertEquals(1.0, z2.xi[2]!!,precision)
         }
     }
@@ -280,7 +296,7 @@ class AffineFormTest {
             val terms = HashMap<Int, Double>()
             terms[1] = 2.0
             terms[2] = 1.0
-            val lgr = AffineForm(this, Range.Reals,10.0, 0.0, terms)
+            val lgr = buildAF(this, RealRange.Reals,10.0, 0.0, terms)
 
             val scl = AffineForm(this, 1.0)
 
@@ -320,13 +336,13 @@ class AffineFormTest {
             var terms = HashMap<Int, Double>()
             terms[1] = 2.0
             terms[2] = 1.0
-            val lgr = AffineForm(this, Range.Reals,10.0, 0.0, terms)
+            val lgr = buildAF(this, RealRange.Reals,10.0, 0.0, terms)
 
             val af1 = AffineForm(this, 1.0 .. 2.0, 1)
 
             terms = HashMap()
             terms[2] = 0.5
-            val rst = AffineForm(this, Range(1.1, 1.9), 1.5, 0.0, terms)
+            val rst = buildAF(this, RealRange(1.1, 1.9), 1.5, 0.0, terms)
 
             val log1 = af1.log()
             assertEquals(0.096, log1.r, 0.001)
@@ -350,13 +366,13 @@ class AffineFormTest {
             var terms = HashMap<Int, Double>()
             terms[1] = 2.0
             terms[2] = 1.0
-            val lgr = AffineForm(this, Range.Reals,10.0, 0.0, terms)
+            val lgr = buildAF(this, RealRange.Reals,10.0, 0.0, terms)
 
             val af1 = AffineForm(this, 1.0 .. 2.0, 1)
 
             terms = HashMap()
             terms[2] = 0.5
-            val rst = AffineForm(this, Range(1.1, 1.9), 1.5, 0.0, terms)
+            val rst = buildAF(this, RealRange(1.1, 1.9), 1.5, 0.0, terms)
 
             val log1 = af1.log()
             //assertEquals(0.38, log1.central, 0.01)
@@ -383,13 +399,13 @@ class AffineFormTest {
             var terms = HashMap<Int, Double>()
             terms[1] = 1.0
             terms[2] = 1.0
-            val lgr = AffineForm(this, Range.Reals, 6.0, 0.0, terms)
+            val lgr = buildAF(this, RealRange.Reals, 6.0, 0.0, terms)
 
             val af1 = AffineForm(this, 1.0 .. 2.0, 1)
 
             terms = HashMap()
             terms[2] = 0.5
-            val rst = AffineForm(this, Range(1.1, 1.9), 1.5, 0.0, terms)
+            val rst = buildAF(this, RealRange(1.1, 1.9), 1.5, 0.0, terms)
 
             val log1 = af1.log(2.0)
             //assertEquals(0.38, log1.central, 0.01)
@@ -428,13 +444,13 @@ class AffineFormTest {
             var terms = HashMap<Int, Double>()
             terms[1] = 2.0
             terms[2] = 1.0
-            val lgr = AffineForm(this, Range.Reals,10.0, 0.0, terms)
+            val lgr = buildAF(this, RealRange.Reals,10.0, 0.0, terms)
 
             val af1 = AffineForm(this, 1.0 .. 2.0, 1)
 
             terms = HashMap()
             terms[2] = 0.5
-            val rst = AffineForm(this, Range(1.1, 1.9), 1.5, 0.0, terms)
+            val rst = buildAF(this, RealRange(1.1, 1.9), 1.5, 0.0, terms)
 
             val sqrt1 = af1.sqrt()
             assertEquals(1.2071, sqrt1.central, 0.01)
@@ -470,13 +486,13 @@ class AffineFormTest {
             var terms = HashMap<Int, Double>()
             terms[1] = 2.0
             terms[2] = 1.0
-            val lgr = AffineForm(this, Range.Reals,10.0, 0.0, terms)
+            val lgr = buildAF(this, RealRange.Reals,10.0, 0.0, terms)
 
             val af1 = AffineForm(this, 1.0 .. 2.0, 1)
 
             terms = HashMap()
             terms[2] = 0.5
-            val rst = AffineForm(this, Range(1.1, 1.9), 1.5, 0.0, terms)
+            val rst = buildAF(this, RealRange(1.1, 1.9), 1.5, 0.0, terms)
 
             val sqrt1 = af1.sqrt()
             assertEquals(1.0, sqrt1.min, 0.01)
@@ -521,13 +537,9 @@ class AffineFormTest {
     @Test
     fun testTimes(){
         DDBuilder{
-            val af1= AffineForm(this, 1.0 .. 3.0,1)
-
+            val af1= AffineForm(this, 1.0 .. 3.0, 1)
             val res = af1.times(af1)
             val expected = AffineForm(this, 1.0 .. 9.0, 1)
-
-            //print("structure " +res.xi.get(1)+ " error: "+res.r+"\n")
-
             assertEquals(expected.min, res.min, 0.0001)
             assertEquals(expected.max, res.max, 0.0001)
         }
@@ -647,8 +659,8 @@ class AffineFormTest {
             val divisor = AffineForm(this, 2.0)
             val res = a0 / divisor
 
-            assertEquals(0.0-0.0.ulp,res.min)
-            assertEquals(500.0,res.max,0.001)
+            assertEquals(0.0, res.min, 0.0.ulp)
+            assertEquals(500.0, res.max, 0.00000001)
 
             val a1 = AffineForm(this, 1000.0)/AffineForm(this, 3600.0)
             assertTrue(1000.0/3600.0 in a1)
@@ -724,9 +736,9 @@ class AffineFormTest {
 
             val af3 = AffineForm(this, 1.0 .. 2.0, 2)
             val af4 = af2.clone()
-            assertFalse(af1 == af2)
-            assertTrue(af3 == af2)
-            assertTrue(af4 == af2)
+            assertNotEquals(af1, af2)
+            assertEquals(af3, af2)
+            assertEquals(af4, af2)
         }
     }
 
@@ -768,7 +780,7 @@ class AffineFormTest {
             val af = AffineForm(this,-1.0..1.0)
             val relu_res = relu(af,this)
             relu_res.getRange()
-            assertEquals(relu_res.max,1.0)
+            assertEquals(1.0, relu_res.max)
             assertTrue { (relu_res.min <= 0.0 + 0.001) && ( 0.0 - 0.001 <= relu_res.min) }
         }
     }
@@ -803,7 +815,7 @@ class AffineFormTest {
     fun testInfiniteTerm() {
         DDBuilder{
             val terms = hashMapOf(1 to Double.POSITIVE_INFINITY)
-            val af3 = AffineForm(this, 2.0 .. 3.0, 2.5, 0.0, terms)
+            val af3 = buildAF(this, 2.0 .. 3.0, 2.5, 0.0, terms)
             assertEquals(2.0 .. 3.0, af3.min .. af3.max)
             // assertEquals(Double.NEGATIVE_INFINITY, af3.min )
             // assertEquals( Double.POSITIVE_INFINITY, af3.max)
@@ -816,7 +828,7 @@ class AffineFormTest {
     @Test
     fun testNaNTerm() {
         DDBuilder{
-            val range = AffineForm(this, 0.0 .. 1.0, 0.0, 0.0, hashMapOf(1 to Double.NaN))
+            val range = buildAF(this, 0.0 .. 1.0, 0.0, 0.0, hashMapOf(1 to Double.NaN))
             assertTrue(range.xi.isEmpty())
             assertEquals(0.0, range.min)
             assertEquals(1.0, range.max)
@@ -832,7 +844,7 @@ class AffineFormTest {
     fun testCeilingFxnAF1() {
         DDBuilder{
             val terms = HashMap<Int, Double>()
-            val x = AffineForm(this, Range(1.47, 1.49), 1.48, 0.01, terms)
+            val x = buildAF(this, RealRange(1.47, 1.49), 1.48, 0.01, terms)
 
             val y = x.ceil()
             //println("x = [" + x.min + ", " + x.max + "]" )
@@ -842,7 +854,7 @@ class AffineFormTest {
             val yL : Long = x.ceilAsLong()
             //println("yL = $yL")
             assertEquals(2, yL)
-            val yIR = x.ceiltoIntRange()
+            val yIR = x.ceilToIntRange()
             //println("yIR = [" + yIR.min + ", " + yIR.max + "]" )
             assertEquals(2, yIR.min)
             assertEquals(2, yIR.max)
@@ -857,7 +869,7 @@ class AffineFormTest {
     fun testInvCeilFxnAF1() {
         DDBuilder{
             val terms = HashMap<Int, Double>()
-            val x = AffineForm(this, Range(1.4, 1.6), 1.5, 0.1, terms)
+            val x = buildAF(this, RealRange(1.4, 1.6), 1.5, 0.1, terms)
             val y = x.ceil()
             val z = y.invCeil()
 
@@ -879,8 +891,7 @@ class AffineFormTest {
     @Test
     fun testFloorFxnAF1() {
         DDBuilder{
-            val terms = HashMap<Int, Double>()
-            val x = AffineForm(this, Range(1.51, 1.53), 1.52, 0.01, terms)
+            val x = buildAF(this, RealRange(1.51, 1.53), 1.52, 0.01)
 
             val y = x.floor()
             //println("x = [" + x.min + ", " + x.max + "]" )
@@ -905,7 +916,7 @@ class AffineFormTest {
     fun testInvFloorFxnAF1() {
         DDBuilder{
             val terms = HashMap<Int, Double>()
-            val x = AffineForm(this, Range(1.4, 1.6), 1.5, 0.1, terms)
+            val x = buildAF(this, RealRange(1.4, 1.6), 1.5, 0.1, terms)
             val y = x.floor()
             val z = y.invFloor()
 
@@ -963,7 +974,7 @@ class AffineFormTest {
             val nts = HashMap<Int,Double>()
             nts[5]= 0.02561483618895184
             nts[3]=  0.9499999999999994
-            val x = leaf(AffineForm(this, Range(0.009999999999999999981,4.0000000000000003),2.0050000000000017,1.0193851638110518,nts))
+            val x = leaf(buildAF(this, RealRange(0.009999999999999999981,4.0000000000000003),2.0050000000000017,1.0193851638110518,nts))
             val y = real(1.0).div(this.leaf(AffineForm(this, 1.0..2.0, 5)))
             val z1 = x.value.pow((y as AADD.Leaf).value)
 

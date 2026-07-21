@@ -1,8 +1,14 @@
-package io.github.tukcps.aadd.values
+package io.github.tukcps.aadd.values.real
 
 import io.github.tukcps.aadd.util.minusUlp
 import io.github.tukcps.aadd.util.parseUSNumberString
 import io.github.tukcps.aadd.util.plusUlp
+import io.github.tukcps.aadd.values.BoundKind
+import io.github.tukcps.aadd.values.NumberRange
+import io.github.tukcps.aadd.values.XBool
+import io.github.tukcps.aadd.values.real.math.RoundingMath
+import io.github.tukcps.aadd.values.real.math.IEEE754RoundingMath
+import io.github.tukcps.aadd.values.real.math.Rounding
 import kotlinx.serialization.Serializable
 import kotlin.math.*
 
@@ -13,12 +19,26 @@ import kotlin.math.*
  * @param max the maximum value, by default POSITIVE_INFINITY
  */
 @Serializable
-open class Range(
+open class RealRange(
     final override var min: Double = Double.NEGATIVE_INFINITY,
     final override var max: Double = Double.POSITIVE_INFINITY
 ) : NumberRange<Double> {
-    override val maxIsInf: Boolean get() = max.isInfinite()
-    override val minIsInf: Boolean get() = min.isInfinite()
+
+    override val minKind: BoundKind
+        get() = if (min == Double.NEGATIVE_INFINITY) BoundKind.NEGATIVE_INFINITY else BoundKind.FINITE
+
+    override val maxKind: BoundKind
+        get() = if (max == Double.POSITIVE_INFINITY) BoundKind.POSITIVE_INFINITY else BoundKind.FINITE
+
+    /**
+     * Implementation of up/down/nearest rounding
+     */
+    protected open val math: RoundingMath
+        get() = IEEE754RoundingMath
+
+    constructor(c: Double) : this(c, c)
+    constructor(r: ClosedRange<Double>) : this(r.start, r.endInclusive)
+    constructor(value: String) : this(parse(value).min, parse(value).max)
 
     /** Checks if the range is finite */
     fun isFinite() = (min.isFinite()) && (max.isFinite())
@@ -26,54 +46,26 @@ open class Range(
     override fun isZero(): Boolean = max == 0.0 && min == 0.0
     override fun isOne():  Boolean = max == 1.0 && min == 1.0
 
-    constructor(range: NumberRange<Double>): this(range.min, range.max)
-    constructor(other: Range) : this( other.min, other.max)
-    constructor(c: Double) : this(c, c)
-    constructor(r: ClosedRange<Double>) : this(r.start, r.endInclusive)
-
-    constructor(str: String) : this() {
-        val boundsStr = str.split("..")
-
-        if(str == "") {
-            min = -Double.MAX_VALUE
-            max = Double.MAX_VALUE
-            return
-        }
-
-        val lbs = boundsStr[0].trim()
-        min = when(lbs) {
-            "-INF","*","-*" -> -Double.MAX_VALUE
-            "INF" -> Double.MAX_VALUE
-            else -> parseUSNumberString(lbs)
-        }
-
-        max = if(boundsStr.size>1) {
-            val ubs = boundsStr[1].trim()
-            if(ubs=="INF" || ubs == "*") Double.MAX_VALUE
-            else parseUSNumberString(ubs)
-        } else min
-    }
-
     /**
      * ceiling function for Range
      */
-    open fun ceil() : Range {
+    open fun ceil() : RealRange {
         var lb = ceil(this.min)
         var ub = ceil(this.max)
         lb -= lb.ulp
         ub += ub.ulp
 
-        return Range(lb, ub)
+        return RealRange(lb, ub)
     }
 
-    open fun invCeil() : Range {
+    open fun invCeil() : RealRange {
         var lb = this.min - 1.0
         var ub = this.max
 
         lb -= lb.ulp
         ub += ub.ulp
 
-        return Range(lb, ub)
+        return RealRange(lb, ub)
     }
 
     /**
@@ -84,8 +76,8 @@ open class Range(
     /**
      * floor function for Range
      */
-    open fun floor() = Range(floor(this.min), floor(this.max))
-    open fun invFloor() : Range = Range(min, max+1.0)
+    open fun floor() = RealRange(floor(this.min), floor(this.max))
+    open fun invFloor() : RealRange = RealRange(min, max+1.0)
 
     /**
      * floor function for Range
@@ -100,7 +92,7 @@ open class Range(
         if (other == null) return false
         if (this::class != other::class) return false
         if (this === other) return true
-        val rr = other as Range
+        val rr = other as RealRange
         val minLowerBound = min - (3*min.ulp)
         val minUpperBound = min + (3*min.ulp)
 
@@ -116,7 +108,7 @@ open class Range(
     override fun greaterThan(other: NumberRange<Double>): XBool {
         if (this === other) return XBool.True
         var retval = XBool.False
-        val rr = other as Range
+        val rr = other as RealRange
         if (min > rr.max) retval = XBool.True
         if (rr.min == min && rr.max == max || max < rr.min)
             return XBool.False
@@ -146,24 +138,17 @@ open class Range(
     override fun greaterThanOrEquals(other: NumberRange<Double>): XBool {
         if (this === other) return XBool.True
         var retval = XBool.False
-        val rr = other as Range
+        val rr = other as RealRange
         if (min >= rr.min)
             retval = XBool.True
 
         return retval
     }
 
-    /**
-     * Quick and dirty relu implementation over real valued intervals
-     * */
-    fun relu() : Range {
-        return Range(max(0.0,this.min),max(0.0,this.max))
-    }
-
     override fun lessThan(other: NumberRange<Double>): XBool {
         if (this === other) return XBool.False
         var retval = XBool.False
-        val rr = other as Range
+        val rr = other as RealRange
         if (max < rr.min) retval = XBool.True
         if (rr.min == min && rr.max == max || min > rr.max)
             return XBool.False
@@ -232,118 +217,110 @@ open class Range(
             else -> XBool.X
         }
 
-    override fun times(other: Double): Range = when {
-        other == 0.0 -> Range(0.0, 0.0)
+    override fun times(other: Double): RealRange = when {
+        other == 0.0 -> RealRange(0.0, 0.0)
         other == 1.0 -> this.clone()
-        this.isZero() -> Range(0.0, 0.0)
-        this.isOne() -> Range(other, other)
-        else -> Range(min(this.min*other, this.max*other).minusUlp(), max(this.min*other, this.max*other).plusUlp())
+        this.isZero() -> RealRange(0.0, 0.0)
+        this.isOne() -> RealRange(other, other)
+        else -> RealRange(min(this.min*other, this.max*other).minusUlp(), max(this.min*other, this.max*other).plusUlp())
     }
 
-    override fun div(other: Double): Range { return this * (1.0 / other) }
+    override fun div(other: Double): RealRange =
+        this * (1.0 / other)
 
     override fun union(other: NumberRange<Double>) =
         when {
             this.isEmpty() -> other
             other.isEmpty() -> this
-            else -> Range(min(this.min, other.min), max(this.max, other.max))
-
+            else -> RealRange(min(this.min, other.min), max(this.max, other.max))
         }
-    override fun copy(min: Double?, max: Double?) = Range(min = min?: this.min, max = max?: this.max)
+
     override fun isEmpty(): Boolean = min > max || min.isNaN() || max.isNaN()
 
-    /**
-     * Sets minimum and maximum to the values of the given range.
-     * @param other value from which values will be copied into this.
-     */
-    fun becomes(other:Range) { min = other.min; max = other.max }
+    override operator fun plus(other: NumberRange<Double>) = RealRange(
+        math.add(min, other.min, Rounding.DOWN),
+        math.add(max, other.max, Rounding.UP)
+    )
 
-    override operator fun plus(other: NumberRange<Double>): Range {
-        var rMin = min + other.min
-        if (rMin.isFinite()) rMin -= rMin.ulp
-        var rMax = max + other.max
-        if (rMax.isFinite()) rMax += rMax.ulp
-        return Range(rMin, rMax)
-    }
+    override operator fun plus(other: Double) = RealRange(
+        math.add(min, other, Rounding.DOWN),
+        math.add(max, other, Rounding.UP)
+    )
 
-    override operator fun plus(other: Double): Range {
-        var rMin = min + other
-        rMin -= rMin.ulp
-        var rMax = max + other
-        rMax += rMax.ulp
-        return Range(rMin, rMax)
-    }
+    override operator fun minus(other: NumberRange<Double>) = RealRange(
+        math.sub(min, other.max, Rounding.DOWN),
+        math.sub(max, other.min, Rounding.UP)
+    )
 
-    /**
-     * Subtraction of two ranges including FP round-off error.
-     */
-    override operator fun minus(other: NumberRange<Double>): Range {
-        var rMin = min - other.max
-        rMin -= rMin.ulp
-        var rMax = max - other.min
-        rMax += rMax.ulp
-        return Range(rMin, rMax)
-    }
+    override operator fun minus(other: Double) = RealRange(
+        math.sub(min, other, Rounding.DOWN),
+        math.sub(max, other, Rounding.UP)
+    )
 
-    override operator fun minus(other: Double): Range {
-        var rMin = min - other
-        rMin -= rMin.ulp
-        var rMax = max - other
-        rMax += rMax.ulp
-        return Range(rMin, rMax)
-    }
+    override operator fun unaryMinus() = RealRange(-max, -min)
 
-    override operator fun unaryMinus() = Range(min(-max, -min), max(-max, -min))
-
+    // FIXME Interval exponentiation is only approximated.
+    // Proper handling depends on exponent type and monotonicity.
     override fun pow(other: NumberRange<Double>): NumberRange<Double> {
         require(this.min >= 0.0)
-        return Range(this.min.pow(other.min) .. this.max.pow(other.max))
+        return RealRange(this.min.pow(other.min) .. this.max.pow(other.max))
     }
 
     override fun pow(other: Double): NumberRange<Double> {
         TODO("Not yet implemented")
     }
 
-    /**
-     * The multiplication of two ranges including FP round-off error.
-     */
-    override operator fun times(other: NumberRange<Double>): Range {
-        val iaMult = listOf(min * other.min, min * other.max, max * other.min, max * other.max)
-        var resultMin = iaMult.min()
-        var resultMax = iaMult.max()
-        resultMin -= resultMin.ulp
-        resultMax += resultMax.ulp
-        return Range(resultMin, resultMax)
+    override operator fun times(other: NumberRange<Double>): RealRange {
+        val mins = listOf(
+            math.mul(min, other.min, Rounding.DOWN),
+            math.mul(min, other.max, Rounding.DOWN),
+            math.mul(max, other.min, Rounding.DOWN),
+            math.mul(max, other.max, Rounding.DOWN)
+        )
+
+        val maxs = listOf(
+            math.mul(min, other.min, Rounding.UP),
+            math.mul(min, other.max, Rounding.UP),
+            math.mul(max, other.min, Rounding.UP),
+            math.mul(max, other.max, Rounding.UP)
+        )
+
+        return RealRange(mins.min(), maxs.max())
     }
 
 
-    open fun inv(): Range = when {
-            min == 0.0  -> Range( (1/max).minusUlp(), Double.POSITIVE_INFINITY)
-            max == 0.0  -> Range( Double.NEGATIVE_INFINITY, (-1/min).plusUlp())
-            0.0 in this -> Reals
-            else        -> Range(min(1/min, 1/max).minusUlp(), max(1/min, 1/max).plusUlp())
-        }
+    open fun inv(): RealRange = when {
+        min == 0.0 -> RealRange(math.div(1.0, max, Rounding.DOWN), Double.POSITIVE_INFINITY)
+        max == 0.0 -> RealRange(Double.NEGATIVE_INFINITY, math.div(1.0, min, Rounding.UP))
+        0.0 in this -> Reals
+        else -> {
+            val dTOWARDNEGATIVE1 = math.div(1.0, min, Rounding.DOWN)
+            val dTOWARDNEGATIVE2 = math.div(1.0, max, Rounding.DOWN)
+            val dTOWARDPOSITIVE1 = math.div(1.0, min, Rounding.UP)
+            val dTOWARDPOSITIVE2 = math.div(1.0, max, Rounding.UP)
 
-    override operator fun div(other: NumberRange<Double>): Range =
-        this*Range(other).inv()
+            RealRange(min(dTOWARDNEGATIVE1, dTOWARDNEGATIVE2), max(dTOWARDPOSITIVE1, dTOWARDPOSITIVE2))
+        }
+    }
+
+    override operator fun div(other: NumberRange<Double>): RealRange =
+        this*RealRange(other).inv()
 
     override infix fun join(other: NumberRange<Double>) =
-        Range(min(other.min, min), max(other.max, max))
+        RealRange(min(other.min, min), max(other.max, max))
 
     override infix fun intersect(other: NumberRange<Double>) =
-        Range(max(other.min, min), min(other.max, max))
+        RealRange(max(other.min, min), min(other.max, max))
 
     /** Subset of, named following operator of Kotlin */
-    operator fun contains(other: Range): Boolean =
+    operator fun contains(other: RealRange): Boolean =
         this.min <= other.min && this.max >= other.max
 
     override operator fun contains(value: Double): Boolean =
         value in min .. max
 
-    fun isProperSubsetof(b: Range): Boolean {
-        return min > b.min && max < b.max
-    }
 
+    fun isProperSubsetOf(b: RealRange): Boolean = min > b.min && max < b.max
     val isStrictlyPositive: Boolean get() = min > 0.0
     val isStrictlyNegative: Boolean get() = max < 0.0
     val isWeaklyPositive: Boolean get() = min >= 0.0
@@ -351,85 +328,87 @@ open class Range(
 
     override fun hashCode()= super.hashCode()
 
-    fun toIntegerRange(): IntegerRange =
-        IntegerRange(min.toLong(), max.toLong())
-
     /** Returns the range as a string, considering also trap representations in format 0000.000E0 */
-    override fun toString(): String {
+    override fun toString(): String =
         when {
-            isEmpty() -> return "∅"
+            isEmpty() -> "∅"
             isScalar() -> {
                 if (min.isInfinite()) return "$min"
                 if (min.isNaN()) return "∅"
-                return min.toString()
+                min.toString()
             }
             this == Reals -> return "Real"
             else -> {
                 // capture near-inf as inf ...
-                val minstr = if (min < -Double.MAX_VALUE / 2.0) "-*" else min.toString()
-                val maxstr = if (max > Double.MAX_VALUE / 2.0) "*" else max.toString()
-                return "$minstr..$maxstr"
+                val minStr = if (min < -Double.MAX_VALUE / 2.0) "-*" else min.toString()
+                val maxStr = if (max > Double.MAX_VALUE / 2.0) "*" else max.toString()
+                "$minStr..$maxStr"
             }
         }
+
+    open fun clone() = RealRange(this.min, this.max)
+
+    override fun sqr(): NumberRange<Double> = when {
+        min >= 0.0 -> RealRange(math.mul(min, min, Rounding.DOWN), math.mul(max, max, Rounding.UP))
+        max <= 0.0 -> RealRange(math.mul(max, max, Rounding.DOWN), math.mul(min, min, Rounding.UP))
+        else -> RealRange(0.0, max(math.mul(min, min, Rounding.UP), math.mul(max, max, Rounding.UP)))
     }
-
-    open fun clone() = Range(this.min, this.max)
-
-
-     /**
-     * The square function.
-     */
-    override fun sqr(): NumberRange<Double> =
-        Range(min(this.min*this.min, this.max*this.max), max(this.min*this.min, this.max*this.max))
 
     override fun sqrt(): NumberRange<Double> = when {
-            isEmpty() -> Empty
-            max < 0   -> Empty
-            else      -> Range(sqrt(min).minusUlp(), sqrt(max).plusUlp())
-        }
-
-
-    override fun root(other: NumberRange<Double>): NumberRange<Double> =
-        TODO("Not yet implemented")
-
-    override fun exp(): NumberRange<Double> {
-        TODO("Not yet implemented")
+        isEmpty() -> Empty
+        max < 0.0 -> Empty
+        else -> RealRange(math.sqrt(max(0.0, min), Rounding.DOWN), math.sqrt(max, Rounding.UP))
     }
 
-    override fun log(): NumberRange<Double> {
-        TODO("Not yet implemented")
+    override fun exp(): NumberRange<Double> = when {
+        isEmpty() -> Empty
+        else -> RealRange(math.exp(min, Rounding.DOWN), math.exp(max, Rounding.UP))
     }
-    
-    override fun log(other: NumberRange<Double>): NumberRange<Double> {
-        TODO("Not yet implemented")
+
+    override fun log(): NumberRange<Double> = when {
+        isEmpty() -> Empty
+        max <= 0.0 -> Empty
+        min <= 0.0 -> RealRange(Double.NEGATIVE_INFINITY, math.log(max, Rounding.UP))
+        else -> RealRange(math.log(min, Rounding.DOWN), math.log(max, Rounding.UP))
     }
+
+    override fun log(other: NumberRange<Double>): NumberRange<Double> =
+        this.log() / other.log()
+
     /**
      * Some constants for different kind of special cases:
      *  * EMPTY is an empty range, i.e. (+infinity, -infinity)
      *  * RANGE is a finite range.
      *  * REAL is a  range that includes all Reals representable as Double
      */
-    companion object { /** Some constants that simplify work ...  */
-        val Empty = Range(Double.MAX_VALUE, -Double.MAX_VALUE)
-        val Reals = Range(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY)
+    companion object {
+        val Empty = RealRange(Double.MAX_VALUE, -Double.MAX_VALUE)
+        val Reals = RealRange(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY)
 
-        @Deprecated("Dont use; use Empty instead to represent that there is no valid result.", ReplaceWith("Empty"))
-        val RealsNaN = Range(-Double.NaN, Double.NaN)
+        private data class Bounds(val min: Double, val max: Double)
+
+        private fun parse(value: String): Bounds {
+            if (value.isBlank()) {
+                return Bounds(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY)
+            }
+
+            val bounds = value.split("..", limit = 2)
+            val min = parseLowerBound(bounds[0].trim())
+            val max = if (bounds.size == 2) parseUpperBound(bounds[1].trim()) else min
+
+            return Bounds(min, max)
+        }
+
+        private fun parseLowerBound(value: String): Double = when (value.uppercase()) {
+            "-INF", "-*" -> Double.NEGATIVE_INFINITY
+            "INF", "*"   -> Double.POSITIVE_INFINITY
+            else         -> parseUSNumberString(value)
+        }
+
+        private fun parseUpperBound(value: String): Double = when (value.uppercase()) {
+            "-INF", "-*" -> Double.NEGATIVE_INFINITY
+            "INF", "*" -> Double.POSITIVE_INFINITY
+            else       -> parseUSNumberString(value)
+        }
     }
 }
-
-/** overloaded contains-operator to allow "in" range notation */
-operator fun ClosedFloatingPointRange<Double>.contains(range: ClosedFloatingPointRange<Double>): Boolean {
-    if (this.start > range.start) return false
-    if (this.endInclusive < range.endInclusive) return false
-    return true
-}
-
-/**  Extension Functions developed by Jack **/
-fun ceil(input : Range) : Range = input.ceil()
-
-fun invCeil(input : Range) : Range = input.invCeil()
-
-fun floor(input : Range) : Range = input.floor()
-
-fun invFloor(input : Range) : Range = input.invFloor()

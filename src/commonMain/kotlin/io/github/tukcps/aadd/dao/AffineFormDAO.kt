@@ -1,8 +1,7 @@
 package io.github.tukcps.aadd.dao
 
-import io.github.tukcps.aadd.values.AffineForm
+import io.github.tukcps.aadd.values.real.AffineForm
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
 
 
 /**

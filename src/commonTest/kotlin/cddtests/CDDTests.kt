@@ -3,7 +3,7 @@ import io.github.tukcps.aadd.AADD
 import io.github.tukcps.aadd.BDD
 import io.github.tukcps.aadd.DD
 import io.github.tukcps.aadd.DDBuilder
-import io.github.tukcps.aadd.values.AffineForm
+import io.github.tukcps.aadd.values.real.AffineForm
 import io.github.tukcps.aadd.values.StateTuple
 import kotlin.test.Test
 import kotlin.test.assertEquals

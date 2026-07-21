@@ -1,17 +1,17 @@
 package aaddtests
 
-import io.github.tukcps.aadd.values.Range
-import io.github.tukcps.aadd.values.ceil
-import io.github.tukcps.aadd.values.floor
+import io.github.tukcps.aadd.values.real.RealRange
+import io.github.tukcps.aadd.values.real.ceil
+import io.github.tukcps.aadd.values.real.floor
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 
-class RangeTests {
+class RealRangeTests {
 
     @Test
     fun toStringTest() {
-        val r = Range(-1.2345678 .. 1.0 )
+        val r = RealRange(-1.2345678 .. 1.0 )
         assertEquals("-1.2345678..1.0", r.toString())
     }
 
@@ -27,29 +27,29 @@ class RangeTests {
     @Test
     fun testNeuralNetworkExampleRun1() {
         val precision = 0.001
-        val C = Range(40.0 .. 40.0) // variable to be changed
-        val C_w = Range(101.0 .. 101.0)
-        val K = Range(16.0 .. 16.0)
-        val F = Range(3.0 .. 3.0)
-        val s = Range(1.0 .. 1.0)
-        val p = Range(0.0 .. 0.0) // padding, 0 = NOT enabled, 1 = enabled
-        val C_wb: Range = floor (F / Range(2.0 .. 2.0))
-        val C_w_hat: Range = C_w + p * Range(2.0 .. 2.0) * C_wb
-        val a_w: Range = floor((C_w_hat - F) / s + 1.0)
-        val C_wb_s_floor_arg: Range = (C_wb - Range(1.0 .. 1.0)) / s + 1.0
-        val a_pb: Range = p * floor(C_wb_s_floor_arg)
-        val sum_a_pb: Range = (a_pb - Range(1.0 .. 1.0)) * a_pb / Range(2.0 .. 2.0) // sum from 0 to a_pb - 1
-        val MAC_notb: Range = (C_wb - s) * sum_a_pb // eq. 12
-        val Fw: Range = s * (a_w - Range(1.0 .. 1.0)) + F
-        val C_we: Range = Fw - C_w - C_wb
-        val C_we_s_floor_arg: Range = (C_we - Range(1.0 .. 1.0)) / s + 1.0
-        val a_pe: Range = p * floor(C_we_s_floor_arg)
-        val sum_a_pe: Range = (a_pe - Range(1.0 .. 1.0)) * a_pe / Range(2.0 .. 2.0) // sum from 0 to a_pe - 1
-        val C_wb_minus_C_we: Range = C_wb - C_we
-        val MAC_note: Range = (C_we - s) * sum_a_pe - C_wb_minus_C_we
+        val C = RealRange(40.0 .. 40.0) // variable to be changed
+        val C_w = RealRange(101.0 .. 101.0)
+        val K = RealRange(16.0 .. 16.0)
+        val F = RealRange(3.0 .. 3.0)
+        val s = RealRange(1.0 .. 1.0)
+        val p = RealRange(0.0 .. 0.0) // padding, 0 = NOT enabled, 1 = enabled
+        val C_wb: RealRange = floor(F / RealRange(2.0..2.0))
+        val C_w_hat: RealRange = C_w + p * RealRange(2.0 .. 2.0) * C_wb
+        val a_w: RealRange = floor((C_w_hat - F) / s + 1.0)
+        val C_wb_s_floor_arg: RealRange = (C_wb - RealRange(1.0 .. 1.0)) / s + 1.0
+        val a_pb: RealRange = p * floor(C_wb_s_floor_arg)
+        val sum_a_pb: RealRange = (a_pb - RealRange(1.0 .. 1.0)) * a_pb / RealRange(2.0 .. 2.0) // sum from 0 to a_pb - 1
+        val MAC_notb: RealRange = (C_wb - s) * sum_a_pb // eq. 12
+        val Fw: RealRange = s * (a_w - RealRange(1.0 .. 1.0)) + F
+        val C_we: RealRange = Fw - C_w - C_wb
+        val C_we_s_floor_arg: RealRange = (C_we - RealRange(1.0 .. 1.0)) / s + 1.0
+        val a_pe: RealRange = p * floor(C_we_s_floor_arg)
+        val sum_a_pe: RealRange = (a_pe - RealRange(1.0 .. 1.0)) * a_pe / RealRange(2.0 .. 2.0) // sum from 0 to a_pe - 1
+        val C_wb_minus_C_we: RealRange = C_wb - C_we
+        val MAC_note: RealRange = (C_we - s) * sum_a_pe - C_wb_minus_C_we
         //var MAC_note: Range = sum_i(0, a_pe - 1.0, C_wb - s * i) - C_wb_minus_C_we
         // var t_l: Range = Range(1.0 .. 1.0) + C / Range(8.0 .. 8.0) * K / Range(8.0 .. 8.0) * (a_w * F - MAC_notb - MAC_note)
-        val t_l: Range = Range(1.0 .. 1.0) + ceil(C / Range(8.0 .. 8.0)) * ceil(K / Range(8.0 .. 8.0)) * (a_w * F - MAC_notb - MAC_note)
+        val t_l: RealRange = RealRange(1.0 .. 1.0) + ceil(C / RealRange(8.0..8.0)) * ceil(K / RealRange(8.0..8.0)) * (a_w * F - MAC_notb - MAC_note)
         assertEquals(1.0, C_wb.min, precision) // 1
         assertEquals(1.0, C_wb.max, precision) // 1
         assertEquals(100.99999999999999, C_w_hat.min, precision) // 101
@@ -80,7 +80,6 @@ class RangeTests {
         assertEquals(-1.999999999999957, MAC_note.max, precision) // -2
         assertEquals(2960.9999999999964, t_l.min, precision) // 2981
         assertEquals(5401.0000000000055, t_l.max, precision) // 2981
-        //println("\nEnd of test Neural Network Example, Run 1\n")
     }
 
     /** TODO : Test already exists in this form AADDTests so can potentially be deleted */
@@ -88,34 +87,34 @@ class RangeTests {
     fun testNeuralNetworkExampleRun2() {
         //println("\nBeginning test Neural Network Example, Run 2\n")
         val precision = 0.001
-        val C = Range(16.0 .. 16.0) // variable to be changed
-        val C_w = Range(99.0 .. 99.0)
-        val K = Range(24.0 .. 24.0)
-        val F = Range(9.0 .. 9.0)
-        val s = Range(2.0 .. 2.0)
-        val p = Range(1.0 .. 1.0) // padding, 0 = NOT enabled, 1 = enabled
+        val C = RealRange(16.0 .. 16.0) // variable to be changed
+        val C_w = RealRange(99.0 .. 99.0)
+        val K = RealRange(24.0 .. 24.0)
+        val F = RealRange(9.0 .. 9.0)
+        val s = RealRange(2.0 .. 2.0)
+        val p = RealRange(1.0 .. 1.0) // padding, 0 = NOT enabled, 1 = enabled
         //var i = Range(1.0 .. 1.0)
         //var timeinyears = Range(10.0 .. 10.0)
 
-        val C_wb: Range = floor (F / Range(2.0 .. 2.0))
-        val C_w_hat: Range = C_w + p * Range(2.0 .. 2.0) * C_wb
+        val C_wb: RealRange = floor(F / RealRange(2.0..2.0))
+        val C_w_hat: RealRange = C_w + p * RealRange(2.0 .. 2.0) * C_wb
         //var a_w: Range = (C_w_hat - F) / s + 1.0
-        val a_w: Range = floor((C_w_hat - F) / s + 1.0)
-        val C_wb_s_floor_arg: Range = (C_wb - Range(1.0 .. 1.0)) / s + 1.0
-        val a_pb: Range = p * floor(C_wb_s_floor_arg)
-        val sum_a_pb: Range = (a_pb - Range(1.0 .. 1.0)) * a_pb / Range(2.0 .. 2.0) // sum from 0 to a_pb - 1
-        val MAC_notb: Range = (C_wb - s) * sum_a_pb // eq. 12
+        val a_w: RealRange = floor((C_w_hat - F) / s + 1.0)
+        val C_wb_s_floor_arg: RealRange = (C_wb - RealRange(1.0 .. 1.0)) / s + 1.0
+        val a_pb: RealRange = p * floor(C_wb_s_floor_arg)
+        val sum_a_pb: RealRange = (a_pb - RealRange(1.0 .. 1.0)) * a_pb / RealRange(2.0 .. 2.0) // sum from 0 to a_pb - 1
+        val MAC_notb: RealRange = (C_wb - s) * sum_a_pb // eq. 12
         //var MAC_notb: Range = sum_i(0, a_pb - 1.0, C_wb - s * i)
-        val Fw: Range = s * (a_w - Range(1.0 .. 1.0)) + F
-        val C_we: Range = Fw - C_w - C_wb
-        val C_we_s_floor_arg: Range = (C_we - Range(1.0 .. 1.0)) / s + 1.0
-        val a_pe: Range = p * floor(C_we_s_floor_arg)
-        val sum_a_pe: Range = (a_pe - Range(1.0 .. 1.0)) * a_pe / Range(2.0 .. 2.0) // sum from 0 to a_pe - 1
-        val C_wb_minus_C_we: Range = C_wb - C_we
-        val MAC_note: Range = (C_we - s) * sum_a_pe - C_wb_minus_C_we
+        val Fw: RealRange = s * (a_w - RealRange(1.0 .. 1.0)) + F
+        val C_we: RealRange = Fw - C_w - C_wb
+        val C_we_s_floor_arg: RealRange = (C_we - RealRange(1.0 .. 1.0)) / s + 1.0
+        val a_pe: RealRange = p * floor(C_we_s_floor_arg)
+        val sum_a_pe: RealRange = (a_pe - RealRange(1.0 .. 1.0)) * a_pe / RealRange(2.0 .. 2.0) // sum from 0 to a_pe - 1
+        val C_wb_minus_C_we: RealRange = C_wb - C_we
+        val MAC_note: RealRange = (C_we - s) * sum_a_pe - C_wb_minus_C_we
         //var MAC_note: Range = sum_i(0, a_pe - 1.0, C_wb - s * i) - C_wb_minus_C_we
         // var t_l: Range = Range(1.0 .. 1.0) + C / Range(8.0 .. 8.0) * K / Range(8.0 .. 8.0) * (a_w * F - MAC_notb - MAC_note)
-        val t_l: Range = Range(1.0 .. 1.0) + ceil(C / Range(8.0 .. 8.0)) * ceil(K / Range(8.0 .. 8.0)) * (a_w * F - MAC_notb - MAC_note)
+        val t_l: RealRange = RealRange(1.0 .. 1.0) + ceil(C / RealRange(8.0..8.0)) * ceil(K / RealRange(8.0..8.0)) * (a_w * F - MAC_notb - MAC_note)
         // var runtimein: Range = t_l
         // var runtimeout: Range = runtimein / power2(0.5 * timeinyears) // power2 not defined here
 

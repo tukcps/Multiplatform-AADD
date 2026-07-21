@@ -1,5 +1,31 @@
 package io.github.tukcps.aadd.values
 
+enum class BoundKind {
+    FINITE,
+    NEGATIVE_INFINITY,
+    POSITIVE_INFINITY;
+
+    fun isValid(value: Long): Boolean = when (this) {
+        FINITE -> true
+        NEGATIVE_INFINITY -> value == Long.MIN_VALUE
+        POSITIVE_INFINITY -> value == Long.MAX_VALUE
+    }
+}
+
+val BoundKind.isFinite: Boolean
+    get() = this == BoundKind.FINITE
+
+val BoundKind.isInfinite: Boolean
+    get() = this == BoundKind.NEGATIVE_INFINITY ||
+            this == BoundKind.POSITIVE_INFINITY
+
+val BoundKind.sign: Int
+    get() = when (this) {
+        BoundKind.NEGATIVE_INFINITY -> -1
+        BoundKind.FINITE -> 0
+        BoundKind.POSITIVE_INFINITY -> 1
+    }
+
 /**
  * NumberRange is the common interface for different kind of range arithmetics
  * on different kind of value types: Long, Double, using IA and AA.
@@ -7,20 +33,22 @@ package io.github.tukcps.aadd.values
  * - overflows
  * - rounding errors such that a safe inclusion is guaranteed
  * - exceptions, e.g., division by zero.
- * The implementation shall provide immutable objects.
+ *
+ * Invariants:
+ * - The implementation has to provide immutable objects.
+ * - min <= max      -> non-empty interval
+ * - min > max       -> empty interval; represents also NaN which is never stored in min or max.
  */
 interface NumberRange <T: Comparable<T> >: ClosedRange<T> {
-    /** The interface property of ClosedFloatingPointRange is mapped to min/max */
+    /** The interface property of ClosedRange is mapped to min/max */
     override val start: T get() = min
     override val endInclusive: T get() = max
     val min: T
     val max: T
 
-    fun copy(min: T?, max: T?): NumberRange<T>
-
-    override fun isEmpty(): Boolean = (min > max) || !(min == min) || !(max == max)
-    val maxIsInf: Boolean
-    val minIsInf: Boolean
+    override fun isEmpty(): Boolean = min > max
+    val maxKind: BoundKind
+    val minKind: BoundKind
 
     fun isScalar() = (min == max)
     fun isRange() = max > min
@@ -57,7 +85,6 @@ interface NumberRange <T: Comparable<T> >: ClosedRange<T> {
     fun pow(other: NumberRange<T>): NumberRange<T>
     fun sqr() : NumberRange<T>
     fun sqrt() : NumberRange<T>
-    fun root(other: NumberRange<T>): NumberRange<T> //nth root (other=n)
     fun exp(): NumberRange<T>
     fun log(): NumberRange<T>
     fun log(other: NumberRange<T>): NumberRange<T>

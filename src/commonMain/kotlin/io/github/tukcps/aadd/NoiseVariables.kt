@@ -1,6 +1,6 @@
 package io.github.tukcps.aadd
 
-import io.github.tukcps.aadd.values.AffineForm
+import io.github.tukcps.aadd.values.real.AffineForm
 
 /**
  * This class manages the noise variables.
