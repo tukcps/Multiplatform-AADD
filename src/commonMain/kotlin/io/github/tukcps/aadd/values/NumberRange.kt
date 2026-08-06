@@ -1,91 +1,172 @@
 package io.github.tukcps.aadd.values
 
-enum class BoundKind {
-    FINITE,
-    NEGATIVE_INFINITY,
-    POSITIVE_INFINITY;
-
-    fun isValid(value: Long): Boolean = when (this) {
-        FINITE -> true
-        NEGATIVE_INFINITY -> value == Long.MIN_VALUE
-        POSITIVE_INFINITY -> value == Long.MAX_VALUE
-    }
-}
-
-val BoundKind.isFinite: Boolean
-    get() = this == BoundKind.FINITE
-
-val BoundKind.isInfinite: Boolean
-    get() = this == BoundKind.NEGATIVE_INFINITY ||
-            this == BoundKind.POSITIVE_INFINITY
-
-val BoundKind.sign: Int
-    get() = when (this) {
-        BoundKind.NEGATIVE_INFINITY -> -1
-        BoundKind.FINITE -> 0
-        BoundKind.POSITIVE_INFINITY -> 1
-    }
+import io.github.tukcps.aadd.values.bool.XBool
 
 /**
- * NumberRange is the common interface for different kind of range arithmetics
- * on different kind of value types: Long, Double, using IA and AA.
- * The implementations shall handle
- * - overflows
- * - rounding errors such that a safe inclusion is guaranteed
- * - exceptions, e.g., division by zero.
+ * ## NumberRange
+ * A closed range over an ordered domain given by bounds of type `Bound`.
+ * Bound has null and one elements, and can be Finite, Infinite, or Unknown.
  *
- * Invariants:
- * - The implementation has to provide immutable objects.
- * - min <= max      -> non-empty interval
- * - min > max       -> empty interval; represents also NaN which is never stored in min or max.
+ * A number range
+ * - consists a lower and an upper bound,
+ * - defines null and one elements, and
+ * - can be Empty, a Scalar, or Finite/Infinite.
+ *
+ * Implementations provide operations on ranges:
+ * - (in) equality.
+ * - containment,
+ * - intersection, and
+ * - union.
+ * Arithmetic operations are intentionally not part of this interface.
+ * @param B the bound type
  */
-interface NumberRange <T: Comparable<T> >: ClosedRange<T> {
-    /** The interface property of ClosedRange is mapped to min/max */
-    override val start: T get() = min
-    override val endInclusive: T get() = max
-    val min: T
-    val max: T
+interface NumberRange<B : Bound> : ClosedRange<B>, NumericValue {
 
+    /** Lower bound of this range. */
+    val min: B
+
+    /** Upper bound of this range. */
+    val max: B
+
+    /**
+     * To implement the ClosedRange interface
+     */
+    override val start: B
+        get() = min
+
+    override val endInclusive: B
+        get() = max
+
+    /**
+     * Returns whether this range contains no values.
+     */
     override fun isEmpty(): Boolean = min > max
-    val maxKind: BoundKind
-    val minKind: BoundKind
 
-    fun isScalar() = (min == max)
-    fun isRange() = max > min
-    fun isZero(): Boolean
-    fun isOne(): Boolean
+    /**
+     * Returns whether both bounds are finite.
+     */
+    fun isFinite(): Boolean = min.isInfinite && max.isInfinite && !isEmpty()
 
-    override operator fun contains(value: T): Boolean = value in min..max
-    operator fun contains(value: NumberRange<T>) = this.min <= value.min && this.max >= value.max
+    /**
+     * Returns whether this range represents exactly one value.
+     */
+    fun isScalar(): Boolean = !isEmpty() && min == max
 
-    infix fun join(other: NumberRange<T>): NumberRange<T>
-    infix fun union(other: NumberRange<T>): NumberRange<T>
-    infix fun intersect(other: NumberRange<T>): NumberRange<T>
+    /**
+     * Returns whether this range represents zero.
+     */
+    fun isZero(): Boolean = min.isZero && max.isZero
 
-    fun greaterThan(other: NumberRange<T>): XBool
-    fun greaterThan(other: T): XBool
-    fun greaterThanOrEquals(other: NumberRange<T>): XBool
-    fun greaterThanOrEquals(other: T): XBool
-    fun lessThan(other: NumberRange<T>): XBool
-    fun lessThan(other: T): XBool
-    fun lessThanOrEquals(other: NumberRange<T>): XBool
-    fun lessThanOrEquals(other: T): XBool
+    /**
+     * Returns whether this range represents one.
+     */
+    fun isOne(): Boolean = min.isOne && max.isOne
 
-    operator fun div(other: NumberRange<T>): NumberRange<T>
-    operator fun div(other: T): NumberRange<T>
-    operator fun minus(other: NumberRange<T>): NumberRange<T>
-    operator fun minus(other: T): NumberRange<T>
-    operator fun plus(other: NumberRange<T>): NumberRange<T>
-    operator fun plus(other: T): NumberRange<T>
-    operator fun times(other: NumberRange<T>): NumberRange<T>
-    operator fun times(other: T): NumberRange<T>
-    operator fun unaryMinus(): NumberRange<T>
+    /**
+     * Returns whether this range contains the specified value.
+     *
+     * @param value the value to test
+     * @return `true` iff the value is contained in this range
+     */
+    override operator fun contains(value: B): Boolean =
+        !isEmpty() && value >= min && value <= max
 
-    fun pow(other: T): NumberRange<T>
-    fun pow(other: NumberRange<T>): NumberRange<T>
-    fun sqr() : NumberRange<T>
-    fun sqrt() : NumberRange<T>
-    fun exp(): NumberRange<T>
-    fun log(): NumberRange<T>
-    fun log(other: NumberRange<T>): NumberRange<T>
+    /**
+     * Returns whether this range completely contains another range.
+     *
+     * @param other the range to test
+     * @return `true` iff this range contains the other range
+     */
+    operator fun contains(other: NumberRange<B>): Boolean =
+        !other.isEmpty() && other.min >= min && other.max <= max
+
+    /**
+     * Returns the intersection of this range and another range.
+     *
+     * @param other the other range
+     * @return the common part of both ranges
+     */
+    infix fun intersect(other: NumberRange<B>): NumberRange<B>
+
+    /**
+     * Returns the smallest range containing this range and another range.
+     *
+     * @param other the other range
+     * @return the convex hull of both ranges
+     */
+    infix fun join(other: NumberRange<B>): NumberRange<B>
+
+    /**
+     * Returns the union of this range and another range.
+     * For convex ranges this is identical to [join].
+     *
+     * @param other the other range
+     * @return the union of both ranges
+     */
+    infix fun union(other: NumberRange<B>): NumberRange<B> =
+        join(other)
+
+    /**
+     * Compares this range with a scalar value.
+     *
+     * @param other the value to compare with
+     * @return the three-valued comparison result
+     */
+    infix fun greaterThan(other: B): XBool
+
+    /**
+     * Compares this range with a scalar value.
+     *
+     * @param other the value to compare with
+     * @return the three-valued comparison result
+     */
+    infix fun greaterThanOrEquals(other: B): XBool
+
+    /**
+     * Compares this range with a scalar value.
+     *
+     * @param other the value to compare with
+     * @return the three-valued comparison result
+     */
+    infix fun lessThan(other: B): XBool
+
+    /**
+     * Compares this range with a scalar value.
+     *
+     * @param other the value to compare with
+     * @return the three-valued comparison result
+     */
+    infix fun lessThanOrEquals(other: B): XBool
+
+    /**
+     * Compares this range with another range.
+     *
+     * @param other the other range
+     * @return the three-valued comparison result
+     */
+    infix fun greaterThan(other: NumberRange<B>): XBool
+
+    /**
+     * Compares this range with another range.
+     *
+     * @param other the other range
+     * @return the three-valued comparison result
+     */
+    infix fun greaterThanOrEquals(other: NumberRange<B>): XBool
+
+    /**
+     * Compares this range with another range.
+     *
+     * @param other the other range
+     * @return the three-valued comparison result
+     */
+    infix fun lessThan(other: NumberRange<B>): XBool
+
+    /**
+     * Compares this range with another range.
+     *
+     * @param other the other range
+     * @return the three-valued comparison result
+     */
+    infix fun lessThanOrEquals(other: NumberRange<B>): XBool
 }

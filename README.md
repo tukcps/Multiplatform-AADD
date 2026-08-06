@@ -7,37 +7,80 @@
 
 ![Logo of AADD](doc/AADDLogo.png)
 
-## What are AADDs?  
-AADDs permit semi-symbolic computations on Ranges, Integers, and its interactions with control flow via predicates.
-AADDs are a combination of reduced, ordered BDD that model discrete conditions and Affine Forms that model computations on real numbers.
-Both interact via predicates that are structured in the form of a BDD.
-The overview and control of the interactions between discrete and continuous variables might be useful in many problems, 
-e.g. the development of  
+## What the AADD library does
+The AADD library enables **semi-symbolic computations** over Reals (Doubles), Integers, and Booleans.
+These are represented by sets of convex ranges; likewise, operations are done on sets of convex ranges.
+The results guarantee **safe inclusion**: no possible results are lose
 
-- Methods for symbolic execution of software that has computations on Double or Integer numbers,
-- Methods for runtime-verification, 
-- Methods for verification of neural networks, 
-- Constraint propagation or SMT solvers where discrete and continuous solutions are tightly entangled.
+Use cases include 
+
+- Reachability analysis by abstract execution in general, 
+- Formal verification of mixed discrete/continuous and control systems, 
+- Type inference and verification in software systems, 
+- Development of tools for constraint propagation and reasoning, e.g., SMT solvers.
+
+What the AADD library does can be seen by a tiny code-example in Kotlin: 
+
+```
+   import io.github.tukcps.aadd.*
+
+   fun main() = DDBuilder {
+      val x: Real = real(-1.0 .. 1.0, "x")
+      val f: Real = ite(x greaterEquals 0.0, x-100.0, x+100.0)
+      val g: Real = f/2     // also nonlinear functions
+      println(" f = $f")
+   }
+```
+
+The resulting output is:
+```
+    f = ITE(1, [-50; -49.5], [49.5; 50]) 
+```
+
+To reduce over-approximation, the AADD library implements a number of state-of-the-art techniques, including
+
+- Reals with **directed rounding** on the JVM platform (Double + TwoSum and other algorithms),
+- Integers with **Infinities** and handling of overflow (Long + Kotlin), 
+- **Adaptive, Constrained** Affine Arithmetic (AA) with
+  - Taylor, Chebychev/MinMax, and other linear approximations, 
+  - Combination with interval arithmetic where useful,
+  - Automatic **reduction of noise terms**, 
+  - (WiP) Caching of intermediate results,
+  - Minimization of overapproximation by an LP solver.
+  - **Splitting of image** where useful (WiP) is represented by **Shannon Decomposition in decision diagrams (DD)**, 
+  - Also, **linearized constraints** are represented as Shannon Decomposition in decision diagrams (DD), allowing us
+  to profit from BDD-like reduction techniques on AADDs and IDDs. 
+  - Possibility to model discrete computations with BDD (Bool),
+  - BDD (Bool) can be used to control continuous computations (IF, THEN, ELSE, LOOP, etc.), and
+
+To the best of our knowledge, the last four techniques are unique to the AADD library.
+They allow us to achive in suitable applications like reachability analysis a high performance and scalability to
+numerical algorithms far beyond linear filters. 
+
+However, note: 
+> For purely Boolean problems, optimized BDD packages or a SAT solver are likely better suited.
+
+Also, the AADD library does not provide a complete SMT solver -- but it can be used to develop such tools.
 
 To learn more:
 
+- Grimm et al. DAC 2017; https://dl.acm.org/doi/abs/10.1145/3061639.3072949
 - Grimm et al., EPTCS 247, 2017, pp. 1-17; https://doi.org/10.4204/EPTCS.247.1
 - Zivkovic et al., IEEE TCAD 38/10 2019;  https://ieeexplore.ieee.org/document/8428606
 - Zivkovic et al., DATE 2019; http://dx.doi.org/10.23919/DATE.2019.8715278
 
-For a complex project that uses AADD check SysMD Notebook on Github: https://github.com/tukcps/SysMD 
-
-> For purely Boolean problems, optimized BDD packages or a SAT solver are likely better suited.
+For a complex project base on the AADD library, check SysMD Notebook on Github: https://github.com/tukcps/SysMD.
 
 ## Contents and Use of the AADD Library
-This repository contains the *multi-platform* AADD library.
-It implements *Affine Arithmetic Decision Diagrams* (AADD) for various platforms, including
-binary shared libraries (for use from C/C++, ...), and the Java Virtual Machine platform.
+
+The implementation is a **Kotlin Multiplatform Project**.
+This means, that Kotlin generates both JAR files for the Java Virtual Machine platform
+and binary shared libraries (for use from C/C++, ...).
 
 The development environment is:
+- Gradle 8.5+ as build tool.
 - Kotlin v2.4+ which compiles to Java 21+ Byte code or various binary platforms, 
 - Kotlin test for unit testing, 
-- Gradle 8.5+ as build tool. 
 
 The Gradle build tool automatically downloads all dependencies.
 The multi-platform version includes a simple LP solver (which is ok as most LP problems in AADD are small ones, where the overhead for starting a complex solver is expensive).
@@ -45,23 +88,28 @@ For the JVM platforms, other solvers for LP/MILP problems like OjAlgo will be us
 
 To include the AADD library in an application, add the following dependency to your Gradle dependencies: 
 ```
-    implementation("io.github.tukcps:aadd:0.1.8") 
+    implementation("io.github.tukcps:aadd:0.9.1") // Check for newer versions!  
 ```
-Gradle will get and use the respective version (i.e., 0.1.8), and you just can use it in your code.
+If you use Gradle (or Maven) as build tool, these will download and use the respective version 
+(i.e., 0.9.1) automatically, and you just can use it in your code.
+If you prefer compiling the code by yourself: 
+```
+    gradle build
+```
 
-To quickly try some pre-existing examples, it is suggested to use IntelliJ IDEA (https://www.jetbrains.com/idea/), and to import the Gradle project.
-Navigate to "src/test," and right-click on a benchmark, or example to run it. 
+To quickly try some pre-existing examples, it is suggested to use IntelliJ IDEA (https://www.jetbrains.com/idea/), 
+and to import the Gradle project.
+Navigate to "src/test," and right-click on an example to run it. 
 
-
-## Semi-Symbolic Computations with AADD
+## Semi-Symbolic Computations with the AADD library
 
 The AADD library allows users execute code in a semi-symbolic way.
 For this purpose, it provides representations of variables and constants of the types
 
 - Real 
 - Integer 
-- String 
-- Boolean 
+- Bool 
+- String (just a toy extension)
 
 Variables and constants are created a factory and builder class instance ```DDBuilder```. 
 This object maintains all information on dependencies and interactions. 
@@ -71,14 +119,12 @@ Then, its methods can be used to create new variables and constants, e.g., in Ko
 ```
    import io.github.tukcps.aadd.*
 
-   fun main() {
-      val bulder = DDBuilder() 	
-      val x = builder.real(-1.0 .. 1.0, "x")
-      val f = builder.ite(x greaterEquals 0.0, x-100.0, x+100.0)
+   fun main() = DDBuilder {
+      val x: Real = real(-1.0 .. 1.0, "x")
+      val f: Real = ite(x greaterEquals 0.0, x-100.0, x+100.0)
       println(" f = $f")
-      // f = ITE(1, [-100,00; -99,00], [99,00; 100,00])
+      // Displays: f = ITE(1, [-100,00; -99,00], [99,00; 100,00])
    }
-}
 ```
 For other platforms, the respective functions must be called in the respective language, e.g., Java, or C++. 
 Note that a DDBuilder has a single abstract method as parameter. 
@@ -102,46 +148,10 @@ Furthermore, the method `.toString` returns a suitable string.
 
 ### Configuration parameters of DDBuilder 
 
-Computations on affine forms lead to internal errors due to rounding and approximation of the results of nonlinear operations.
-To not distort the actual result interval, these errors need to be stored in the affine form.
-
-The implementation offers two different ways of storing internal errors: 
-Either in one single error term with interval semantics (r) or in additional noise symbols (xi).
-While the first option offers shorter computation times, the second option reduces exponential error growth in long iterative computations.
-
-All default configurations can be found in the configuration file of DDBuilder (jAADDConfig.json):
-```
-   "noiseSymbolsFlag": false,
-   "originalFormsFlag": false,
-   "maxSymbols": 200,
-   "mergeSymbols": 10
-```
-By default, ```noiseSymbolsFlag``` is set to false, which means that all errors are stored in a single error term.
-If it is switched to true, every internal error is stored in an individual noise symbol and approximation errors are mapped to the operation they resulted from. 
-This may allow error cancellation in further computations, but also increases the number of the affine form's noise symbols and thus the computation time.
-
-Therefore, the number of noise symbols per affine form is limited by the reduceNoiseSymbols function. 
-Whenever the number of noise symbols in an affine form exceeds "maxSymbols," the function replaces exactly 
-"mergeSymbols" many of them by a new noise variable that has the value of the replaced ones.
-A detailed description of the reduceNoiseSymbols function can be found in section 2.2 of the User Guide.
-
-The ```originalFormsFlag``` enables an additional mapping for times and inverse operations for the detection of linear dependencies between approximation errors that resulted from operations on scalar dependent affine forms. 
-Thus, enabling the originalFormsFlag without the noiseSymbolsFlag has no effect.
-
-According to the use case, the configuration of a DDBuilder's instance can be adapted, 
-as shown in the following example:
-```
-DDBUilder{
-   config.noiseSymbolsFlag = true
-   config.originalFormsFlag = true
-   config.maxSymbols = 100
-   config.mergeSymbols = 5   
-}
-```
 
 ### AADD and BDD combined and DSL
 
-Imagine the following program, e.g., in Kotlin: 
+Imagine the following pseudocode program, e.g., in Kotlin, C++, Java in : 
 ```
     var a = Real(-1.0, 1.0) // precondition: a has a value in -1..1
     if (a > 0.0) 
@@ -159,8 +169,8 @@ With the help of the class DDBuilder that provides DSL features, we can write
              a=a.assignS(a+10.0)    // Condition is considered by solver
          ELSE()                     // Condition is negated
              a=a.assignS(a-10.0)    // Negated condition is considered by solver 
-         END ()
-         println("a = "+a)
+         END()
+         println("a = $a")
     }
 ```
 More complete documentation is in the folder doc. 

@@ -1,33 +1,71 @@
 package values.real
+import io.github.tukcps.aadd.values.real.DoubleBound
 import kotlin.test.*
-import io.github.tukcps.aadd.values.real.RealRange
-import io.github.tukcps.aadd.values.real.relu
+import testutil.Assertions.assertEquals
+import io.github.tukcps.aadd.values.real.ia.RealRange
+import io.github.tukcps.aadd.values.real.ia.exp
+import io.github.tukcps.aadd.values.real.ia.ln
+import io.github.tukcps.aadd.values.real.ia.minus
+import io.github.tukcps.aadd.values.real.ia.plus
+import io.github.tukcps.aadd.values.real.minus
+import io.github.tukcps.aadd.values.real.plus
+import kotlin.math.*
+import kotlin.ranges.rangeTo
 
 class RealRangeTests {
 
     @Test
-    fun rangeEqualsTest1() {
+    fun rangeEqualsTestRange() {
         val realRangeA = RealRange(3.0..3.0)
-        val realRangeB = RealRange(2.9999999999999987..3.0000000000000013)
+        val realRangeB = RealRange(3.0..3.0)
         assertEquals(realRangeA,realRangeB)
     }
 
     @Test
-    fun rangeEqualsTest2() {
+    fun rangeEqualsTestScalar() {
         val realRangeA = RealRange(2.0..2.0)
         val realRangeB = RealRange(2.0..2.0)
         println(realRangeA == realRangeB)
     }
 
-    @Test
-    fun reluTest()
-    {
-        // The relu functions sets negative values to 0 and non negaitve it just passes
-        // Thus for -1.0 .. 1.0 we expect a return range of 0.0 .. 1.0
-        val realRange = RealRange(-1.0..1.0)
-        val relu_res = realRange.relu()
-        //println(relu_res)
+    val a = RealRange(-1.0, 2.0)
+    val b = RealRange(2.0, 3.0)
 
+    /** A real is the range +-MAX_VALUE. It is identified by isReal() */
+    @Test fun realTest() {
+        val real = RealRange(RealRange.Reals)
+        assertEquals(DoubleBound.NegativeInfinity, real.min)
+        assertEquals(DoubleBound.PositiveInfinity, real.max)
+        assertTrue(real.isReals())
     }
 
+    @Test
+    fun testPlus() {
+        val c = a+b
+        assertEquals(c.min, a.min+b.min)
+        assertEquals(c.max, a.max+b.max)
+    }
+
+    @Test
+    fun testMinus() {
+        val c = a-b
+        assertEquals(c.max.finiteValue,
+            max(a.min.finiteValue - b.max.finiteValue, b.min.finiteValue - a.max.finiteValue)
+        )
+        assertEquals(c.min.finiteValue,
+            min(a.min.finiteValue - b.max.finiteValue, b.min.finiteValue - a.max.finiteValue)
+        )
+    }
+
+    @Test
+    fun testExp() {
+        val c = exp(RealRange(1.0, 2.0))
+        assertEquals(exp(1.0) .. exp(2.0), c, 0.0000000001)
+    }
+
+    @Test
+    fun testLn() {
+        val c = ln(RealRange(1.0, 2.0))
+        assertEquals(ln(1.0) .. ln(2.0), c, 0.0000000001)
+    }
 }

@@ -1,12 +1,18 @@
-package benchmarks
+package examples
 
-import io.github.tukcps.aadd.AADD
-import io.github.tukcps.aadd.BDD
 import io.github.tukcps.aadd.DDBuilder
-import io.github.tukcps.aadd.functions.contains
+import io.github.tukcps.aadd.DDBuilder.BoolMath.and
+import io.github.tukcps.aadd.DDBuilder.RealMath.constrainTo
+import io.github.tukcps.aadd.DDBuilder.RealMath.plus
+import io.github.tukcps.aadd.DDBuilder.RealMath.sqrt
+import io.github.tukcps.aadd.DDBuilder.RealMath.times
+import io.github.tukcps.aadd.Real
+import io.github.tukcps.aadd.dd.AADD
+import io.github.tukcps.aadd.dd.BDD
 import io.github.tukcps.aadd.util.toRoundedString
-import io.github.tukcps.aadd.values.real.RealRange
+import io.github.tukcps.aadd.values.real.ia.RealRange
 import kotlin.math.PI
+import kotlin.math.exp
 import kotlin.math.ln
 import kotlin.test.Ignore
 import kotlin.test.Test
@@ -20,27 +26,27 @@ class WaterLevelBenchmark2 {
         DDBuilder {
             val gravity = 9.81
             val c = 0.9 // constant for flow speed of the drain
-            val areaOfOutflowPipe= kotlin.math.exp(ln(0.5)*2)* PI //A_0
+            val areaOfOutflowPipe= exp(ln(0.5)*2) * PI //A_0
             lpCalls = 0
             // val start = System.currentTimeMillis()
             // println("==== Stupid water level monitor runtime verification benchmark ====")
             // some constants with uncertain value.
             val inrate = real(0.6..1.0, "inrate")
-            var level: AADD = real(1.0..11.0, "level")
+            var level: Real = real(1.0..11.0, "level")
             // outflow after Torricelli's law
             var dlevel = real(10.0)
             val aux = real(2*gravity) * dlevel
-            val outrate = real(- c* areaOfOutflowPipe) * aux.sqrt()
+            val outrate = real(- c* areaOfOutflowPipe) * sqrt(aux)
             var rate = boolean("initial direction").ite(inrate, outrate)
             var drate = outrate
-            var inrange: BDD = True
+            var inrange: BDD = Bool.True
             var rlevel: AADD = real(1.0..11.0, (-1).toString())
             repeat (40) {
                 // For discrete fault:
                 // if (time > 22) dlevel = 2.0
                 //print("  At time: $time sec. physical water level is: " + String.format("%.2f", dlevel))
-                if (dlevel.max >= 10.0) drate = outrate
-                if (dlevel.min < 2.0) drate = real(0.9)
+                if (dlevel.max.finiteValue >= 10.0) drate = outrate
+                if (dlevel.min.finiteValue < 2.0) drate = real(0.9)
                 // For parametric fault:
                 // if (time >= 19 && drate == 0.9) drate = 0.5
                 dlevel += drate
@@ -50,7 +56,7 @@ class WaterLevelBenchmark2 {
                 inrange = (level greaterThanOrEquals real(10.0)) and (level lessThanOrEquals real(10.0)) and inrange
                 // ... or better: check with intersect:
                 rlevel = rlevel.constrainTo(RealRange(10.0 - 0.01..10.0 + 0.01))
-                assertTrue(level in 0.9..11.1)
+                assertTrue(level in RealRange(0.9..11.1))
                 IF(level greaterThan real(10.0))
                 rate = assign(rate, outrate)
                 END()
@@ -88,7 +94,7 @@ class WaterLevelBenchmark2 {
             var rate = boolean("initial direction").ite(inrate, outrate)
             var drate = 0.9
             var dlevel = 4.0
-            var inrange: BDD = True
+            var inrange: BDD = Bool.True
             var rlevel: AADD = real(1.0..11.0, (-1).toString())
             for (time in 0 .. 39) {
                 // For discrete fault:
@@ -104,8 +110,8 @@ class WaterLevelBenchmark2 {
                 // Check the discrete state ...
                 inrange = (level greaterThanOrEquals real(dlevel)) and (level lessThanOrEquals real(dlevel)) and inrange
                 // ... or better: check with intersect:
-                rlevel = rlevel.constrainTo(RealRange(dlevel - 0.01..dlevel + 0.01))
-                assertTrue(level in 0.9..12.0)
+                rlevel = rlevel constrainTo RealRange(dlevel - 0.01..dlevel + 0.01)
+                assertTrue(level in RealRange(0.9..12.0))
                 IF(level greaterThan real(10.0))
                 rate = assign(rate, outrate)
                 END()
@@ -132,10 +138,6 @@ class WaterLevelBenchmark2 {
     @Ignore
     fun runtimeVerificationBenchmarkWithoutR() {
         DDBuilder {
-            this.config.noiseSymbolsFlag = true
-            this.config.maxSymbols = 4
-            this.config.mergeSymbols = 3
-            this.config.xiHashMapSize = 10
             lpCalls = 0
             // val start = System.currentTimeMillis()
             // println("==== Stupid water level monitor runtime verification benchmark ====")
@@ -146,7 +148,7 @@ class WaterLevelBenchmark2 {
             var rate: AADD = boolean("initial direction").ite(inrate, outrate)
             var drate = 0.9
             var dlevel = 4.0
-            var inrange: BDD = True
+            var inrange: BDD = Bool.True
             var rlevel: AADD = real(1.0..11.0, (-1).toString())
             for (time in 0 .. 39) {
                 // For discrete fault:
@@ -163,7 +165,7 @@ class WaterLevelBenchmark2 {
                 inrange = (level greaterThanOrEquals real(dlevel)) and (level lessThanOrEquals real(dlevel)) and inrange
                 // ... or better: check with intersect:
                 rlevel = rlevel.constrainTo(RealRange(dlevel - 0.01..dlevel + 0.01))
-                assertTrue(level in 0.9..11.1)
+                assertTrue(level in RealRange(0.9..11.1))
                 IF(level greaterThan real(10.0))
                     rate = assign(rate, outrate)
                 END()

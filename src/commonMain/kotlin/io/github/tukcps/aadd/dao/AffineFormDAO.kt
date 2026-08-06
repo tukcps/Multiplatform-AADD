@@ -1,6 +1,7 @@
 package io.github.tukcps.aadd.dao
 
-import io.github.tukcps.aadd.values.real.AffineForm
+import io.github.tukcps.aadd.values.real.aa.AffineForm
+import io.github.tukcps.aadd.values.real.DoubleBoundMath.toDouble
 import kotlinx.serialization.Serializable
 
 
@@ -12,16 +13,14 @@ data class AffineFormDAO (
     val min: Double,
     val max: Double,
     var central: Double,
-    var r: Double,
-    val xi: HashMap<Int, Double>
+    val xi: HashMap<Long, Double>
 ) {
     fun toJson(): String = json.encodeToString(this)
 }
 
 fun AffineForm.toDAO() = AffineFormDAO(
-    min = min,
-    max = max,
+    min = min.toDouble(),
+    max = max.toDouble(),
     central = central,
-    r = r,
     xi = xi
 )

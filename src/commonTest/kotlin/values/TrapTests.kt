@@ -1,9 +1,17 @@
 package values
 
-import io.github.tukcps.aadd.*
 import io.github.tukcps.aadd.DDBuilder
-import io.github.tukcps.aadd.values.real.AffineForm
-import io.github.tukcps.aadd.values.real.RealRange
+import io.github.tukcps.aadd.DDBuilder.RealMath.constrainTo
+import io.github.tukcps.aadd.DDBuilder.RealMath.div
+import io.github.tukcps.aadd.DDBuilder.RealMath.inv
+import io.github.tukcps.aadd.DDBuilder.RealMath.plus
+import io.github.tukcps.aadd.DDBuilder.RealMath.times
+import io.github.tukcps.aadd.Real
+import io.github.tukcps.aadd.dd.AADD
+import io.github.tukcps.aadd.values.real.DoubleBoundMath.toDouble
+import io.github.tukcps.aadd.values.real.aa.AffineForm
+import io.github.tukcps.aadd.values.real.aa.times
+import io.github.tukcps.aadd.values.real.ia.RealRange
 import kotlin.test.*
 
 /**
@@ -19,20 +27,20 @@ class TrapTests {
     fun constantsTest() {
         DDBuilder {
             val x = RealRange.Reals
-            assertTrue(x.max.isInfinite())
-            assertTrue(x.min.isInfinite())
+            assertTrue(x.max.isInfinite)
+            assertTrue(x.min.isInfinite)
             assertTrue(x.min < x.max)
 
-            val afReals = AFReals
-            assertTrue(afReals.max.isInfinite())
-            assertTrue(afReals.min.isInfinite())
+            val afReals = AF.All
+            assertTrue(afReals.max.isInfinite)
+            assertTrue(afReals.min.isInfinite)
             assertTrue(afReals.min < afReals.max)
             assertTrue(!afReals.isFinite())
             assertTrue(!afReals.isFinite())
 
-            val reals = Reals
-            assertTrue(reals.maxIsInf)
-            assertTrue(reals.minIsInf)
+            val reals = Reals.All
+            assertTrue(reals.max.isInfinite)
+            assertTrue(reals.min.isInfinite)
             assertTrue(reals.min < reals.max)
         }
     }
@@ -42,16 +50,16 @@ class TrapTests {
     fun arithmeticOperationsWithEmpty() {
         DDBuilder {
             // Arithmetic operations with one operand Empty shall return Empty
-            val a = Empty
-            val b: AADD = real(1.0..2.0)
+            val a = Reals.Empty
+            val b: Real = real(1.0..2.0)
             var c = a + b
-            assertTrue(c === Empty)
+            assertSame(c, Reals.Empty)
             c = a * b
-            assertTrue(c === Empty)
+            assertSame(c, Reals.Empty)
             c = a / b
-            assertTrue(c === Empty)
+            assertSame(c, Reals.Empty)
             c = b + a
-            assertTrue(c === Empty)
+            assertSame(c, Reals.Empty)
         }
     }
 
@@ -60,42 +68,44 @@ class TrapTests {
     fun divisionByZeroInRange() {
         DDBuilder {
             val b: AADD = real(1.0..2.0)
-            val c = b/Reals
+            val c = b/Reals.All
             assertFalse(c.isEmpty())
-            assertEquals(Reals.min, c.min)
-            assertEquals(Reals.max, c.max)
+            assertSame(c, Reals.All)
+            assertEquals(Reals.All.min, c.min)
+            assertEquals(Reals.All.max, c.max)
         }
     }
 
-    /** Operations with Empty set return InfeasibleB for comparisons */
+    /** Operations with Empty set return Infeasible for comparisons */
     @Test
     fun relationOperationsWithEmpty() {
         DDBuilder {
             // Relations with BDD shall be marked as "InfeasibleB"; the best match for a result.
             val b = real(1.0..2.0)
-            val c = Empty greaterThan b
-            assertSame(InfeasibleB, c)
+            val c = Reals.Empty greaterThan b
+            assertSame(Bool.Infeasible, c)
         }
     }
 
     /** Reals are represented as +-Infinity; maintained by addition */
     @Test
     fun overflowTest() {
-        DDBuilder{
-            val a = Reals
-            val b = Reals
+        DDBuilder {
+            val a = Reals.All
+            val b = Reals.All
             val c = a + b
-            assertTrue(a.maxIsInf)
-            assertTrue(a.minIsInf)
-            assertTrue(c.minIsInf)
-            assertTrue(c.maxIsInf)
+            assertSame(c, Reals.All)
+            assertTrue(a.max.isInfinite)
+            assertTrue(a.min.isInfinite)
+            assertTrue(c.min.isInfinite)
+            assertTrue(c.max.isInfinite)
         }
     }
 
     @Test
     fun emptyConstrainToTest() {
         DDBuilder {
-            val a = Empty
+            val a = Reals.Empty
             val b = real(1.0 .. 2.0)
             // val c = a constrainTo b
             val d = b constrainTo a
@@ -109,16 +119,16 @@ class TrapTests {
     @Test
     fun realsCloned() {
         DDBuilder {
-            val af = AFReals.clone()
-            assertTrue(af.max.isInfinite())
-            assertTrue(af.min.isInfinite())
+            val af = AF.All.clone()
+            assertTrue(af.max.isInfinite)
+            assertTrue(af.min.isInfinite)
 
-            val a = Reals
+            val a = Reals.All
             val b = a.clone()
-            assertTrue(b.maxIsInf)
-            assertTrue(b.minIsInf)
-            assertEquals(Double.NEGATIVE_INFINITY, b.min)
-            assertEquals(Double.POSITIVE_INFINITY, b.max)
+            assertTrue(b.max.isInfinite)
+            assertTrue(b.min.isInfinite)
+            assertEquals(Double.NEGATIVE_INFINITY, b.min.toDouble())
+            assertEquals(Double.POSITIVE_INFINITY, b.max.toDouble())
             assertTrue(b is AADD.Leaf)
         }
     }
@@ -126,62 +136,56 @@ class TrapTests {
     @Test
     fun realsConstrainToScalar() {
         DDBuilder {
-            val r = Reals constrainTo real(2.0)
-            assertEquals(r.min, 2.0, 0.00001)
-            assertEquals(0.0, (r as AADD.Leaf).r, 0.000001)
-            assertEquals(r.max, 2.0, 0.00001)
-            val z = real(2.0) constrainTo Reals
-            assertEquals(r.min, 2.0, 0.00001)
-            assertEquals(0.0, (z as AADD.Leaf).r, 0.000001)
-            assertEquals(r.max, 2.0, 0.00001)
+            val r = Reals.All constrainTo real(2.0)
+            assertEquals(2.0, r.min.toDouble(), 0.00001)
+            assertEquals(2.0, r.max.finiteValue, 0.00001)
+            val z = real(2.0) constrainTo Reals.All
+            assertEquals(2.0, z.min.finiteValue, 0.00001)
+            assertEquals(2.0, z.max.finiteValue, 0.00001)
         }
     }
 
     @Test
     fun realsConstrainToRange() {
         DDBuilder {
-            val a = Reals
+            val a = Reals.All
             val b = real(1.0..2.0)
             val c = a constrainTo b
-            assertEquals(1.0, c.min)
-            assertEquals(2.0, c.max)
+            assertEquals(1.0, c.min.finiteValue)
+            assertEquals(2.0, c.max.finiteValue)
             val d = b constrainTo a
-            assertEquals(1.0, d.min)
-            assertEquals(2.0, d.max)
+            assertEquals(1.0, d.min.finiteValue)
+            assertEquals(2.0, d.max.finiteValue)
             val e = a intersect b
-            assertEquals(1.0, e.min)
-            assertEquals(2.0, e.max)
+            assertEquals(1.0, e.min.finiteValue)
+            assertEquals(2.0, e.max.finiteValue)
             val f = b intersect a
-            assertEquals(1.0, f.min)
-            assertEquals(2.0, f.max)
-            val g = Reals intersect Reals
-            assertEquals(Double.NEGATIVE_INFINITY, g.min)
-            assertTrue( (g as AADD.Leaf).r == Double.POSITIVE_INFINITY)
-            assertEquals(Double.POSITIVE_INFINITY, g.max)
+            assertEquals(1.0, f.min.finiteValue)
+            assertEquals(2.0, f.max.finiteValue)
+            val g = Reals.All intersect Reals.All
+            assertEquals(Double.NEGATIVE_INFINITY, g.min.toDouble())
+            assertEquals(Double.POSITIVE_INFINITY, g.max.toDouble())
         }
     }
 
     @Test
     fun timesRealsTest() {
         DDBuilder {
-            val c = AFReals * AffineForm(this, 2.0..3.0,)
-            assertTrue(c.max.isInfinite())
-            assertTrue(c.min.isInfinite())
+            val c = AF.All * AffineForm.range(this, RealRange(2.0..3.0))
+            assertTrue(c.max.isInfinite)
+            assertTrue(c.min.isInfinite)
 
-            val d = AFReals * AFReals
-            assertTrue(d.max.isInfinite())
-            assertEquals(d.r, Double.POSITIVE_INFINITY)
-            assertTrue(d.min.isInfinite())
+            val d = AF.All * AF.All
+            assertTrue(d.max.isInfinite)
+            assertTrue(d.min.isInfinite)
 
-            val f = Reals * real(2.0..3.0)
-            assertTrue(f.maxIsInf)
-            assertEquals((f as AADD.Leaf).value.r, Double.POSITIVE_INFINITY)
-            assertTrue(f.minIsInf)
+            val f = Reals.All * real(2.0..3.0)
+            assertTrue(f.max.isInfinite)
+            assertTrue(f.min.isInfinite)
 
-            val i = Reals * Reals
-            assertTrue(i.maxIsInf)
-            assertEquals((i as AADD.Leaf).value.r, Double.POSITIVE_INFINITY)
-            assertTrue(i.minIsInf)
+            val i = Reals.All * Reals.All
+            assertTrue(i.max.isInfinite)
+            assertTrue(i.min.isInfinite)
         }
     }
 
@@ -189,9 +193,9 @@ class TrapTests {
     fun invRealTest() {
         DDBuilder {
             val d = real(-1.0..1.0)
-            val result = d.inv()
-            assertEquals(Double.NEGATIVE_INFINITY,result.min)
-            assertEquals(Double.POSITIVE_INFINITY,result.max)
+            val result = inv(d)
+            assertEquals(Double.NEGATIVE_INFINITY,result.min.toDouble())
+            assertEquals(Double.POSITIVE_INFINITY,result.max.toDouble())
         }
     }
 }

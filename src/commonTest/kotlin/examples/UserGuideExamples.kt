@@ -1,6 +1,12 @@
 package examples
 
-import io.github.tukcps.aadd.*
+import io.github.tukcps.aadd.DDBuilder
+import io.github.tukcps.aadd.DDBuilder.BoolMath.and
+import io.github.tukcps.aadd.DDBuilder.BoolMath.or
+import io.github.tukcps.aadd.DDBuilder.RealMath.minus
+import io.github.tukcps.aadd.DDBuilder.RealMath.multiply
+import io.github.tukcps.aadd.DDBuilder.RealMath.plus
+import io.github.tukcps.aadd.dd.AADD
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -25,18 +31,16 @@ class HelloBDD {
 class HelloAADD {
 
     @Test
-    fun main() {
-        DDBuilder {
-            val c = boolean("c")
-            val x = real(1.1..2.0, "x")
-            val y = real(1.1..3.0, "y")
-            val f = (x greaterThanOrEquals real(1.5)) and (x lessThanOrEquals y * x) or c
-            // println(" f = $f")
-            // toStringVerbose = true
-            // println(conds.toString())
-            assertEquals(3, f.height())
-        }
-    }
+    fun main() { DDBuilder {
+        val c = boolean("c")
+        val x: AADD = real(1.1..2.0, "x")
+        val y: AADD = real(1.1..3.0, "y")
+        val f = (x greaterThanOrEquals real(1.5)) and (x lessThanOrEquals ( multiply(y, x) ) ) or c
+        // println(" f = $f")
+        // toStringVerbose = true
+        // println(conds.toString())
+        assertEquals(3, f.height())
+    }}
 }
 
 class HelloAADD2 {
@@ -44,7 +48,8 @@ class HelloAADD2 {
     fun main() {
         DDBuilder {
             val x = real(-1.0..1.0, "x")
-            val f = (x greaterThanOrEquals real(0.0)).ite(x - real(100.0), x + real(100.0))
+            val c = x greaterThanOrEquals real(0.0)
+            val f = c.ite(x - real(100.0), x + real(100.0))
             f.getRange()
             // println(" x = $x")
             // println(" f = $f")

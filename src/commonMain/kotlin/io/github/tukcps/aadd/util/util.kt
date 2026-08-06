@@ -1,6 +1,7 @@
 package io.github.tukcps.aadd.util
 
-import io.github.tukcps.aadd.values.real.RealRange
+import io.github.tukcps.aadd.values.real.ia.RealRange
+import io.github.tukcps.aadd.values.real.toDoubleBound
 import kotlin.math.nextDown
 import kotlin.math.nextUp
 import kotlin.math.pow
@@ -19,9 +20,9 @@ fun Double.toRoundedString(numOfDec: Int): String {
  * Converts a Double value into a Range that includes the value
  * @return Range with this+/-1 ulp
  */
-fun Double.plusMinusUlp() = RealRange(this.minusUlp() ..this.plusUlp())
-fun Double.plusUlp() = if (this.isFinite()) this.nextUp() else this
-fun Double.minusUlp() = if (this.isFinite()) this.nextDown() else this
+fun Double.plusMinusUlp() = RealRange(this.minusUlp(), this.plusUlp())
+fun Double.plusUlp()  = (if (this.isFinite()) this.nextUp() else this).toDoubleBound()!!
+fun Double.minusUlp() = (if (this.isFinite()) this.nextDown() else this).toDoubleBound()!!
 
 /** Function converting a String of a us represented real number
  * TODO: ISO conformity check

@@ -1,13 +1,29 @@
-@file:Suppress("LocalVariableName")
+@file:Suppress("LocalVariableName", "PropertyName", "FunctionName")
 
 package io.github.tukcps.aadd
 
-import io.github.tukcps.aadd.DD.Status
-import io.github.tukcps.aadd.values.*
-import io.github.tukcps.aadd.values.real.AffineForm
+import io.github.tukcps.aadd.DDBuilder.BoolMath.and
+import io.github.tukcps.aadd.DDBuilder.BoolMath.not
+import io.github.tukcps.aadd.dd.*
+import io.github.tukcps.aadd.dd.DD.Status
+import io.github.tukcps.aadd.dd.Str
+import io.github.tukcps.aadd.values.NumberRange
+import io.github.tukcps.aadd.values.ScalarValue
+import io.github.tukcps.aadd.values.bool.XBool
 import io.github.tukcps.aadd.values.integer.IntegerRange
-import io.github.tukcps.aadd.values.real.RealRange
+import io.github.tukcps.aadd.values.integer.LongBound
+import io.github.tukcps.aadd.values.real.DoubleBound
+import io.github.tukcps.aadd.values.real.aa.AffineForm
+import io.github.tukcps.aadd.values.real.aa.NoiseVariables
+import io.github.tukcps.aadd.values.real.ia.RealRange
+import io.github.tukcps.aadd.values.real.toDoubleBound
 import kotlinx.serialization.json.Json
+import kotlin.jvm.JvmName
+
+typealias Real = AADD
+typealias Integer = IDD
+typealias Bool = BDD
+typealias Str = StrDD
 
 /**
  * ### DDBuilder
@@ -25,70 +41,102 @@ import kotlinx.serialization.json.Json
  * - `boolean (...)` creates a representation of a maybe unknown Boolean value.
  *
  * where the parameters (...) can be literals or value ranges of suitable base types (Double, Long).
+ * Other constants are (for any DD), addressing the use in constraint propagation techniques:
+ * - Empty (no elements of a type; bottom set)
+ * - Zero - a single element with domain-specific meaning (False, 0.0, 0.0)
+ * - One - a single element with domain-specific meaning (True, 1.0, 1)
+ * - All (all elements of a type interpreted as a set)
  *
- * Furthermore, it can be given a lambda parameter that permits its
- * use in a 'builder' pattern.
- *
- * DDBuilder holds all the shared information for the instances:
- *  - Noise symbols
- *  - Different kind of conditions
+ * DDBuilder furthermore holds (internally) all the shared information for the instances:
+ *  - Noise symbols of DD-constrained affine arithmetic
+ *  - Conditions (path constraints) of internal leaves of DDs
  *  - Settings
  *
- * @param noiseVars the noise variables of affine arithmetic
- * @param config the settings
+ * @param settings the settings
  */
 class DDBuilder(
-    var noiseVars: NoiseVariables = NoiseVariables(),
-    var config: DDBuilderSettings = DDBuilderSettings(),
+    internal var settings: DDBuilderSettings = DDBuilderSettings()
 ) {
-    var conds: Conditions = Conditions(this)
-    constructor() : this(NoiseVariables(), DDBuilderSettings()) {
-        conds = Conditions(this)
-    }
-    /** Parameterless constructor for nice Builder in a DSL-like way */
-    constructor(block: DDBuilder.() -> Unit): this() {
-        this.block()
-    }
+    /** Parameterless constructor the uses default settins. */
+    constructor() : this(DDBuilderSettings())
 
-    constructor(conditions: Conditions):this(){
-        conds = conditions
-    }
+    /** Constructor with single lambda for DSL-like programming */
+    constructor(block: DDBuilder.() -> Unit): this() { this.block() }
 
     /**
-     * Creates an integer constant with given value
-     * @param value the value of the integer constant
+     * Manager for the noise symbols of constrained affine arithmetic.
      */
-    fun integer(value: Long): IDD =
-        leaf(value .. value)
+    internal val noiseVariables = NoiseVariables(this)
 
     /**
-     * Creates an integer variable bounded to a range
+     * Manager for the path conditions (predicates on internal nodes of DDs).
+     */
+    val conditions = Conditions(this)
+    @Deprecated("Replace with conditions", ReplaceWith("conditions"))
+    val conds: Conditions get() = conditions
+
+    /**
+     * Creates an Integer scalar with given finite Long value.
+     * @param scalar the value of the integer constant as Long.
+     */
+    fun integer(scalar: Long): Integer =
+        leaf(IntegerRange(scalar))
+
+    /**
+     * Creates an integer scalar with given value that may also be infinite.
+     * @param scalar the value of the integer constant
+     */
+    fun integer(scalar: LongBound): Integer =
+        leaf(IntegerRange(scalar))
+
+    /**
+     * Crates an integer range that may have infinite bounds.
+     * @param range the range
+     */
+    @JvmName("integerLongBound")
+    fun integer(range: ClosedRange<LongBound>): Integer =
+        leaf(IntegerRange(range))
+
+    /**
+     * Creates an integer variable bounded to a range that may only be finite.
      * @param range bounds of the integer
      */
-    fun integer(range: ClosedRange<Long>): IDD =
-        leaf(range)
+    fun integer(range: ClosedRange<Long>): Integer =
+        leaf(IntegerRange(range.start, range.endInclusive))
+
+    /**
+     * Creates a real variable modeld by an affine form
+     * @param af affine form
+     * @param symbol noise symbol as a string
+     */
+    internal fun real(af: AffineForm): Real =
+        leaf(af)
 
     /**
      * Creates a real constant with given value
      * @param value the value of the real constant
      */
-    fun real(value: Double): AADD =
-        leaf(value..value)
+    fun real(value: Double): Real =
+        leaf(RealRange(value, value))
 
     /**
      * Creates a real variable bounded by a range
      * @param range bounds of the real variable
-     * @param symbol noise symbol as a string
+     * @param id noise symbol as a string
      */
-    fun real(range: ClosedRange<Double>, symbol: String) =
-        leaf(AffineForm(this, range, symbol))
+    fun real(range: ClosedRange<DoubleBound>, id: String? = null): Real =
+        leaf(AffineForm.range(this, range.start, range.endInclusive, id))
 
     /**
-     * Creates a real variable bounded by a ranges
+     * Creates a real variable bounded by a range
      * @param range - bounds of the real variable
      */
-    fun real(range: ClosedRange<Double>) =
-        leaf(AffineForm(this, range))
+    fun real(range: ClosedRange<Double>, id: String? = null) =
+        leaf(AffineForm.range(this,
+            range.start.toDoubleBound() ?: DoubleBound.NegativeInfinity,
+            range.endInclusive.toDoubleBound() ?: DoubleBound.PositiveInfinity,
+            id)
+        )
 
     /**
      * Creates a constant of a value typed by Number
@@ -96,15 +144,15 @@ class DDBuilder(
      */
     fun number(value: Number): DD<*> =
         when(value) {
-            is Double -> real(value)
-            is Float -> real(value.toDouble())
-            is Int -> integer(value.toLong())
-            is Long -> integer(value)
+            is Double   -> real(value)
+            is Float    -> real(value.toDouble())
+            is Int      -> integer(value.toLong()..value.toLong())
+            is Long     -> integer(value .. value)
             else -> throw DDException("Cannot convert $value to number")
         }
 
     /**
-     * Creates a variable typed by ClosedRange<Number> bounded by a range
+     * Creates a variable typed by ClosedRange<Number> bounded by a finite range
      * @param range range with the bounds
      */
     @Suppress("UNCHECKED_CAST")
@@ -117,13 +165,11 @@ class DDBuilder(
             else -> throw DDException("Cannot convert $range to number range")
         }
 
-
     /**
      * Creates a boolean variable with a given id.
      * @param id String that identifies the underlying variable in the decision diagrams
      */
-    fun boolean(id: String): BDD = internal(conds.newVariable(id, this), True, False)
-
+    fun boolean(id: String): BDD = internal(conditions.newVariable(id, this), Bool.True, Bool.False)
 
     /**
      * Creates a boolean constant with a given value of true or false
@@ -135,8 +181,7 @@ class DDBuilder(
      * Creates a string constant with a given value
      * @param value the value of the string
      */
-    fun string(value: String): StrDD = StrDD.Leaf(this, value)
-
+    fun string(value: String): StrDD = StrDD.Leaf(this, Str(value))
 
     enum class ApproximationScheme{
         Chebyshev,
@@ -145,53 +190,72 @@ class DDBuilder(
         LinearRegression
     }
 
-    var scheme = ApproximationScheme.MinRange
 
     fun setExternalConfig(configString: String) {
-        config = jsonMapper.decodeFromString(string = configString)
+        settings = jsonMapper.decodeFromString(string = configString)
     }
 
-    /**
-     * Below here, only for internal use!
-     */
+    //
+    // -------------- Below here, only for internal use! -----------------
+    //
 
     /** Factory: Creates a new AADD.Leaf with an affine form as value.  */
     internal fun leaf(value: AffineForm, status: Status): AADD.Leaf = when {
-        status == Status.Infeasible -> Infeasible
-        value.isEmpty()     -> Empty
+        status == Status.Infeasible -> Reals.Infeasible
+        value.isEmpty()     -> Reals.Empty
         else                -> AADD.Leaf(this, value.clone(), status)
     }
 
     /** Creates a new AADD.Leaf with an affine form as value.  */
     internal fun leaf(value: AffineForm): AADD.Leaf = when {
-        value.isEmpty() -> Empty
-        value.isReals() -> Reals
-        value.isEmpty() -> Empty
+        value.isEmpty() -> Reals.Empty
+        value.isReals() -> Reals.All
         else -> AADD.Leaf(this, value)
     }
 
-    internal fun leaf(value: ClosedRange<Double>): AADD.Leaf =
-        leaf(AffineForm(this, value))
+    internal fun leaf(value: NumberRange<DoubleBound>): AADD.Leaf =
+        leaf(AffineForm.range(this, value))
 
-    internal fun leaf(value: IntegerRange) : IDD.Leaf =
-        IDD.Leaf(this, value)
-
-    internal fun leaf(value: ClosedRange<Long>) : IDD.Leaf =
-        if (value.isEmpty()) EmptyIntegerRange
-        else IDD.Leaf(this, IntegerRange(value))
-
-    internal fun leaf(value: IntegerRange, status: Status): IDD.Leaf = when {
-        status == Status.Infeasible -> InfeasibleI
-        value.isEmpty() -> EmptyIntegerRange
-        else -> IDD.Leaf(this, value, status)
+    internal fun leaf(value: NumberRange<LongBound>, status: Status = Status.NotSolved): IDD.Leaf = when {
+        status == Status.Infeasible -> Integers.Infeasible
+        value.isEmpty()             -> Integers.Empty
+        else                        -> IDD.Leaf(this, IntegerRange(value), status)
     }
 
     internal fun leaf(value: String): StrDD.Leaf =
-        StrDD.Leaf(this, value)
+        StrDD.Leaf(this, Str(value))
+
+    /**
+     * Generic creation of internal node.
+     */
+    @Suppress("UNCHECKED_CAST")
+    internal fun <DDType: DD<ValueType>, ValueType: ScalarValue> internal(index: Int, T: DDType, F: DDType): DDType =
+        if (T is DD.Leaf<*> && F is DD.Leaf<*> && T.value == F.value)
+            if (T is BDD) T else leaf(T.value as ValueType)
+        else when (T) {
+            is AADD -> AADD.Internal(this, index, T, F as AADD) as DDType
+            is BDD -> BDD.Internal(this, index, T, F as BDD) as DDType
+            is IDD -> IDD.Internal(this, index, T, F as IDD) as DDType
+            is StrDD -> StrDD.Internal(this, index, T, F as StrDD) as DDType
+        }
+
+    /**
+     * Generic creation of leaf node.
+     */
+    @Suppress("UNCHECKED_CAST")
+    internal fun <DDType: DD<ScalarValue>, ValueType: Any> leaf(value: ValueType): DDType = when (value) {
+        is AffineForm   -> leaf(value as AffineForm) as DDType
+        is IntegerRange -> leaf(value as IntegerRange) as DDType
+        is String       -> leaf(value as String) as DDType
+        is Long         -> integer(IntegerRange(value)) as DDType
+        is Double       -> leaf(RealRange(value, value)) as DDType
+        is DD.Leaf<*>   -> value as DDType
+        else -> TODO()
+    }
 
     /** Creates a new AADD internal node with index 'index' and child nodes T and F. */
     internal fun internal(index: Int, T: AADD, F: AADD): AADD =
-        if (T is AADD.Leaf && F is AADD.Leaf && T.value.isSimilar(F.value, this.config.joinTh))
+        if (T is AADD.Leaf && F is AADD.Leaf && T.value.isSimilar(F.value, this.settings.ddJoinLeavesThreshold))
             leaf(T.value.join(F.value))
         else {
             AADD.Internal(this, index, T, F)
@@ -204,35 +268,36 @@ class DDBuilder(
         else
             IDD.Internal(this, index, T, F)
 
+    /*
     internal fun internal(index: Int, T: StrDD, F: StrDD): StrDD =
         if (T is StrDD.Leaf && F is StrDD.Leaf && T.value == F.value)
             StrDD.Leaf(this, T.value)
         else
-            StrDD.Internal(this, index, T, F)
+            StrDD.Internal(this, index, T, F) */
 
     /** Use this to get a leaf node of a given Boolean value whose path can be infeasible  */
     internal fun constant(value: Boolean, status: Status): BDD =
         when {
-            status == Status.Infeasible -> NaB
-            value -> True
-            else -> False
+            status == Status.Infeasible -> Bool.Empty
+            value -> Bool.True
+            else -> Bool.False
         }
 
     /** Returns one of the Boolean constants True or False as BDD */
-    fun constant(value: Boolean): BDD.Leaf = if (value) True else False
+    fun constant(value: Boolean): BDD.Leaf = if (value) Bool.True else Bool.False
 
     /** Returns one of the values of the extended Booleans */
     fun constant(value: XBool): BDD =
         when (value) {
-            XBool.True -> True
-            XBool.False -> False
-            XBool.X -> Bool
-            XBool.NaB -> NaB
+            XBool.True -> Bool.True
+            XBool.False -> Bool.False
+            XBool.XBool -> Bool.All
+            XBool.Empty -> Bool.Empty
             else -> throw Exception("Inconsistent value in BDD")
         }
 
     fun variable(varname: String, fromExpr: String ="noSourceExpression", isDecVar: Boolean=false): BDD =
-        internal(conds.newVariable(varname, this, fromExpr, isDecVar), True, False)
+        internal(conditions.newVariable(varname, this, fromExpr, isDecVar), Bool.True, Bool.False)
 
     /** Creates an internal node with a given index that must refer to an existing condition. */
     internal fun internal(index: Int, T: BDD, F: BDD): BDD =
@@ -260,11 +325,13 @@ class DDBuilder(
         for(i in 1 until pathConds.size)pathConjunction = pathConjunction.and(pathConds[i])
         return pathConjunction.ite(new,old)
     }
+
     fun assign(old: AADD, new: AADD): AADD {
         var pathConjunction = pathConds[0]
         for(i in 1 until pathConds.size)pathConjunction = pathConjunction.and(pathConds[i])
         return pathConjunction.ite(new,old)
     }
+
     fun assign(old: IDD, new: IDD):IDD{
         var pathConjunction = pathConds[0]
         for(i in 1 until pathConds.size)pathConjunction = pathConjunction.and(pathConds[i])
@@ -272,7 +339,7 @@ class DDBuilder(
     }
 
     override fun toString(): String
-            = "Builder: ($conds, $noiseVars)"
+            = "Builder: ($conditions, $noiseVariables)"
 
 
     /**
@@ -280,103 +347,85 @@ class DDBuilder(
      * @param ddli: The list of DDs that we gather the root indices of
      * @return List of integers that represent the root indizes of the given DD list
      * */
-    fun gatherIndices(ddli: MutableMap<String,DD<*>>) : MutableMap<String,Int>
-    {
+    fun <T: ScalarValue> gatherIndices (ddli: MutableMap<String, DD<T>>) : MutableMap<String,Int> {
         val indizes = mutableMapOf<String,Int>()
-        for(dd in ddli) {
-            indizes[dd.key] = dd.value.index
+        for((key, value) in ddli) {
+            indizes[key] = value.index
         }
         return indizes
     }
 
-    fun generateCDD(variables: MutableMap<String,DD<*>>, currentState: StateTuple, builder: DDBuilder) : CDD
-    {
-        val finalVars = mutableListOf<String>() // Variables that are already only represented by a single affine form or truth value thus not need to split them further
-        for (variable in variables) {
-            if(variable.value is AADD.Leaf) {
-                currentState.addContinuousVar(variable.key,(variable.value as AADD.Leaf).value)
-                finalVars.add(variable.key)
-            }
-            else if(variable.value is BDD.Leaf)
-            {
-                currentState.addDiscreteVar(variable.key,(variable.value as BDD.Leaf).value)
-                finalVars.add(variable.key)
-            }
-        }
+    /** BDD Constants: True */
+    val Bool = BDDNamespace()
+    inner class BDDNamespace {
+        val Infeasible = BDD.Leaf(this@DDBuilder, XBool.Empty, Status.Infeasible)
+        val Empty = BDD.Leaf(this@DDBuilder, XBool.Empty, Status.Feasible)
+        val Zero = BDD.Leaf(this@DDBuilder, false)
+        val False: BDD.Leaf get() = Zero
+        val One = BDD.Leaf(this@DDBuilder, true)
+        val True: BDD.Leaf get() = One
+        val All = BDD.Leaf(this@DDBuilder, XBool.XBool, Status.NotSolved)
+        @Deprecated("Replace with All", ReplaceWith("All"))
+        val Bool: BDD.Leaf get() = All
+    }
+    object BoolMath: BDDMath
+    inline fun <R> boolMath(block: BoolMath.() -> R): R = BoolMath.block()
 
-        for(variable in finalVars)variables.remove(variable)
-
-        val indizes = gatherIndices(variables)
-        var lowest = Int.MAX_VALUE
-
-        for(indexTupel in indizes)
-        {
-            if(indexTupel.value < lowest) lowest = indexTupel.value
-        }
-
-        val toSplitVars = mutableListOf<String>()
-
-        for(indexTuple in indizes)
-        {
-            if(indexTuple.value == lowest)
-            {
-                toSplitVars.add(indexTuple.key)
-            }
-        }
-
-        for(variable in toSplitVars) indizes.remove(variable)// remove the entry from the map as it will be handled separately
-
-        val tMap = mutableMapOf<String,DD<*>>()
-        val fMap = mutableMapOf<String,DD<*>>()
-
-        for(indexTuple in indizes) {
-            tMap[indexTuple.key] = variables[indexTuple.key]!!
-            fMap[indexTuple.key] = variables[indexTuple.key]!!
-        }
-
-        for(id in toSplitVars) {
-            tMap[id] = (variables[id]!! as DD.Internal).T
-            fMap[id] = (variables[id]!! as DD.Internal).F
-        }
-
-        return if(variables.isEmpty()) {
-            CDD.Leaf(builder=builder,value = currentState.clone())
-        } else {
-            CDD.Internal(builder=builder, index = lowest,T = generateCDD(builder = builder, currentState = currentState.clone(), variables = tMap),F = generateCDD(builder = builder, currentState = currentState.clone(), variables = fMap))
-        }
-
+    /**
+     * AffineForm Constants for All, Empty, Zero, One (internal)
+     * Don't use independenty - splits could return AADD.
+     * Use just Real, Integer, Bool.
+     */
+    internal val AF = AFNamespace()
+    inner class AFNamespace {
+        val All = AffineForm(this@DDBuilder, RealRange.Reals.min, RealRange.Reals.max, Double.NaN, hashMapOf())
+        val Empty = AffineForm(this@DDBuilder, RealRange.Empty.min, RealRange.Empty.max, Double.NaN, hashMapOf())
+        val Zero  = AffineForm(this@DDBuilder, RealRange.Zero.min, RealRange.Zero.max, 0.0, hashMapOf())
+        val One   = AffineForm(this@DDBuilder, RealRange.One.min, RealRange.One.max, 0.0, hashMapOf())
     }
 
-    /** BDD Constants: True */
-    val True = BDD.Leaf(this, true)
-    val False = BDD.Leaf(this, false)
-    val Bool = BDD.Leaf(this, XBool.X, Status.NotSolved)
-    val NaB = BDD.Leaf(this, XBool.NaB, Status.Feasible)
-    val InfeasibleB = BDD.Leaf(this, XBool.NaB, Status.Infeasible)
+    /** Constants for the Reals */
+    val Reals = AADDNamespace()
+    inner class AADDNamespace {
+        val Infeasible = AADD.Leaf(this@DDBuilder, AF.Empty, Status.Infeasible)
+        val Empty = AADD.Leaf(this@DDBuilder, AF.Empty, Status.NotSolved)
+        val Zero = AADD.Leaf(this@DDBuilder, AF.Zero)
+        val One = AADD.Leaf(this@DDBuilder, AF.One)
+        val All = AADD.Leaf(this@DDBuilder, AF.All, Status.NotSolved)
+        @Deprecated("Replace with All", ReplaceWith("All"))
+        val Reals: AADD.Leaf  get() = All
+    }
+    /** Operations, Functions on Reals, based on AADD */
+    object RealMath: AADDMath
+    inline fun <R> realMath(block: RealMath.() -> R): R = RealMath.block()
 
-    /** AffineForm Constants */
-    val AFReals  = AffineForm(this, RealRange.Reals.min, RealRange.Reals.max)
-    val AFEmpty = AffineForm(this, RealRange.Empty.min, RealRange.Empty.max)
+    /** Constants for the Integers */
+    val Integers = IDDNamespace()
+    inner class IDDNamespace {
+        val Infeasible = IDD.Leaf(this@DDBuilder, IntegerRange.Empty, Status.Infeasible)
+        val Empty = IDD.Leaf(this@DDBuilder, IntegerRange.Empty, Status.NotSolved)
+        val All = IDD.Leaf(this@DDBuilder, IntegerRange())
+        val Zero = IDD.Leaf(this@DDBuilder, IntegerRange(LongBound.Finite(0)))
+        val One = IDD.Leaf(this@DDBuilder, IntegerRange(LongBound.Finite(1)))
+        @Deprecated("Replace with All", ReplaceWith("All"))
+        val Integers: IDD.Leaf  get() = All
+    }
 
-    /** AADD Constants */
-    val Reals = AADD.Leaf(this, AFReals, Status.NotSolved)
-    val Empty = AADD.Leaf(this, AFEmpty, Status.NotSolved)
-    val Infeasible = AADD.Leaf(this, AFEmpty, Status.Infeasible)
-    val RealZero = AADD.Leaf(this, AffineForm(this, 0.0))
-    val RealOne = AADD.Leaf(this, AffineForm(this, 1.0))
+    /** Operations for Integers, based on IDD */
+    object IntMath: IDDMath
+    inline fun <R> intMath(block: IntMath.() -> R): R = IntMath.block()
 
-    /** IDD Constants */
-    val EmptyIntegerRange = IDD.Leaf(this, IntegerRange.Empty, Status.NotSolved)
-    val Integers = IDD.Leaf(this, IntegerRange())
-    val InfeasibleI = IDD.Leaf(this, IntegerRange.Empty, Status.Infeasible)
-    val IntegerRangeZero = IDD.Leaf(this, IntegerRange(0))
-    val IntegerRangeOne = IDD.Leaf(this, IntegerRange(1))
+    /** StrDD Constants -- just a try */
+    val Strings = StrDDNamespace()
+    inner class StrDDNamespace {
+        val Infeasible = StrDD.Leaf(this@DDBuilder, Str(""), Status.Infeasible)
+        val Empty = StrDD.Leaf(this@DDBuilder, Str(""), Status.NotSolved)
+        val All = StrDD.Leaf(this@DDBuilder, Str("*"))
+    }
 
-    /** StrDD Constants */
-    val Strings = StrDD.Leaf(this, "")
-    val InfeasableS = StrDD.Leaf(this, "", Status.Infeasible)
-    val EmptyStrings = StrDD.Leaf(this,"", Status.NotSolved)
-
+    //
+    // ------------------------ Other stuff --------------------------
+    //
     var lpCalls = 0
 
     val jsonMapper = Json {
@@ -385,175 +434,171 @@ class DDBuilder(
     }
 
     internal val notTable = hashMapOf<BDD, BDD.Leaf>(
-        True to False,
-        False to True,
-        NaB to NaB,
-        InfeasibleB to InfeasibleB,
-        Bool to Bool
+        Bool.True to Bool.False,
+        Bool.False to Bool.True,
+        Bool.Empty to Bool.Empty,
+        Bool.Infeasible to Bool.Infeasible,
+        Bool.All to Bool.All
     )
 
     internal val andTable = hashMapOf(
-        Pair(True, True) to True,
-        Pair(True, False) to False,
-        Pair(True, Bool) to Bool,
-        Pair(True, NaB) to NaB,
-        Pair(True, InfeasibleB) to InfeasibleB,
+        Pair(Bool.True, Bool.True) to Bool.True,
+        Pair(Bool.True, Bool.False) to Bool.False,
+        Pair(Bool.True, Bool.All) to Bool.All,
+        Pair(Bool.True, Bool.Empty) to Bool.Empty,
+        Pair(Bool.True, Bool.Infeasible) to Bool.Infeasible,
 
-        Pair(False, False) to False,
-        Pair(False, True) to False,
-        Pair(False, Bool) to False,
-        Pair(False, NaB) to NaB,
-        Pair(False, InfeasibleB) to InfeasibleB,
+        Pair(Bool.False, Bool.False) to Bool.False,
+        Pair(Bool.False, Bool.True) to Bool.False,
+        Pair(Bool.False, Bool.All) to Bool.False,
+        Pair(Bool.False, Bool.Empty) to Bool.Empty,
+        Pair(Bool.False, Bool.Infeasible) to Bool.Infeasible,
 
-        Pair(Bool, False) to False,
-        Pair(Bool, True) to Bool,
-        Pair(Bool, Bool) to Bool,
-        Pair(Bool, NaB) to NaB,
-        Pair(Bool, InfeasibleB) to InfeasibleB,
+        Pair(Bool.All, Bool.False) to Bool.False,
+        Pair(Bool.All, Bool.True) to Bool.All,
+        Pair(Bool.All, Bool.All) to Bool.All,
+        Pair(Bool.All, Bool.Empty) to Bool.Empty,
+        Pair(Bool.All, Bool.Infeasible) to Bool.Infeasible,
 
-        Pair(NaB, False) to NaB,
-        Pair(NaB, True) to NaB,
-        Pair(NaB, NaB) to NaB,
-        Pair(NaB, Bool) to NaB,
-        Pair(NaB, InfeasibleB) to InfeasibleB,
+        Pair(Bool.Empty, Bool.False) to Bool.Empty,
+        Pair(Bool.Empty, Bool.True) to Bool.Empty,
+        Pair(Bool.Empty, Bool.Empty) to Bool.Empty,
+        Pair(Bool.Empty, Bool.All) to Bool.Empty,
+        Pair(Bool.Empty, Bool.Infeasible) to Bool.Infeasible,
 
-        Pair(InfeasibleB, False) to InfeasibleB,
-        Pair(InfeasibleB, True) to InfeasibleB,
-        Pair(InfeasibleB, NaB) to InfeasibleB,
-        Pair(InfeasibleB, Bool) to InfeasibleB,
-        Pair(InfeasibleB, InfeasibleB) to InfeasibleB,
+        Pair(Bool.Infeasible, Bool.False) to Bool.Infeasible,
+        Pair(Bool.Infeasible, Bool.True) to Bool.Infeasible,
+        Pair(Bool.Infeasible, Bool.Empty) to Bool.Infeasible,
+        Pair(Bool.Infeasible, Bool.All) to Bool.Infeasible,
+        Pair(Bool.Infeasible, Bool.Infeasible) to Bool.Infeasible,
     )
-
 
     internal val orTable = hashMapOf<Pair<BDD, BDD>, BDD.Leaf>(
-        Pair(True, True) to True,
-        Pair(True, False) to True,
-        Pair(True, Bool) to True,
-        Pair(True, NaB) to NaB,
-        Pair(True, InfeasibleB) to InfeasibleB,
+        Pair(Bool.True, Bool.True) to Bool.True,
+        Pair(Bool.True, Bool.False) to Bool.True,
+        Pair(Bool.True, Bool.All) to Bool.True,
+        Pair(Bool.True, Bool.Empty) to Bool.Empty,
+        Pair(Bool.True, Bool.Infeasible) to Bool.Infeasible,
 
-        Pair(False, False) to False,
-        Pair(False, True) to True,
-        Pair(False, Bool) to Bool,
-        Pair(False, NaB) to NaB,
-        Pair(False, InfeasibleB) to InfeasibleB,
+        Pair(Bool.False, Bool.False) to Bool.False,
+        Pair(Bool.False, Bool.True) to Bool.True,
+        Pair(Bool.False, Bool.All) to Bool.All,
+        Pair(Bool.False, Bool.Empty) to Bool.Empty,
+        Pair(Bool.False, Bool.Infeasible) to Bool.Infeasible,
 
-        Pair(Bool, False) to Bool,
-        Pair(Bool, True) to True,
-        Pair(Bool, Bool) to Bool,
-        Pair(Bool, NaB) to NaB,
-        Pair(Bool, InfeasibleB) to InfeasibleB,
+        Pair(Bool.All, Bool.False) to Bool.All,
+        Pair(Bool.All, Bool.True) to Bool.True,
+        Pair(Bool.All, Bool.All) to Bool.All,
+        Pair(Bool.All, Bool.Empty) to Bool.Empty,
+        Pair(Bool.All, Bool.Infeasible) to Bool.Infeasible,
 
-        Pair(NaB, False) to NaB,
-        Pair(NaB, True) to NaB,
-        Pair(NaB, NaB) to NaB,
-        Pair(NaB, Bool) to NaB,
-        Pair(NaB, InfeasibleB) to InfeasibleB,
+        Pair(Bool.Empty, Bool.False) to Bool.Empty,
+        Pair(Bool.Empty, Bool.True) to Bool.Empty,
+        Pair(Bool.Empty, Bool.Empty) to Bool.Empty,
+        Pair(Bool.Empty, Bool.All) to Bool.Empty,
+        Pair(Bool.Empty, Bool.Infeasible) to Bool.Infeasible,
 
-        Pair(InfeasibleB, False) to InfeasibleB,
-        Pair(InfeasibleB, True) to InfeasibleB,
-        Pair(InfeasibleB, NaB) to InfeasibleB,
-        Pair(InfeasibleB, Bool) to InfeasibleB,
-        Pair(InfeasibleB, InfeasibleB) to InfeasibleB,
+        Pair(Bool.Infeasible, Bool.False) to Bool.Infeasible,
+        Pair(Bool.Infeasible, Bool.True) to Bool.Infeasible,
+        Pair(Bool.Infeasible, Bool.Empty) to Bool.Infeasible,
+        Pair(Bool.Infeasible, Bool.All) to Bool.Infeasible,
+        Pair(Bool.Infeasible, Bool.Infeasible) to Bool.Infeasible,
     )
-
 
     internal val nandTable = hashMapOf<Pair<BDD, BDD>, BDD.Leaf>(
-        Pair(True, True) to False,
-        Pair(True, False) to True,
-        Pair(True, Bool) to Bool,
-        Pair(True, NaB) to NaB,
-        Pair(True, InfeasibleB) to InfeasibleB,
+        Pair(Bool.True, Bool.True) to Bool.False,
+        Pair(Bool.True, Bool.False) to Bool.True,
+        Pair(Bool.True, Bool.All) to Bool.All,
+        Pair(Bool.True, Bool.Empty) to Bool.Empty,
+        Pair(Bool.True, Bool.Infeasible) to Bool.Infeasible,
 
-        Pair(False, False) to True,
-        Pair(False, True) to True,
-        Pair(False, Bool) to True,
-        Pair(False, NaB) to NaB,
-        Pair(False, InfeasibleB) to InfeasibleB,
+        Pair(Bool.False, Bool.False) to Bool.True,
+        Pair(Bool.False, Bool.True) to Bool.True,
+        Pair(Bool.False, Bool.All) to Bool.True,
+        Pair(Bool.False, Bool.Empty) to Bool.Empty,
+        Pair(Bool.False, Bool.Infeasible) to Bool.Infeasible,
 
-        Pair(Bool, False) to True,
-        Pair(Bool, True) to Bool,
-        Pair(Bool, Bool) to Bool,
-        Pair(Bool, NaB) to NaB,
-        Pair(Bool, InfeasibleB) to InfeasibleB,
+        Pair(Bool.All, Bool.False) to Bool.True,
+        Pair(Bool.All, Bool.True) to Bool.All,
+        Pair(Bool.All, Bool.All) to Bool.All,
+        Pair(Bool.All, Bool.Empty) to Bool.Empty,
+        Pair(Bool.All, Bool.Infeasible) to Bool.Infeasible,
 
-        Pair(NaB, False) to NaB,
-        Pair(NaB, True) to NaB,
-        Pair(NaB, NaB) to NaB,
-        Pair(NaB, Bool) to NaB,
-        Pair(NaB, InfeasibleB) to InfeasibleB,
+        Pair(Bool.Empty, Bool.False) to Bool.Empty,
+        Pair(Bool.Empty, Bool.True) to Bool.Empty,
+        Pair(Bool.Empty, Bool.Empty) to Bool.Empty,
+        Pair(Bool.Empty, Bool.All) to Bool.Empty,
+        Pair(Bool.Empty, Bool.Infeasible) to Bool.Infeasible,
 
-        Pair(InfeasibleB, False) to InfeasibleB,
-        Pair(InfeasibleB, True) to InfeasibleB,
-        Pair(InfeasibleB, NaB) to InfeasibleB,
-        Pair(InfeasibleB, Bool) to InfeasibleB,
-        Pair(InfeasibleB, InfeasibleB) to InfeasibleB,
+        Pair(Bool.Infeasible, Bool.False) to Bool.Infeasible,
+        Pair(Bool.Infeasible, Bool.True) to Bool.Infeasible,
+        Pair(Bool.Infeasible, Bool.Empty) to Bool.Infeasible,
+        Pair(Bool.Infeasible, Bool.All) to Bool.Infeasible,
+        Pair(Bool.Infeasible, Bool.Infeasible) to Bool.Infeasible,
     )
-
 
     internal val xorTable = hashMapOf<Pair<BDD, BDD>, BDD.Leaf>(
-        Pair(True, True) to False,
-        Pair(True, False) to True,
-        Pair(True, Bool) to Bool,
-        Pair(True, NaB) to NaB,
-        Pair(True, InfeasibleB) to InfeasibleB,
+        Pair(Bool.True, Bool.True) to Bool.False,
+        Pair(Bool.True, Bool.False) to Bool.True,
+        Pair(Bool.True, Bool.All) to Bool.All,
+        Pair(Bool.True, Bool.Empty) to Bool.Empty,
+        Pair(Bool.True, Bool.Infeasible) to Bool.Infeasible,
 
-        Pair(False, False) to False,
-        Pair(False, True) to True,
-        Pair(False, Bool) to Bool,
-        Pair(False, NaB) to NaB,
-        Pair(False, InfeasibleB) to InfeasibleB,
+        Pair(Bool.False, Bool.False) to Bool.False,
+        Pair(Bool.False, Bool.True) to Bool.True,
+        Pair(Bool.False, Bool.All) to Bool.All,
+        Pair(Bool.False, Bool.Empty) to Bool.Empty,
+        Pair(Bool.False, Bool.Infeasible) to Bool.Infeasible,
 
-        Pair(Bool, False) to Bool,
-        Pair(Bool, True) to Bool,
-        Pair(Bool, Bool) to Bool,
-        Pair(Bool, NaB) to NaB,
-        Pair(Bool, InfeasibleB) to InfeasibleB,
+        Pair(Bool.All, Bool.False) to Bool.All,
+        Pair(Bool.All, Bool.True) to Bool.All,
+        Pair(Bool.All, Bool.All) to Bool.All,
+        Pair(Bool.All, Bool.Empty) to Bool.Empty,
+        Pair(Bool.All, Bool.Infeasible) to Bool.Infeasible,
 
-        Pair(NaB, False) to NaB,
-        Pair(NaB, True) to NaB,
-        Pair(NaB, NaB) to NaB,
-        Pair(NaB, Bool) to NaB,
-        Pair(NaB, InfeasibleB) to InfeasibleB,
+        Pair(Bool.Empty, Bool.False) to Bool.Empty,
+        Pair(Bool.Empty, Bool.True) to Bool.Empty,
+        Pair(Bool.Empty, Bool.Empty) to Bool.Empty,
+        Pair(Bool.Empty, Bool.All) to Bool.Empty,
+        Pair(Bool.Empty, Bool.Infeasible) to Bool.Infeasible,
 
-        Pair(InfeasibleB, False) to InfeasibleB,
-        Pair(InfeasibleB, True) to InfeasibleB,
-        Pair(InfeasibleB, NaB) to InfeasibleB,
-        Pair(InfeasibleB, Bool) to InfeasibleB,
-        Pair(InfeasibleB, InfeasibleB) to InfeasibleB,
+        Pair(Bool.Infeasible, Bool.False) to Bool.Infeasible,
+        Pair(Bool.Infeasible, Bool.True) to Bool.Infeasible,
+        Pair(Bool.Infeasible, Bool.Empty) to Bool.Infeasible,
+        Pair(Bool.Infeasible, Bool.All) to Bool.Infeasible,
+        Pair(Bool.Infeasible, Bool.Infeasible) to Bool.Infeasible,
     )
-
 
     /** the intersect operation on two XBool checks for the possible equality */
     internal val intersectTable = hashMapOf(
-        Pair(True, True ) to True,
-        Pair(True, False) to NaB,
-        Pair(True, Bool) to True,
-        Pair(True, NaB) to NaB,
-        Pair(True, InfeasibleB) to InfeasibleB,
+        Pair(Bool.True, Bool.True ) to Bool.True,
+        Pair(Bool.True, Bool.False) to Bool.Empty,
+        Pair(Bool.True, Bool.All) to Bool.True,
+        Pair(Bool.True, Bool.Empty) to Bool.Empty,
+        Pair(Bool.True, Bool.Infeasible) to Bool.Infeasible,
 
-        Pair(False, True ) to NaB,
-        Pair(False, False) to False,
-        Pair(False, Bool) to False,
-        Pair(False, NaB) to NaB,
-        Pair(False, InfeasibleB) to InfeasibleB,
+        Pair(Bool.False, Bool.True ) to Bool.Empty,
+        Pair(Bool.False, Bool.False) to Bool.False,
+        Pair(Bool.False, Bool.All) to Bool.False,
+        Pair(Bool.False, Bool.Empty) to Bool.Empty,
+        Pair(Bool.False, Bool.Infeasible) to Bool.Infeasible,
 
-        Pair(Bool, True ) to True,
-        Pair(Bool, False) to False,
-        Pair(Bool, Bool) to Bool,
-        Pair(Bool, NaB) to NaB,
-        Pair(Bool, InfeasibleB) to InfeasibleB,
+        Pair(Bool.All, Bool.True ) to Bool.True,
+        Pair(Bool.All, Bool.False) to Bool.False,
+        Pair(Bool.All, Bool.All) to Bool.All,
+        Pair(Bool.All, Bool.Empty) to Bool.Empty,
+        Pair(Bool.All, Bool.Infeasible) to Bool.Infeasible,
 
-        Pair(NaB, True ) to NaB,
-        Pair(NaB, False) to NaB,
-        Pair(NaB, Bool) to NaB,
-        Pair(NaB, NaB) to NaB,
-        Pair(NaB, InfeasibleB) to InfeasibleB,
+        Pair(Bool.Empty, Bool.True ) to Bool.Empty,
+        Pair(Bool.Empty, Bool.False) to Bool.Empty,
+        Pair(Bool.Empty, Bool.All) to Bool.Empty,
+        Pair(Bool.Empty, Bool.Empty) to Bool.Empty,
+        Pair(Bool.Empty, Bool.Infeasible) to Bool.Infeasible,
 
-        Pair(InfeasibleB, True ) to InfeasibleB,
-        Pair(InfeasibleB, False) to InfeasibleB,
-        Pair(InfeasibleB, Bool) to InfeasibleB,
-        Pair(InfeasibleB, NaB) to InfeasibleB,
-        Pair(InfeasibleB, InfeasibleB) to InfeasibleB,
+        Pair(Bool.Infeasible, Bool.True ) to Bool.Infeasible,
+        Pair(Bool.Infeasible, Bool.False) to Bool.Infeasible,
+        Pair(Bool.Infeasible, Bool.All) to Bool.Infeasible,
+        Pair(Bool.Infeasible, Bool.Empty) to Bool.Infeasible,
+        Pair(Bool.Infeasible, Bool.Infeasible) to Bool.Infeasible,
     )
 }

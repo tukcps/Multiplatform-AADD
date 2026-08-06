@@ -1,9 +1,6 @@
 package io.github.tukcps.aadd.pwl
 
-import io.github.tukcps.aadd.AADD
-import io.github.tukcps.aadd.DDBuilder
-import io.github.tukcps.aadd.values.real.AffineForm
-
+/*
 /**
  * This is an implementation of the Rectified linear unit function. It works as follows: If the interval that is below
  * 0 of the input affine form is larger than then the given split_threshold a split is performed by introducing an internal
@@ -409,4 +406,4 @@ fun exp(extraUncertainty: Double = 0.75, extraIntervals: Int = -1): AADD {
 
 enum class EFunction{
     TIMES,EXP,SQRT,LOG,DIV,SIN, COS
-}
+} */

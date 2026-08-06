@@ -1,6 +1,6 @@
 package io.github.tukcps.aadd.dao
 
-import io.github.tukcps.aadd.IDD
+import io.github.tukcps.aadd.dd.IDD
 import kotlinx.serialization.Serializable
 
 

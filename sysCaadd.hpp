@@ -6,6 +6,9 @@
 #include <systemc-ams>
 #include "libnative_api.h"
 
+//
+// !!!! NEEDS UPDATE TO VERSION 0.9 !!!!
+//
 typedef libnative_kref_com_github_tukcps_jaadd_values_NumberRange range_t;
 typedef libnative_kref_com_github_tukcps_jaadd_BDD BDD_t;
 typedef libnative_kref_com_github_tukcps_jaadd_AADD AADD_t;

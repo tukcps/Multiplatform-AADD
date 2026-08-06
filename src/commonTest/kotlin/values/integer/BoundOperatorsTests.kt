@@ -1,89 +1,74 @@
 package values.integer
 
-import io.github.tukcps.aadd.values.integer.Bound
+import io.github.tukcps.aadd.values.integer.LongBound
 import io.github.tukcps.aadd.values.integer.abs
 import io.github.tukcps.aadd.values.integer.unaryMinus
 import io.github.tukcps.aadd.values.integer.plus
 import io.github.tukcps.aadd.values.integer.minus
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 class BoundOperatorsTests {
 
     @Test
     fun unaryMinusFinite() {
-        assertEquals(Bound.Finite(-5), -Bound.Finite(5))
-        assertEquals(Bound.Finite(5), -Bound.Finite(-5))
+        assertEquals(LongBound.Finite(-5), -LongBound.Finite(5))
+        assertEquals(LongBound.Finite(5), -LongBound.Finite(-5))
     }
 
     @Test
     fun unaryMinusOverflow() {
         assertEquals(
-            Bound.PositiveInfinity,
-            -Bound.Finite(Long.MIN_VALUE)
+            LongBound.PositiveInfinity,
+            -LongBound.Finite(Long.MIN_VALUE)
         )
     }
 
     @Test
     fun unaryMinusInfinity() {
-        assertEquals(Bound.PositiveInfinity, -Bound.NegativeInfinity)
-        assertEquals(Bound.NegativeInfinity, -Bound.PositiveInfinity)
+        assertEquals(LongBound.PositiveInfinity, -LongBound.NegativeInfinity)
+        assertEquals(LongBound.NegativeInfinity, -LongBound.PositiveInfinity)
     }
 
     @Test
     fun absFinite() {
-        assertEquals(Bound.Finite(5), Bound.Finite(-5).abs())
-        assertEquals(Bound.Finite(5), Bound.Finite(5).abs())
+        assertEquals(LongBound.Finite(5), abs(LongBound.Finite(-5)))
+        assertEquals(LongBound.Finite(5), abs(LongBound.Finite(5)))
     }
 
     @Test
     fun absInfinity() {
-        assertEquals(Bound.PositiveInfinity, Bound.PositiveInfinity.abs())
-        assertEquals(Bound.PositiveInfinity, Bound.NegativeInfinity.abs())
+        assertEquals(LongBound.PositiveInfinity, abs(LongBound.PositiveInfinity))
+        assertEquals(LongBound.PositiveInfinity, abs(LongBound.NegativeInfinity))
     }
 
     @Test
     fun plusFinite() {
-        assertEquals(
-            Bound.Finite(8),
-            Bound.Finite(3) + Bound.Finite(5)
-        )
+        assertEquals(LongBound.Finite(8), LongBound.Finite(3) + LongBound.Finite(5))
     }
 
     @Test
     fun plusOverflow() {
         assertEquals(
-            Bound.PositiveInfinity,
-            Bound.Finite(Long.MAX_VALUE) + Bound.Finite(1)
+            LongBound.PositiveInfinity,
+            LongBound.Finite(Long.MAX_VALUE) + LongBound.Finite(1)
         )
     }
 
     @Test
     fun plusInfinity() {
-        assertEquals(
-            Bound.PositiveInfinity,
-            Bound.PositiveInfinity + Bound.Finite(5)
-        )
-
-        assertEquals(
-            Bound.NegativeInfinity,
-            Bound.NegativeInfinity + Bound.Finite(5)
-        )
+        assertEquals(LongBound.PositiveInfinity, LongBound.PositiveInfinity + LongBound.Finite(5))
+        assertEquals(LongBound.NegativeInfinity, LongBound.NegativeInfinity + LongBound.Finite(5))
     }
 
     @Test
     fun plusOppositeInfinity() {
-        assertEquals(
-            Bound.NaN,
-            Bound.PositiveInfinity + Bound.NegativeInfinity
-        )
+        assertNull(LongBound.PositiveInfinity + LongBound.NegativeInfinity)
     }
 
     @Test
     fun minusFinite() {
-        assertEquals(
-            Bound.Finite(2),
-            Bound.Finite(5) - Bound.Finite(3)
-        )
+        assertEquals(LongBound.Finite(2), LongBound.Finite(5) - LongBound.Finite(3))
     }
 }

@@ -1,8 +1,9 @@
+@file:Suppress("PropertyName")
+
 package io.github.tukcps.aadd.dao
 
-import io.github.tukcps.aadd.BDD
+import io.github.tukcps.aadd.dd.BDD
 import kotlinx.serialization.Serializable
-
 
 /**
  * A simple POJO class that can be handled directly for exchange of AADD.

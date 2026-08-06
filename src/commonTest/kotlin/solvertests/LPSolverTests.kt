@@ -1,9 +1,10 @@
 package solvertests
-import io.github.tukcps.aadd.AADD
 import io.github.tukcps.aadd.DDBuilder
-import kotlin.test.Test
+import io.github.tukcps.aadd.DDBuilder.RealMath.plus
+import io.github.tukcps.aadd.dd.AADD
 import io.github.tukcps.aadd.lpsolver.*
 import kotlin.math.ulp
+import kotlin.test.Test
 import kotlin.test.assertEquals
 
 
@@ -16,7 +17,7 @@ class LPSolverTests {
         val problem = LpProblem(listOf(noiseVar), listOf(upperConstraint),optF)
         val solution = solve(problem)
         val x0Value = (solution as Solved).variablesValues[noiseVar]
-        assertEquals(x0Value,1.0)
+        assertEquals(1.0, x0Value)
     }
     @Test
     fun noiseVariableLowerTest(){
@@ -26,7 +27,7 @@ class LPSolverTests {
         val problem = LpProblem(listOf(noiseVar), listOf(upperConstraint),optF)
         val solution = solve(problem)
         val x0Value = (solution as Solved).variablesValues[noiseVar]
-        assertEquals(x0Value,-1.0)
+        assertEquals(-1.0, x0Value)
     }
 
     @Test
@@ -50,8 +51,8 @@ class LPSolverTests {
 
     @Test
     fun posSmallBoxLpProblemTest(){
-        var x0 = LpVariable("x0",canBeNegative = false)
-        var x1 = LpVariable("x1",canBeNegative = false)
+        val x0 = LpVariable("x0",canBeNegative = false)
+        val x1 = LpVariable("x1",canBeNegative = false)
 
         val c0 = LpConstraint(LpExpression(mapOf(x0 to 1.0)),LpConstraintSign.LESS_OR_EQUAL,2.0)
         val c1 = LpConstraint(LpExpression(mapOf(x0 to 1.0)),LpConstraintSign.GREATER_OR_EQUAL,1.0)
@@ -69,14 +70,12 @@ class LPSolverTests {
         assertEquals(-2.0, (minSol as Solved).functionValue)
     }
 
-
     @Test
-    fun simpleTest(){
-        val builder = DDBuilder()
-        with(builder){
-            var r: AADD = real(0.0 .. 1.0)
+    fun simpleTest() {
+        DDBuilder {
+            var r: AADD = real(0.0..1.0)
             IF(r.greaterThanOrEquals(0.5))
-                r = assign(r,r+1.0)
+            r = assign(r, r + 1.0)
             END()
             r.getRange()
             // println(r.toIteString())

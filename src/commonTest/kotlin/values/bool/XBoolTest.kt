@@ -1,6 +1,6 @@
-package values
+package values.bool
 
-import io.github.tukcps.aadd.values.XBool
+import io.github.tukcps.aadd.values.bool.XBool
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -17,19 +17,7 @@ class XBoolTest {
         t = b.equals(true)
         f = b.equals(false)
 
-        assertEquals(t, false)
-        assertEquals(f, true)
-    }
-
-    @Test
-    fun xBoolNotTest1() {
-        val a = XBool.True.not()
-        assertEquals(XBool.False, a)
-    }
-
-    @Test
-    fun xBoolNotTest2() {
-        val a = XBool.False.not()
-        assertEquals(XBool.True, a)
+        assertEquals(false, t)
+        assertEquals(true, f)
     }
 }

@@ -1,8 +1,8 @@
 package values.real.math
 
-import io.github.tukcps.aadd.values.real.math.ErrorFreeTransforms
-import io.github.tukcps.aadd.values.real.math.IEEE754RoundingMath
-import io.github.tukcps.aadd.values.real.math.Rounding
+import io.github.tukcps.aadd.values.real.rounding.ErrorFreeTransforms
+import io.github.tukcps.aadd.values.real.rounding.IEEE754RoundingMath
+import io.github.tukcps.aadd.values.real.rounding.Rounding
 import kotlin.math.nextDown
 import kotlin.test.Test
 import kotlin.test.assertEquals

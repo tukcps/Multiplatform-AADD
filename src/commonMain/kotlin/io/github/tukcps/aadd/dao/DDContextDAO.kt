@@ -16,6 +16,6 @@ data class DDContextDAO (
 )
 
 fun DDBuilder.toDAO() = DDContextDAO(
-   conditions = conds.toDAO(),
+   conditions = conditions.toDAO(),
    // noiseVars = noiseVars,
 )

@@ -1,7 +1,7 @@
 package values.real.math
 
-import io.github.tukcps.aadd.values.real.math.IEEE754RoundingMath
-import io.github.tukcps.aadd.values.real.math.Rounding
+import io.github.tukcps.aadd.values.real.rounding.IEEE754RoundingMath
+import io.github.tukcps.aadd.values.real.rounding.Rounding
 
 import kotlin.test.Test
 import kotlin.test.assertEquals

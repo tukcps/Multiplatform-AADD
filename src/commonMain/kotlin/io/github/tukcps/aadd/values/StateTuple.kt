@@ -2,7 +2,8 @@ package io.github.tukcps.aadd.values
 
 import io.github.tukcps.aadd.CDDVariableError
 import io.github.tukcps.aadd.DDBuilder
-import io.github.tukcps.aadd.values.real.AffineForm
+import io.github.tukcps.aadd.values.bool.XBool
+import io.github.tukcps.aadd.values.real.aa.AffineForm
 
 /**
  * A class that represents the Cartesian product of a set of AADDs and BDDs for a single path through the set.
@@ -25,7 +26,7 @@ class StateTuple(
      * The key is a string that is the id of the specific variable
      * The value is a bool that represents for this specific discrete variable its value in this specific context
      * */
-    private val discreteMap: MutableMap<String,XBool> = hashMapOf()
+    private val discreteMap: MutableMap<String, XBool> = hashMapOf()
 )
 {
 
@@ -69,7 +70,7 @@ class StateTuple(
     /**
      * Simple getter that returns a copy of the discrete variables map
      * */
-    fun getDiscreteValues():MutableMap<String,XBool>
+    fun getDiscreteValues():MutableMap<String, XBool>
     {
         return discreteMap.toMutableMap()
     }

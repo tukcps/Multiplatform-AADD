@@ -1,17 +1,14 @@
 group = "io.github.tukcps"
-version = "0.1.19"
+version = "0.9.1"
 
 plugins {
-    id("org.jetbrains.kotlin.multiplatform") version "2.4.10"
-    kotlin("plugin.serialization") version "2.4.10"
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.dokka)
+
     id("idea")
-    id("org.jetbrains.dokka") version "2.2.0"
     id("maven-publish")
     signing
-}
-
-subprojects {
-    apply(plugin = "org.jetbrains.dokka")
 }
 
 repositories {
@@ -34,46 +31,22 @@ kotlin {
     val nativeTarget = when {
         isMacOs -> {
             when {
-                isArm64 -> macosArm64("native"){
-                    binaries {
-                        sharedLib {
-                            baseName = "native"
-                        }
-                    }
-                }
-
-                isX64 -> macosX64("native") {
-                    binaries {
-                        sharedLib {
-                            baseName = "native"
-                        }
-                    }
-                }
-
+                isArm64 -> macosArm64("native"){ binaries { sharedLib { baseName = "aadd" } } }
+                isX64 -> macosX64("native") { binaries { sharedLib { baseName = "aadd" } } }
                 else -> throw GradleException("Mac Processor Architecture not supported")
             }
         }
 
         isLinux -> {
             when {
-                isX64 -> linuxX64("native") {
-                    binaries {
-                        sharedLib {
-                            baseName = "native"
-                        }
-                    }
-                }
-
+                isX64 -> linuxX64("native") { binaries { sharedLib { baseName = "aadd" } } }
+                isArm64 -> linuxArm64("native") { binaries { sharedLib { baseName = "aadd" } } }
                 else -> throw GradleException("Linux Processor Architecture not supported")
             }
         }
 
         isWindows -> mingwX64("native"){
-            binaries{
-                sharedLib {
-                    baseName = "libnative"
-                }
-            }
+            binaries{ sharedLib { baseName = "aadd" } }
         }
 
         else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
@@ -81,36 +54,19 @@ kotlin {
 
     sourceSets {
         val commonMain by getting {
-            dependencies{
-                implementation("org.jetbrains.kotlin:kotlin-bom")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
-                implementation("org.jetbrains.kotlin:kotlin-reflect")
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
-                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.7.1")
+            dependencies {
+                implementation(libs.kotlinx.coroutines)
+                implementation(libs.kotlinx.serialization.json)
             }
         }
         val commonTest by getting {
-            dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.2")
-                implementation(kotlin("test"))
-            }
+            dependencies { implementation(kotlin("test")) }
         }
         val jvmMain by getting
         val jvmTest by getting
-        val nativeMain by getting {
-            dependencies{
-                implementation("org.jetbrains.kotlin:kotlin-bom")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
-                implementation("org.jetbrains.kotlin:kotlin-reflect")
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
-                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.7.1")
-            }
-        }
+        val nativeMain by getting { dependencies{} }
         val nativeTest by getting {
-            dependencies {
-                implementation(kotlin("test"))
-                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.7.1")
-            }
+            dependencies { implementation(kotlin("test")) }
         }
     }
 }
@@ -137,7 +93,7 @@ publishing {
                 artifactId = project.name
                 version = project.version.toString()
 
-                pom {
+                // pom {
                     name.set(project.name)
                     description.set("Affine Arithmetic Decision Diagram Library for Kotlin Multiplatform")
                     url.set("https://github.com/tukcps/Multiplatform-AADD")
@@ -193,7 +149,7 @@ publishing {
                     issueManagement {
                         url.set("https://github.com/tukcps/Multiplatform-AADD/issues")
                     }
-                }
+                // }
             }
         }
     }

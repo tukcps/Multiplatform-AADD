@@ -1,24 +1,24 @@
-package io.github.tukcps.aadd.values
+package io.github.tukcps.aadd.values.bool
 
 
-import io.github.tukcps.aadd.BDD
-import io.github.tukcps.aadd.DD
 import io.github.tukcps.aadd.DDBuilder
-import io.github.tukcps.aadd.values.XBool.Companion.False
-import io.github.tukcps.aadd.values.XBool.Companion.NaB
-import io.github.tukcps.aadd.values.XBool.Companion.True
-import io.github.tukcps.aadd.values.XBool.Companion.X
-import kotlinx.serialization.Serializable
+import io.github.tukcps.aadd.dd.BDD
+import io.github.tukcps.aadd.dd.DD
+import io.github.tukcps.aadd.values.XBoolValue
+import io.github.tukcps.aadd.values.bool.XBool.Companion.Empty
+import io.github.tukcps.aadd.values.bool.XBool.Companion.False
+import io.github.tukcps.aadd.values.bool.XBool.Companion.True
+import io.github.tukcps.aadd.values.bool.XBool.Companion.XBool
 
 /**
  * The interface XBool serves as an abstraction of a multivalued Boolean variable.
  * It can take the values
  * - True,
  * - False,
- * - X (for unknown in the sense that it can be refined to True or False),
- * - NaB (Not-a-Boolean; for the case that a value or dependency is not "Feasible" by a path condition)
+ * - XBool (for unknown in the sense that it can be refined to True or False),
+ * - Empty (Not-a-Boolean; for the case that a value or dependency is not "Feasible" by a path condition)
  */
-interface XBool {
+interface XBool: XBoolValue {
     // Value
     val value: XBool
 
@@ -26,14 +26,14 @@ interface XBool {
     companion object {
         val True: XBool = XBoolImpl(XBoolImpl.XBoolEnum.True)
         val False: XBool = XBoolImpl(XBoolImpl.XBoolEnum.False)
-        val X: XBool = XBoolImpl(XBoolImpl.XBoolEnum.X)
-        val NaB: XBool = XBoolImpl(XBoolImpl.XBoolEnum.NaB)
+        val XBool: XBool = XBoolImpl(XBoolImpl.XBoolEnum.XBool)
+        val Empty: XBool = XBoolImpl(XBoolImpl.XBoolEnum.Empty)
 
         fun valueOf(s: String): XBool = when(s) {
             "True" -> True
             "False" -> False
-            "X" -> X
-            "NaB" -> NaB
+            "X" -> XBool
+            "NaB" -> Empty
             else -> TODO()
         }
     }
@@ -41,76 +41,83 @@ interface XBool {
     override fun equals(other: Any?): Boolean
     fun intersect(other: XBool): XBool
     operator fun contains(other: XBool): Boolean
+
+    /*
     operator fun not(): XBool
     infix fun and(other: XBool): XBool
     infix fun or(other: XBool): XBool
-
+    infix fun xor(other: XBool): XBool
+    infix fun nand(other: XBool): XBool */
 
     fun valueOf(dd: DD<*>): XBool =
         when(dd) {
-            dd.builder.True -> True
-            dd.builder.False -> False
-            dd.builder.Bool -> X
-            dd.builder.NaB -> NaB
+            dd.builder.Bool.True -> True
+            dd.builder.Bool.False -> False
+            dd.builder.Bool.All -> XBool
+            dd.builder.Bool.Empty -> Empty
             else -> TODO(" Experimental NOT in use ")
         }
 
     fun bddLeafOf(builder: DDBuilder): BDD.Leaf =
         when(this) {
-            True -> builder.True
-            False -> builder.False
-            X -> builder.Bool
-            NaB -> builder.NaB
+            True -> builder.Bool.True
+            False -> builder.Bool.False
+            XBool -> builder.Bool.All
+            Empty -> builder.Bool.Empty
             else -> TODO()
         }
 }
 
-
-@Serializable
 class XBoolImpl(
-    private val xBoolEnum: XBoolEnum = XBoolEnum.X
+    private val xBoolEnum: XBoolEnum = XBoolEnum.XBool
 ): XBool {
 
     override val value: XBool get() =  when(xBoolEnum) {
         XBoolEnum.True -> True
         XBoolEnum.False -> False
-        XBoolEnum.X -> X
-        XBoolEnum.NaB -> NaB
+        XBoolEnum.XBool -> XBool
+        XBoolEnum.Empty -> Empty
     }
+
     enum class XBoolEnum  {
         True,
         False,              // False
-        X,                  // True or False, e.g., external unknown input
-        NaB;                // Neither True nor False, e.g., Predicate on value that is NaN
+        XBool,              // True or False, e.g., external unknown input
+        Empty;              // Neither True nor False, e.g., Predicate on value that is NaN
     }
 
     override fun toString(): String =
         when(this.value) {
-            True   -> "True"
-            False  -> "False"
-            NaB    -> "Contradiction"
-            X      -> "Unknown"
-            else   -> "BDD leaf: None of True, False, NaB, X"
+            True    -> "True"
+            False   -> "False"
+            Empty   -> "Contradiction"
+            XBool   -> "Unknown"
+            else    -> "BDD leaf: None of True, False, NaB, X"
         }
 
     override fun intersect(other: XBool): XBool =
-        xBoolIntersect[Pair(this, other)]!!
+        xBoolBoolIntersect[Pair(this, other)]!!
 
     override operator fun contains(other: XBool): Boolean =
-        xBoolContains[Pair(this, other)]!!
-
+        xBoolBoolContains[Pair(this, other)]!!
+/*
     override infix fun and(other: XBool): XBool =
-        xBoolAnd[Pair(this, other)]!!
+        xBoolBoolAnd[Pair(this, other)]!!
 
     override infix fun or(other: XBool): XBool =
-        xBoolOr[Pair(this, other)]!!
+        xBoolBoolOr[Pair(this, other)]!!
 
-    override fun not(): XBool = when(this.xBoolEnum) {
+    override fun xor(other: XBool): XBool =
+        xBoolBoolXor[Pair(this, other)]!!
+
+    override fun nand(other: XBool): XBool = (this and other).not()
+
+    override operator fun not(): XBool = when(this.xBoolEnum) {
             XBoolEnum.False -> True
             XBoolEnum.True -> False
-            XBoolEnum.X -> X
-            XBoolEnum.NaB -> NaB
-    }
+            XBoolEnum.XBool -> XBool
+            XBoolEnum.Empty -> Empty
+    } */
 
     override fun equals(other: Any?): Boolean = when {
         (this === other)   -> true
@@ -124,92 +131,114 @@ class XBoolImpl(
     }
 }
 
-val xBoolContains: HashMap<Pair<XBool, XBool>, Boolean> = hashMapOf(
+val xBoolBoolContains: HashMap<Pair<XBool, XBool>, Boolean> = hashMapOf(
     Pair(True, True ) to true,
     Pair(True, False) to false,
-    Pair(True, X) to false,
-    Pair(True, NaB) to false,
+    Pair(True, XBool) to false,
+    Pair(True, Empty) to false,
 
     Pair(False, True ) to false,
     Pair(False, False) to true,
-    Pair(False, X) to false,
-    Pair(False, NaB) to false,
+    Pair(False, XBool) to false,
+    Pair(False, Empty) to false,
 
-    Pair(X, True ) to true,
-    Pair(X, False) to true,
-    Pair(X, X) to true,
-    Pair(X, NaB) to false,
+    Pair(XBool, True ) to true,
+    Pair(XBool, False) to true,
+    Pair(XBool, XBool) to true,
+    Pair(XBool, Empty) to false,
 
-    Pair(NaB, True ) to false,
-    Pair(NaB, False) to false,
-    Pair(NaB, X) to false,
-    Pair(NaB, NaB) to true,
+    Pair(Empty, True ) to false,
+    Pair(Empty, False) to false,
+    Pair(Empty, XBool) to false,
+    Pair(Empty, Empty) to true,
 )
 
 /** the intersect operation on two Xbool checks for the possible equality */
-val xBoolIntersect: HashMap<Pair<XBool, XBool>, XBool> = hashMapOf(
+val xBoolBoolIntersect: HashMap<Pair<XBool, XBool>, XBool> = hashMapOf(
     Pair(True, True ) to True,
-    Pair(True, False) to NaB,
-    Pair(True, X) to True,
-    Pair(True, NaB) to NaB,
+    Pair(True, False) to Empty,
+    Pair(True, XBool) to True,
+    Pair(True, Empty) to Empty,
 
-    Pair(False, True ) to NaB,
+    Pair(False, True ) to Empty,
     Pair(False, False) to False,
-    Pair(False, X) to False,
-    Pair(False, NaB) to NaB,
+    Pair(False, XBool) to False,
+    Pair(False, Empty) to Empty,
 
-    Pair(X, True ) to True,
-    Pair(X, False) to False,
-    Pair(X, X) to X,
-    Pair(X, NaB) to NaB,
+    Pair(XBool, True ) to True,
+    Pair(XBool, False) to False,
+    Pair(XBool, XBool) to XBool,
+    Pair(XBool, Empty) to Empty,
 
-    Pair(NaB, True ) to NaB,
-    Pair(NaB, False) to NaB,
-    Pair(NaB, X) to NaB,
-    Pair(NaB, NaB) to NaB,
+    Pair(Empty, True ) to Empty,
+    Pair(Empty, False) to Empty,
+    Pair(Empty, XBool) to Empty,
+    Pair(Empty, Empty) to Empty,
 )
 
-val xBoolAnd: HashMap<Pair<XBool, XBool>, XBool> = hashMapOf(
+val xBoolBoolAnd: HashMap<Pair<XBool, XBool>, XBool> = hashMapOf(
     Pair(True, True ) to True,
     Pair(True, False) to False,
-    Pair(True, X) to X,
-    Pair(True, NaB) to NaB,
+    Pair(True, XBool) to XBool,
+    Pair(True, Empty) to Empty,
 
     Pair(False, True ) to False,
     Pair(False, False) to False,
-    Pair(False, X) to False,
-    Pair(False, NaB) to NaB,
+    Pair(False, XBool) to False,
+    Pair(False, Empty) to Empty,
 
-    Pair(X, True ) to X,
-    Pair(X, False) to False,
-    Pair(X, X) to X,
-    Pair(X, NaB) to NaB,
+    Pair(XBool, True ) to XBool,
+    Pair(XBool, False) to False,
+    Pair(XBool, XBool) to XBool,
+    Pair(XBool, Empty) to Empty,
 
-    Pair(NaB, True ) to NaB,
-    Pair(NaB, False) to NaB,
-    Pair(NaB, X) to NaB,
-    Pair(NaB, NaB) to NaB,
+    Pair(Empty, True ) to Empty,
+    Pair(Empty, False) to Empty,
+    Pair(Empty, XBool) to Empty,
+    Pair(Empty, Empty) to Empty,
 )
 
-
-val xBoolOr: HashMap<Pair<XBool, XBool>, XBool> = hashMapOf(
+val xBoolBoolOr: HashMap<Pair<XBool, XBool>, XBool> = hashMapOf(
     Pair(True, True ) to True,
     Pair(True, False) to True,
-    Pair(True, X) to True,
-    Pair(True, NaB) to NaB,
+    Pair(True, XBool) to True,
+    Pair(True, Empty) to Empty,
 
     Pair(False, True ) to True,
     Pair(False, False) to False,
-    Pair(False, X) to False,
-    Pair(False, NaB) to NaB,
+    Pair(False, XBool) to False,
+    Pair(False, Empty) to Empty,
 
-    Pair(X, True ) to True,
-    Pair(X, False) to X,
-    Pair(X, X) to X,
-    Pair(X, NaB) to NaB,
+    Pair(XBool, True ) to True,
+    Pair(XBool, False) to XBool,
+    Pair(XBool, XBool) to XBool,
+    Pair(XBool, Empty) to Empty,
 
-    Pair(NaB, True ) to NaB,
-    Pair(NaB, False) to NaB,
-    Pair(NaB, X) to NaB,
-    Pair(NaB, NaB) to NaB,
+    Pair(Empty, True ) to Empty,
+    Pair(Empty, False) to Empty,
+    Pair(Empty, XBool) to Empty,
+    Pair(Empty, Empty) to Empty,
+)
+
+
+val xBoolBoolXor: HashMap<Pair<XBool, XBool>, XBool> = hashMapOf(
+    Pair(True, True ) to False,
+    Pair(True, False) to True,
+    Pair(True, XBool) to XBool,
+    Pair(True, Empty) to Empty,
+
+    Pair(False, True ) to True,
+    Pair(False, False) to False,
+    Pair(False, XBool) to XBool,
+    Pair(False, Empty) to Empty,
+
+    Pair(XBool, True ) to XBool,
+    Pair(XBool, False) to XBool,
+    Pair(XBool, XBool) to XBool,
+    Pair(XBool, Empty) to Empty,
+
+    Pair(Empty, True ) to Empty,
+    Pair(Empty, False) to Empty,
+    Pair(Empty, XBool) to Empty,
+    Pair(Empty, Empty) to Empty,
 )

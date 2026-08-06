@@ -1,8 +1,9 @@
+@file:Suppress("PropertyName")
+
 package io.github.tukcps.aadd.dao
 
-import io.github.tukcps.aadd.StrDD
+import io.github.tukcps.aadd.dd.StrDD
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 
@@ -23,7 +24,7 @@ data class StrDdDAO(
 fun StrDD.toDTO(): StrDdDAO = StrDdDAO(
     type = if (this is StrDD.Leaf) "StrDD.Leaf" else "StrDD.Internal",
     index = index,
-    value = if (this is StrDD.Leaf) value else null,
+    value = if (this is StrDD.Leaf) value.str else null,
     T = if (this is StrDD.Internal) T.toDTO() else null,
     F = if (this is StrDD.Internal) F.toDTO() else null
 )

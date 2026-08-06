@@ -1,6 +1,6 @@
 package values.real.math
 
-import io.github.tukcps.aadd.values.real.math.ErrorFreeTransforms
+import io.github.tukcps.aadd.values.real.rounding.ErrorFreeTransforms
 import kotlin.math.nextDown
 import kotlin.math.nextUp
 import kotlin.test.*
@@ -100,13 +100,16 @@ class ErrorFreeTransformsTest {
 
     @Test
     fun twoProdInexact() {
-        val r = ErrorFreeTransforms.twoProd(0.1, 0.2)
+        val a = 0.1
+        val b = 0.2
 
+        val r = ErrorFreeTransforms.twoProd(a, b)
+
+        // Das gerundete Produkt muss dem normalen IEEE-754-Ergebnis entsprechen.
+        assertEquals(a * b, r.value)
+
+        // Es muss ein Fehlerterm entstanden sein.
         assertNotEquals(0.0, r.error)
-
-        val exact = 0.1 * 0.2
-        assertEquals(exact, r.value)
-        assertEquals(exact, r.value + r.error)
     }
 
     @Test

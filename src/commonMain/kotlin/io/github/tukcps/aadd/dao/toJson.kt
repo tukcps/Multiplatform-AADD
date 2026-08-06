@@ -1,10 +1,7 @@
 package io.github.tukcps.aadd.dao
 
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-@OptIn(ExperimentalSerializationApi::class)
 var json = Json {
     prettyPrint = true
     allowSpecialFloatingPointValues = true
