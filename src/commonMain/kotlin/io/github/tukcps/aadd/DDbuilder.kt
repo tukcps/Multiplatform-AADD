@@ -183,6 +183,7 @@ class DDBuilder(
      */
     fun string(value: String): StrDD = StrDD.Leaf(this, Str(value))
 
+    @Deprecated("No longer needed")
     enum class ApproximationScheme{
         Chebyshev,
         MinRange,
@@ -289,10 +290,10 @@ class DDBuilder(
     /** Returns one of the values of the extended Booleans */
     fun constant(value: XBool): BDD =
         when (value) {
+            XBool.Empty -> Bool.Empty
             XBool.True -> Bool.True
             XBool.False -> Bool.False
-            XBool.XBool -> Bool.All
-            XBool.Empty -> Bool.Empty
+            XBool.All -> Bool.All
             else -> throw Exception("Inconsistent value in BDD")
         }
 
@@ -357,6 +358,8 @@ class DDBuilder(
 
     /** BDD Constants: True */
     val Bool = BDDNamespace()
+    @Deprecated("Replaced by Bool", replaceWith = ReplaceWith("Bool"))
+    val Boolean: BDDNamespace get() = Bool
     inner class BDDNamespace {
         val Infeasible = BDD.Leaf(this@DDBuilder, XBool.Empty, Status.Infeasible)
         val Empty = BDD.Leaf(this@DDBuilder, XBool.Empty, Status.Feasible)
@@ -364,7 +367,7 @@ class DDBuilder(
         val False: BDD.Leaf get() = Zero
         val One = BDD.Leaf(this@DDBuilder, true)
         val True: BDD.Leaf get() = One
-        val All = BDD.Leaf(this@DDBuilder, XBool.XBool, Status.NotSolved)
+        val All = BDD.Leaf(this@DDBuilder, XBool.All, Status.NotSolved)
         @Deprecated("Replace with All", ReplaceWith("All"))
         val Bool: BDD.Leaf get() = All
     }
@@ -378,10 +381,10 @@ class DDBuilder(
      */
     internal val AF = AFNamespace()
     inner class AFNamespace {
-        val All = AffineForm(this@DDBuilder, RealRange.Reals.min, RealRange.Reals.max, Double.NaN, hashMapOf())
+        val All   = AffineForm(this@DDBuilder, RealRange.Reals.min, RealRange.Reals.max, Double.NaN, hashMapOf())
         val Empty = AffineForm(this@DDBuilder, RealRange.Empty.min, RealRange.Empty.max, Double.NaN, hashMapOf())
         val Zero  = AffineForm(this@DDBuilder, RealRange.Zero.min, RealRange.Zero.max, 0.0, hashMapOf())
-        val One   = AffineForm(this@DDBuilder, RealRange.One.min, RealRange.One.max, 0.0, hashMapOf())
+        val One   = AffineForm(this@DDBuilder, RealRange.One.min, RealRange.One.max, 1.0, hashMapOf())
     }
 
     /** Constants for the Reals */
@@ -389,9 +392,9 @@ class DDBuilder(
     inner class AADDNamespace {
         val Infeasible = AADD.Leaf(this@DDBuilder, AF.Empty, Status.Infeasible)
         val Empty = AADD.Leaf(this@DDBuilder, AF.Empty, Status.NotSolved)
-        val Zero = AADD.Leaf(this@DDBuilder, AF.Zero)
-        val One = AADD.Leaf(this@DDBuilder, AF.One)
-        val All = AADD.Leaf(this@DDBuilder, AF.All, Status.NotSolved)
+        val Zero  = AADD.Leaf(this@DDBuilder, AF.Zero)
+        val One   = AADD.Leaf(this@DDBuilder, AF.One)
+        val All   = AADD.Leaf(this@DDBuilder, AF.All, Status.NotSolved)
         @Deprecated("Replace with All", ReplaceWith("All"))
         val Reals: AADD.Leaf  get() = All
     }
@@ -401,6 +404,8 @@ class DDBuilder(
 
     /** Constants for the Integers */
     val Integers = IDDNamespace()
+    @Deprecated("Replaced by Integers.Empty", replaceWith = ReplaceWith("Integers.Empty"))
+    val EmptyIntegerRange get() = Integers.Empty
     inner class IDDNamespace {
         val Infeasible = IDD.Leaf(this@DDBuilder, IntegerRange.Empty, Status.Infeasible)
         val Empty = IDD.Leaf(this@DDBuilder, IntegerRange.Empty, Status.NotSolved)

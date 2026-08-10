@@ -1,5 +1,5 @@
 group = "io.github.tukcps"
-version = "0.9.1"
+version = "0.9.3"
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
@@ -68,6 +68,9 @@ kotlin {
         val nativeTest by getting {
             dependencies { implementation(kotlin("test")) }
         }
+    }
+    sourceSets.commonTest.dependencies {
+        implementation(kotlin("test"))
     }
 }
 

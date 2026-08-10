@@ -1,4 +1,4 @@
-package io.github.tukcps.aadd.values
+package io.github.tukcps.aadd.dd
 
 import io.github.tukcps.aadd.DDApi
 

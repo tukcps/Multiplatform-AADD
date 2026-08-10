@@ -11,7 +11,7 @@ import io.github.tukcps.aadd.values.real.ia.RealRange
 import kotlin.math.ceil
 
 //
-// -------------------- Definition of functions based on AffineForm functions ----------------
+// ----------------- Definition of functions based on apply of AffineForm functions --------------
 //
 internal interface AADDMath: NumericApi<Real, AffineForm, Double> {
     override fun add(a: AADD, b: AADD): AADD = a.apply(b, ::add)
@@ -29,7 +29,7 @@ internal interface AADDMath: NumericApi<Real, AffineForm, Double> {
     override fun sqr(value: AADD): AADD = value.apply(::sqr)
     override fun pow(value: AADD, exponent: Double): AADD = value.applyOther(exponent, ::pow)
     override fun pow(value: AADD, exponent: AADD): AADD = value.apply(exponent, ::pow)
-    fun power2(value: AADD): AADD = value.apply(::power2)
+    fun pow2(value: AADD): AADD = value.apply(::power2)
 
     override fun root(value: AADD, degree: AADD): AADD = value.apply(degree, ::root)
     override fun root(value: AADD, degree: Double): AADD = value.applyOther(degree, ::root)
@@ -50,7 +50,9 @@ internal interface AADDMath: NumericApi<Real, AffineForm, Double> {
         )
     }
 
+    /** Ceil function */
     fun ceil(value: AADD): AADD = value.apply(::ceil)
+    /** Inverse function of ceil function */
     fun invCeil(value: AADD): AADD = value.apply(::invCeil)
     fun floor(value: AADD): AADD = value.apply(::floor)
     fun invFloor(value: AADD): AADD = value.apply(::invFloor)
@@ -89,7 +91,7 @@ internal interface AADDMath: NumericApi<Real, AffineForm, Double> {
      * Calculates pow. That is, it is used for the following function: f(x,y) = x^y. The base is 'this'
      * @param exp : Double = the exponential power that the base is being raised to.
      */
-    infix fun AADD.power(exp: AffineForm): AADD = this.apply(builder.leaf(exp), ::pow)
+    infix fun AADD.pow(exp: AffineForm): AADD = this.apply(builder.leaf(exp), ::pow)
 
     /**
      * Calculates nth root

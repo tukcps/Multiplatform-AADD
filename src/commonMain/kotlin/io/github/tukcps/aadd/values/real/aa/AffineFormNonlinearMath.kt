@@ -189,7 +189,6 @@ fun ceilAsLong(value: AffineForm) : LongBound =
     if (!value.max.isFinite) LongBound.PositiveInfinity
     else LongBound.Finite(ceil(value.max.finiteValue).toLong())
 
-
 /**
  * floor function for AFs
  */

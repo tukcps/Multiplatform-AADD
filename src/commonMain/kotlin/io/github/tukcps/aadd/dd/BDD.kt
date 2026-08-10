@@ -55,7 +55,7 @@ sealed class BDD: DD<XBool>, XBool {
         override val status: DD.Status = DD.Status.NotSolved
     ) : BDD(), DD.Internal<XBool>
     {
-        override val value: XBool = XBool.XBool
+        override val value: XBool = XBool.All
 
         /** Clone provides a deep copy of a BDD;
          * reduces, and leaves remain references of ONE and ZERO. */

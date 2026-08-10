@@ -65,14 +65,13 @@ class ConditionsTest {
         }
     }
 
-    @Ignore // TODO: fix this test, it is not working as expected
     @Test
     fun testITEWithDiv() {
         DDBuilder {
             val x = real(1.0 .. 8.0)
             val y = real(8.0)
             val leftValue = y / x
-            val ge = leftValue greaterThan  real(4.0)
+            val ge = leftValue greaterThan real(4.0)
             val evalDown = ge.ite(leftValue, Reals.Empty)
 
             assertEquals(4.0, evalDown.getRange().min.toDouble(), 0.000001)

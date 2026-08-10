@@ -9,7 +9,7 @@ import io.github.tukcps.aadd.DDBuilder.BoolMath.or
 import io.github.tukcps.aadd.DDBuilder.BoolMath.xor
 import io.github.tukcps.aadd.DDBuilder.RealMath.multiply
 import io.github.tukcps.aadd.dd.BDD
-import io.github.tukcps.aadd.numInternalNodes
+import io.github.tukcps.aadd.dd.numInternalNodes
 import io.github.tukcps.aadd.values.bool.XBool
 import kotlin.test.*
 
@@ -245,7 +245,7 @@ class BDDTests {
         }
     }
 
-    @Test //Does not work on Integers
+    @Test //Does not work on Integers as there is not yet an ILP solver :-(
     @Ignore
     fun testITEInt(){
         DDBuilder {

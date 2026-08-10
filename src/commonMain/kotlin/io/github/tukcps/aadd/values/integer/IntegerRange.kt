@@ -168,7 +168,7 @@ class IntegerRange(
             strict && lhsFalse <= rhsFalse -> XBool.False
             !strict && lhs >= rhs -> XBool.True
             !strict && lhsFalse < rhsFalse -> XBool.False
-            else -> XBool.XBool
+            else -> XBool.All
         }
 
     //

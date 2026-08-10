@@ -31,7 +31,7 @@ import kotlin.math.pow
  *
  * @author Christoph Grimm
  */
-data object LongMath {
+object LongMath {
 
     /**
      * Compares two integer bounds according to their total ordering.
@@ -222,22 +222,24 @@ data object LongMath {
             }
         }
 
-    fun min(vararg values: LongBound): LongBound {
+    fun min(vararg values: LongBound?): LongBound {
         require(values.isNotEmpty())
-        var result = values[0]
-        for (i in 1 until values.size)
-            if (compare(values[i], result) < 0)
-                result = values[i]
+        var result = values[0] ?: return NegativeInfinity
+        for (i in 1 until values.size) {
+            if (values[i] == null) return NegativeInfinity
+            else if (compare(values[i]!!, result) < 0)
+                result = values[i]!!
+        }
 
         return result
     }
 
-    fun max(vararg values: LongBound): LongBound {
+    fun max(vararg values: LongBound?): LongBound {
         require(values.isNotEmpty())
-        var result = values[0]
+        var result = values[0] ?: return PositiveInfinity
         for (i in 1 until values.size)
-            if (compare(values[i], result) > 0)
-                result = values[i]
+            if (compare(values[i] ?:return PositiveInfinity, result) > 0)
+                result = values[i]!!
         return result
     }
 

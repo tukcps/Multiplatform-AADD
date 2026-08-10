@@ -84,7 +84,7 @@ open class RealRange(
             isEmpty() || other.isEmpty() -> XBool.Empty
             min > other.max -> XBool.True
             max <= other.min -> XBool.False
-            else -> XBool.XBool
+            else -> XBool.All
         }
 
     override fun greaterThanOrEquals(other: NumberRange<DoubleBound>): XBool =
@@ -92,7 +92,7 @@ open class RealRange(
             isEmpty() || other.isEmpty() -> XBool.Empty
             min >= other.max -> XBool.True
             max < other.min -> XBool.False
-            else -> XBool.XBool
+            else -> XBool.All
         }
 
     override fun lessThan(other: NumberRange<DoubleBound>): XBool =

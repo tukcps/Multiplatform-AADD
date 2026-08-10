@@ -1,4 +1,4 @@
-package examples
+package benchmarks
 
 import io.github.tukcps.aadd.DDBuilder
 import io.github.tukcps.aadd.DDBuilder.BoolMath.and
@@ -9,7 +9,6 @@ import io.github.tukcps.aadd.DDBuilder.RealMath.times
 import io.github.tukcps.aadd.Real
 import io.github.tukcps.aadd.dd.AADD
 import io.github.tukcps.aadd.dd.BDD
-import io.github.tukcps.aadd.util.toRoundedString
 import io.github.tukcps.aadd.values.real.ia.RealRange
 import kotlin.math.PI
 import kotlin.math.exp
@@ -131,60 +130,6 @@ class WaterLevelBenchmark2 {
             // - MacPro, 3.7GHz e.g. +- 2000 (depends on temp, etc.)
             //Assertions.assertTrue(ptime in 1000..100000)
             assertTrue(lpCalls in 1000..1900000)
-        }
-    }
-
-    @Test
-    @Ignore
-    fun runtimeVerificationBenchmarkWithoutR() {
-        DDBuilder {
-            lpCalls = 0
-            // val start = System.currentTimeMillis()
-            // println("==== Stupid water level monitor runtime verification benchmark ====")
-            // some constants with uncertain value.
-            val outrate = real(-1.0..-0.6, "outrate")
-            val inrate = real(0.6..1.0, "inrate")
-            var level: AADD = real(1.0..11.0, "level")
-            var rate: AADD = boolean("initial direction").ite(inrate, outrate)
-            var drate = 0.9
-            var dlevel = 4.0
-            var inrange: BDD = Bool.True
-            var rlevel: AADD = real(1.0..11.0, (-1).toString())
-            for (time in 0 .. 39) {
-                // For discrete fault:
-                // if (time > 22) dlevel = 2.0
-                print("  At time: $time sec. physical water level is: ${dlevel.toRoundedString(2)}")
-                if (dlevel >= 10.0) drate = -.8
-                if (dlevel < 2.0) drate = 0.9
-                // For parametric fault:
-                // if (time >= 19 && drate == 0.9) drate = 0.5
-                dlevel += drate
-
-                println(" symbolic is: " + level.getRange() + " and has leaves: " + level.numLeaves())
-                // Check the discrete state ...
-                inrange = (level greaterThanOrEquals real(dlevel)) and (level lessThanOrEquals real(dlevel)) and inrange
-                // ... or better: check with intersect:
-                rlevel = rlevel.constrainTo(RealRange(dlevel - 0.01..dlevel + 0.01))
-                assertTrue(level in RealRange(0.9..11.1))
-                IF(level greaterThan real(10.0))
-                    rate = assign(rate, outrate)
-                END()
-                IF(level lessThanOrEquals real(2.0))
-                    rate = assign(rate, inrate)
-                END()
-                println("                  feasible paths:  " + inrange.numTrue() + " that match physical data.")
-                println("                  feasible leaves: " + rlevel.numFeasible() + " with Range: " + rlevel)
-                level += rate
-                rlevel += rate
-            }
-            // val ptime = System.currentTimeMillis() - start
-            // println("Ptime: $ptime mSec")
-            // println("CspSolver calls: $lpCalls")
-
-            // Should be ok for all somehow recent computers.
-            // - MacPro, 3.7GHz e.g. +- 2000 (depends on temp, etc.)
-            //Assertions.assertTrue(ptime in 1000..100000)
-            // assertTrue(lpCalls in 120000..1900000)
         }
     }
 }

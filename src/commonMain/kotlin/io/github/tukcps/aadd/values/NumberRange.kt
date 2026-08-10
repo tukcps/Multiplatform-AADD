@@ -13,7 +13,7 @@ import io.github.tukcps.aadd.values.bool.XBool
  * - can be Empty, a Scalar, or Finite/Infinite.
  *
  * Implementations provide operations on ranges:
- * - (in) equality.
+ * - equalities,
  * - containment,
  * - intersection, and
  * - union.

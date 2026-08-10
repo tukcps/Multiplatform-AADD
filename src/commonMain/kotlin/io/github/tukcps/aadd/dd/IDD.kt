@@ -97,7 +97,6 @@ sealed class IDD: DD<IntegerRange>, NumberRange<LongBound> {
     infix fun greaterThanOrEquals(other: Long): BDD = greaterThanOrEquals(builder.leaf(IntegerRange(other)))
     override infix fun greaterThanOrEquals(other: NumberRange<LongBound>): BDD = greaterThanOrEquals(builder.leaf(other))
 
-
     infix fun constrainTo(other: ClosedRange<LongBound>): IDD {
         getRange()
         return this.apply(builder.leaf(IntegerRange(other), Status.NotSolved), IntegerRange::intersect)
@@ -126,7 +125,6 @@ sealed class IDD: DD<IntegerRange>, NumberRange<LongBound> {
         is Internal-> T.getRange().union(F.getRange())
         is Leaf -> value
     }
-
 
     /**
      * Creates an IDD, depending on the result of a comparison.

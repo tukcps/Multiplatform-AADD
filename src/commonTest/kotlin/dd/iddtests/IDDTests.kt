@@ -41,10 +41,6 @@ class IDDTests {
     }
 
     @Test
-            /** ITE of an IDD leaf with a BDD of height 1 must result in merged IDD with height 1.
-             * However, getting height 0
-             */
-    @Ignore
     fun testITE1() {
         DDBuilder {
             var a : Integer = integer(1L..1)
@@ -70,7 +66,6 @@ class IDDTests {
     }
 
     @Test
-    @Ignore
     fun reduceTest() {
         val builder = DDBuilder()
         // Two BDD with different indexes.
@@ -105,7 +100,6 @@ class IDDTests {
 
 
     @Test
-    @Ignore
     fun testIDDAssignment() {
         DDBuilder {
             val a = integer(10)
@@ -180,7 +174,6 @@ class IDDTests {
     }
 
     @Test
-    @Ignore
     // Check if infeasible paths are detected and leaves are marked.
     fun infeasibilityTest() {
         DDBuilder{
@@ -205,7 +198,6 @@ class IDDTests {
     }
 
     @Test
-    @Ignore
     fun testMultiplication2() {
         DDBuilder {
             val a = integer(7L..10)

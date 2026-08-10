@@ -48,4 +48,8 @@ interface Bound : Comparable<Bound> {
      */
     val isOne: Boolean
 
+    /**
+     * Comparison for ordering
+     */
+    override fun compareTo(other: Bound): Int
 }

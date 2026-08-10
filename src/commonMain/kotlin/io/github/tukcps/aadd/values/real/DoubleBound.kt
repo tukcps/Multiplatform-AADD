@@ -19,6 +19,9 @@ import kotlin.jvm.JvmInline
  * 1 / +0.0 = +∞
  * 1 / -0.0 = -∞
  * ```
+ *
+ * Implemented as interface, extending the Double value type.
+ * Hence, no performances losses.
  */
 sealed interface DoubleBound : Bound {
 

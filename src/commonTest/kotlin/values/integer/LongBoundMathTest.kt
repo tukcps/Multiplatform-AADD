@@ -1,6 +1,7 @@
 package values.integer
 
 import io.github.tukcps.aadd.values.integer.LongBound
+import io.github.tukcps.aadd.values.integer.LongBound.NegativeInfinity.eq
 import io.github.tukcps.aadd.values.integer.LongMath
 import io.github.tukcps.aadd.values.integer.LongMath.isNegative
 import io.github.tukcps.aadd.values.integer.LongMath.isPositive
@@ -21,6 +22,7 @@ class LongBoundMathTest {
 
     @Test
     fun testCompare() {
+        // Inequality
         assertEquals(0, LongMath.compare(b(5), b(5)))
         assertTrue(LongMath.compare(b(4), b(5)) < 0)
         assertTrue(LongMath.compare(b(5), b(4)) > 0)
@@ -29,8 +31,9 @@ class LongBoundMathTest {
         assertTrue(LongMath.compare(pInf, b(0)) > 0)
         assertTrue(LongMath.compare(pInf, nInf) > 0)
 
-        // assertTrue(LongMath.compare(nan, pInf) > 0)
-        // assertTrue(LongMath.compare(nInf, nan) < 0)
+        assertTrue(pInf > nInf)
+        assertTrue(LongBound.Finite(0L) eq 0L)
+        assertEquals(pInf, pInf)
     }
 
     @Test
@@ -143,5 +146,13 @@ class LongBoundMathTest {
         assertFailsWith<IllegalArgumentException> {
             LongMath.max()
         }
+    }
+
+    @Test
+    fun testEq() {
+        val b1 = 1L eq LongBound.PositiveInfinity
+        val b2 = LongBound.NegativeInfinity eq 1000L
+        assertEquals(false, b2)
+        assertEquals(false, b1)
     }
 }

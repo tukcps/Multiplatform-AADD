@@ -12,6 +12,9 @@ import kotlin.jvm.JvmInline
  * Invalid mathematical results are not represented as bounds. If an
  * operation has no valid result, the corresponding range is represented
  * by [IntegerRange.Empty].
+ *
+ * Note: Implemented as interface + value type for the general case of a finite value.
+ * No object allocation hence for finite values.
  */
 sealed interface LongBound : Bound {
 
@@ -62,14 +65,22 @@ sealed interface LongBound : Bound {
      * @param other bound to compare with
      * @return negative, zero, or positive according to ordering
      */
-    override fun compareTo(other: Bound): Int {
+    override operator fun compareTo(other: Bound): Int {
         require(other is LongBound) { "Cannot compare LongBound with ${other::class.simpleName}" }
         return LongMath.compare(this, other)
     }
 
-    fun compareTo(other: Long): Int {
-        return LongMath.compare(this, LongBound.Finite(other))
-    }
+    infix operator fun compareTo(other: Long): Int =
+        LongMath.compare(this, Finite(other))
+
+    infix operator fun Long.compareTo(other: LongBound): Int =
+        LongMath.compare(Finite(this), other)
+
+    infix fun eq(other: Long): Boolean =
+        LongMath.compare(this, Finite(other)) == 0
+
+    infix fun Long.eq(other: LongBound): Boolean =
+        LongMath.compare(Finite(this), other) == 0
 
     /**
      * Returns a textual representation.

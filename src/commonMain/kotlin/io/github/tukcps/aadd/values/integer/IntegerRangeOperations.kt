@@ -23,35 +23,24 @@ operator fun IntegerRange.div(other: IntegerRange): IntegerRange  = divide(this,
 operator fun IntegerRange.rem(other: IntegerRange): IntegerRange =
     TODO("Interval remainder")
 
-/*--------------------------------------------------*/
-/* Scalar operators                                 */
-/*--------------------------------------------------*/
-operator fun IntegerRange.plus(value: Long): IntegerRange =
-    this + IntegerRange(value)
+//--------------------------------------------------
+//               Overloaded operators
+//--------------------------------------------------
+operator fun IntegerRange.plus(value: Long): IntegerRange = this + IntegerRange(value)
+operator fun IntegerRange.plus(value: Int): IntegerRange = this + IntegerRange(value.toLong())
+operator fun Long.plus(range: IntegerRange): IntegerRange = IntegerRange(this) + range
 
-operator fun Long.plus(range: IntegerRange): IntegerRange =
-    IntegerRange(this) + range
+operator fun IntegerRange.minus(value: Long): IntegerRange = this - IntegerRange(value)
+operator fun IntegerRange.minus(value: Int): IntegerRange = this - IntegerRange(value.toLong())
+operator fun Long.minus(range: IntegerRange): IntegerRange = IntegerRange(this) - range
 
-operator fun IntegerRange.minus(value: Long): IntegerRange =
-    this - IntegerRange(value)
+operator fun IntegerRange.times(value: Long): IntegerRange = this * IntegerRange(value)
+operator fun IntegerRange.times(value: Int): IntegerRange = this * IntegerRange(value.toLong())
+operator fun Long.times(range: IntegerRange): IntegerRange = IntegerRange(this) * range
 
-operator fun Long.minus(range: IntegerRange): IntegerRange =
-    IntegerRange(this) - range
+operator fun IntegerRange.div(value: Long): IntegerRange = this / IntegerRange(value)
+operator fun IntegerRange.div(value: Int): IntegerRange = this / IntegerRange(value.toLong())
+operator fun Long.div(range: IntegerRange): IntegerRange = IntegerRange(this) / range
 
-operator fun IntegerRange.times(value: Long): IntegerRange =
-    this * IntegerRange(value)
-
-operator fun Long.times(range: IntegerRange): IntegerRange =
-    IntegerRange(this) * range
-
-operator fun IntegerRange.div(value: Long): IntegerRange =
-    this / IntegerRange(value)
-
-operator fun Long.div(range: IntegerRange): IntegerRange =
-    IntegerRange(this) / range
-
-operator fun IntegerRange.rem(value: Long): IntegerRange =
-    this % IntegerRange(value)
-
-operator fun Long.rem(range: IntegerRange): IntegerRange =
-    IntegerRange(this) % range
+operator fun IntegerRange.rem(value: Long): IntegerRange = this % IntegerRange(value)
+operator fun Long.rem(range: IntegerRange): IntegerRange = IntegerRange(this) % range

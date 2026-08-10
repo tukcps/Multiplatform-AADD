@@ -1,6 +1,6 @@
 # AADD
 
-##### Symbolic Computation with Affine Arithmetic Decision Diagrams (AADDs)
+#### Semi-Symbolic Computation with Decision Diagrams (DDs), Constrained Affine Arithmetic (AA), and more. 
 
 (c) University Kaiserslautern-Landau, Chair of Cyber-Physical Systems
 
@@ -10,14 +10,16 @@
 ## What the AADD library does
 The AADD library enables **semi-symbolic computations** over Reals (Doubles), Integers, and Booleans.
 These are represented by sets of convex ranges; likewise, operations are done on sets of convex ranges.
-The results guarantee **safe inclusion**: no possible results are lose
+We split the ranges by a (generalize) Shannon Decomposition to a more general set-representation. 
+The results guarantee **safe inclusion**: no possible results are lost, and high performance 
+and scalability to **numerical problems with complex control** flow are achieved. 
 
 Use cases include 
 
-- Reachability analysis by abstract execution in general, 
-- Formal verification of mixed discrete/continuous and control systems, 
-- Type inference and verification in software systems, 
-- Development of tools for constraint propagation and reasoning, e.g., SMT solvers.
+- **Reachability analysis** by abstract execution in general, 
+- **Formal verification** of mixed discrete/continuous and control systems, 
+- **Type inference and verification** in software systems, 
+- Development of tools for **constraint propagation and reasoning**, e.g., SMT solvers.
 
 What the AADD library does can be seen by a tiny code-example in Kotlin: 
 
@@ -32,7 +34,7 @@ What the AADD library does can be seen by a tiny code-example in Kotlin:
    }
 ```
 
-The resulting output is:
+The resulting output is a Shannon Decomposition (with index 1 linking to a condition):
 ```
     f = ITE(1, [-50; -49.5], [49.5; 50]) 
 ```
@@ -69,7 +71,7 @@ To learn more:
 - Zivkovic et al., IEEE TCAD 38/10 2019;  https://ieeexplore.ieee.org/document/8428606
 - Zivkovic et al., DATE 2019; http://dx.doi.org/10.23919/DATE.2019.8715278
 
-For a complex project base on the AADD library, check SysMD Notebook on Github: https://github.com/tukcps/SysMD.
+For a complex project base on the AADD library, check SysMD Notebook on GitHub: https://github.com/tukcps/SysMD.
 
 ## Contents and Use of the AADD Library
 
@@ -78,7 +80,7 @@ This means, that Kotlin generates both JAR files for the Java Virtual Machine pl
 and binary shared libraries (for use from C/C++, ...).
 
 The development environment is:
-- Gradle 8.5+ as build tool.
+- Gradle 8.5+ as build tool
 - Kotlin v2.4+ which compiles to Java 21+ Byte code or various binary platforms, 
 - Kotlin test for unit testing, 
 
@@ -86,7 +88,9 @@ The Gradle build tool automatically downloads all dependencies.
 The multi-platform version includes a simple LP solver (which is ok as most LP problems in AADD are small ones, where the overhead for starting a complex solver is expensive).
 For the JVM platforms, other solvers for LP/MILP problems like OjAlgo will be used in the next updates.
 
-To include the AADD library in an application, add the following dependency to your Gradle dependencies: 
+To include the AADD library in an application, add the following dependency to your Gradle dependencies (and add 
+[![MvnRepository](https://badges.mvnrepository.com/badge/io.github.tukcps/aadd/badge.svg?label=MvnRepository)](https://mvnrepository.com/artifact/io.github.tukcps/aadd)
+to your repositories): 
 ```
     implementation("io.github.tukcps:aadd:0.9.1") // Check for newer versions!  
 ```
@@ -214,13 +218,23 @@ For more detailed information on utilizing multiplatform shared libraries, pleas
 
 ### API Changelog
 
-##### Versions MP-AADD 0.1+
+#### Multiplatform (MP-) AADD 
+
+##### Versions MP-AADD 0.9-0.9.X
+- API fixes towards 1.0 (but quite stable now)
+- Slightly simplified numerical methods in favor of maintainability, architecture 
+- Temporarily dropped some very use-case-specific features 
+
+##### Versions MP-AADD 0.1-0.1.X 
+- Not for external use as not fully mature API
+- API exploration, scalability checks, ... 
 - In DDBuilder: range and scalar replaced by real, integer, string.
 
 ##### Versions MP-AADD 0.0.1-0.0.9
 - Transition of the project to a multi-platform project 
 - refactor jaadd to aadd in several classes/package names to match new project name that is AADD only (no j for Java)
 
+#### jAADD (deprecated; continued as Multiplatform-AADD)
 ##### Version 3.8+ (jAADD)
 - last jaadd versions; added new builder functions from MP-AADD to make transition easier
 

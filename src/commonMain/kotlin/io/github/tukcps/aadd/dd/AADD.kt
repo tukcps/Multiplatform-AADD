@@ -98,25 +98,41 @@ sealed class AADD: DD<AffineForm>, NumberRange<DoubleBound> {
     }
 
     /** Double in AADD. Allows us writing "Double in AADD" */
-    operator fun contains(value: Double): Boolean = when(this) {
+    infix operator fun contains(value: Double): Boolean = when(this) {
+        is Internal -> T.contains(value) || F.contains(value)
+        is Leaf -> this.value.contains(value)
+    }
+
+    /** Double in AADD. Allows us writing "Double in AADD" */
+    override infix operator fun contains(value: DoubleBound): Boolean = when(this) {
         is Internal -> T.contains(value) || F.contains(value)
         is Leaf -> this.value.contains(value)
     }
 
     /** Overridden operator "in" that allows us to check "Double .. Double in AADD" -> Boolean */
-    operator fun contains(x: ClosedFloatingPointRange<Double>): Boolean = when(this) {
+    infix operator fun contains(x: ClosedFloatingPointRange<Double>): Boolean = when(this) {
         is Leaf -> if (x.start > value.max.toDouble()) false else x.endInclusive >= value.min.toDouble()
         is Internal -> T.contains(x) || F.contains(x)
     }
 
-    override fun join(other: NumberRange<DoubleBound>): AADD = when {
+    override infix fun join(other: NumberRange<DoubleBound>): AADD = when {
         other is AADD       -> apply(other, AffineForm::join)
         else                -> builder.leaf( (this as NumberRange<DoubleBound>) join other)
     }
 
-    override fun intersect(other: NumberRange<DoubleBound>): AADD = when {
+    /**
+     * Computes the intersection of two AADD; for Affine Forms, it considers constraints and LP problem.
+     * (TODO!)
+     */
+    override infix fun intersect(other: NumberRange<DoubleBound>): AADD = when {
         other is AADD       -> apply(other, AffineForm::intersect)
         else                -> builder.leaf( (this as NumberRange<DoubleBound>) intersect other)
+    }
+
+    /** Computes a more simple intersection by just moving the constraints. w*/
+    fun constrainTo(other: NumberRange<DoubleBound>): AADD = when {
+        other is AADD       -> builder.leaf(RealRange(this) intersect RealRange(other) )
+        else                -> builder.leaf( (RealRange(this)) intersect other)
     }
 
     /**
@@ -139,6 +155,7 @@ sealed class AADD: DD<AffineForm>, NumberRange<DoubleBound> {
          difference(other)?.checkObjective("<")?: builder.Bool.Empty
     override fun lessThan(other: DoubleBound): BDD = lessThan(RealRange(other, other))
     infix fun lessThan(other: Double): BDD = lessThan(builder.real(other))
+    infix fun Double.lessThan(other: AADD): BDD = builder.real(other).lessThan(this)
 
     /**
      * Implements relational operator less or equal than `<=`
@@ -147,8 +164,9 @@ sealed class AADD: DD<AffineForm>, NumberRange<DoubleBound> {
      */
     override infix fun lessThanOrEquals(other: NumberRange<DoubleBound>): BDD =
         difference(other)?.checkObjective("<=") ?: builder.Bool.Empty
-    override fun lessThanOrEquals(other: DoubleBound): BDD = lessThanOrEquals(RealRange(other, other))
+    override infix fun lessThanOrEquals(other: DoubleBound): BDD = lessThanOrEquals(RealRange(other, other))
     infix fun lessThanOrEquals(other: Double): BDD = lessThanOrEquals(builder.real(other))
+    infix fun Double.lessThanOrEquals(other: AADD): BDD = builder.real(other).lessThanOrEquals(this)
 
     /**
      * Computes the relational operator greater than `>`
@@ -157,8 +175,9 @@ sealed class AADD: DD<AffineForm>, NumberRange<DoubleBound> {
      */
     override infix fun greaterThan(other: NumberRange<DoubleBound>): BDD =
         difference(other)?.checkObjective(">") ?: builder.Bool.Infeasible
-    override fun greaterThan(other: DoubleBound): BDD = greaterThan(RealRange(other, other))
+    override infix fun greaterThan(other: DoubleBound): BDD = greaterThan(RealRange(other, other))
     infix fun greaterThan(other: Double): BDD = greaterThan(builder.real(other))
+    infix fun Double.greaterThan(other: AADD): BDD = builder.real(other).greaterThan(this)
 
     /**
      * Implements relational operator greater or equal than `>=`
@@ -167,10 +186,11 @@ sealed class AADD: DD<AffineForm>, NumberRange<DoubleBound> {
      */
     override infix fun greaterThanOrEquals(other: NumberRange<DoubleBound>): BDD =
         difference(other)?.checkObjective(">=")?: builder.Bool.Empty
-    override fun greaterThanOrEquals(other: DoubleBound): BDD =
+    override infix fun greaterThanOrEquals(other: DoubleBound): BDD =
         greaterThanOrEquals(RealRange(other, other))
-    infix fun greaterThanOrEquals(other: Double): BDD =
-        greaterThanOrEquals(builder.real(other))
+    infix fun greaterThanOrEquals(other: Double): BDD = greaterThanOrEquals(builder.real(other))
+    infix fun Double.greaterThanOrEquals(other: AADD): BDD = builder.real(other).greaterThanOrEquals(this)
+
 
     override fun union(other: NumberRange<DoubleBound>): NumberRange<DoubleBound> {
         TODO("Not yet implemented")

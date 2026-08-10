@@ -498,7 +498,7 @@ fun log(x: IntegerRange, base: Long): IntegerRange =
 fun log2(x: IntegerRange): IntegerRange =
     ln(x) / ln(IntegerRange(2L))
 
-fun log12(x: IntegerRange): IntegerRange =
+fun log10(x: IntegerRange): IntegerRange =
     ln(x) / ln(IntegerRange(10L))
 
 

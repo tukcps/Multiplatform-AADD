@@ -1,4 +1,4 @@
-package examples
+package benchmarks
 import io.github.tukcps.aadd.DDBuilder
 import io.github.tukcps.aadd.DDBuilder.RealMath.plus
 import io.github.tukcps.aadd.Real

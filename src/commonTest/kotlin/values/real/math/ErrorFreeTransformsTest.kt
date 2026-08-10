@@ -102,20 +102,14 @@ class ErrorFreeTransformsTest {
     fun twoProdInexact() {
         val a = 0.1
         val b = 0.2
-
         val r = ErrorFreeTransforms.twoProd(a, b)
-
-        // Das gerundete Produkt muss dem normalen IEEE-754-Ergebnis entsprechen.
         assertEquals(a * b, r.value)
-
-        // Es muss ein Fehlerterm entstanden sein.
         assertNotEquals(0.0, r.error)
     }
 
     @Test
     fun twoProdInfinity() {
         val r = ErrorFreeTransforms.twoProd(Double.POSITIVE_INFINITY, 2.0)
-
         assertTrue(r.value.isInfinite())
         assertEquals(0.0, r.error)
     }
@@ -123,14 +117,12 @@ class ErrorFreeTransformsTest {
     @Test
     fun twoProdNaN() {
         val r = ErrorFreeTransforms.twoProd(Double.NaN, 2.0)
-
         assertTrue(r.value.isNaN())
     }
 
     @Test
     fun twoProdNegative() {
         val r = ErrorFreeTransforms.twoProd(-2.0, 3.0)
-
         assertEquals(-6.0, r.value)
         assertEquals(0.0, r.error)
         assertTrue(r.exact)

@@ -34,10 +34,10 @@ class NoisetermCompressionBenchmark {
                 invalMax = setValMax - isvalmax
                 invalAA = setValAA - isvalAA
 
-                if (invalAA.min.finiteValue > 0){
-                    piOutAA = ln(invalAA*10.0) + piOutAA
+                piOutAA = if (invalAA.min.finiteValue > 0){
+                    ln(invalAA*10.0) + piOutAA
                 } else {
-                    piOutAA = (invalAA * 0.05) + piOutAA
+                    (invalAA * 0.05) + piOutAA
                 }
 
                 if(invalMin > 0){
