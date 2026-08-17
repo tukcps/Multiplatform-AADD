@@ -7,7 +7,7 @@ import io.github.tukcps.aadd.DDBuilder.RealMath.pow
 import io.github.tukcps.aadd.DDBuilder.RealMath.times
 import io.github.tukcps.aadd.Real
 import io.github.tukcps.aadd.dd.AADD
-import testutil.Assertions.assertEquals
+import io.github.tukcps.aadd.util.Assertions.assertEquals
 import kotlin.test.DefaultAsserter.assertTrue
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -51,8 +51,6 @@ class TestsAgainstRumpEquations {
         DDBuilder {
             val x = real(14.999 ..  15.001)
             val y = real(25.999 .. 26.001)
-            val nine = real(9.0)
-            val two = real(2.0)
             val z : Real =
                 pow(x, 4.0) * 9.0 -
                         pow(y, 4.0) +

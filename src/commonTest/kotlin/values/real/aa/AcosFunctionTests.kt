@@ -4,7 +4,7 @@ import io.github.tukcps.aadd.values.real.aa.AcosFunction
 import io.github.tukcps.aadd.values.real.aa.AffineForm
 import io.github.tukcps.aadd.values.real.aa.linearize
 import io.github.tukcps.aadd.values.real.ia.acos
-import testutil.Assertions.assertEquals
+import io.github.tukcps.aadd.util.Assertions.assertEquals
 import testutil.ddTest
 import kotlin.math.PI
 import kotlin.test.Test

@@ -26,7 +26,7 @@ object IEEE754RoundingMath : RoundingMath {
         round(twoSum(a, -b), rounding)
 
     override fun sub(a: DoubleBound, b: DoubleBound, rounding: Rounding) =
-        round(twoSum(a, -b), rounding).toDoubleBound()
+        round(twoSum(a, (-b)!!), rounding).toDoubleBound()
 
     override fun mul(a: Double, b: Double, rounding: Rounding) =
         round(ErrorFreeTransforms.twoProd(a, b), rounding)

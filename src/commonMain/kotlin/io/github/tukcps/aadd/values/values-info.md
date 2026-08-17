@@ -139,21 +139,21 @@ Note that the range-representation is conservative:
 
 ### Domains
 
-The supported domains are mathematical sets.
+The supported domains are mathematical sets (that are represented by suitable approximations).
 Examples:
 
 ```
-Integers = ℤ
-Reals = ℝ
-Booleans = {false,true}
+Integers.All = ℤ
+Reals.All = ℝ
+Booleans.All = {false,true}
 ```
 
 A value can test whether it represents a complete domain.
 Examples:
 
 ```kotlin
-IntegerRange.Integers.isIntegers()
-RealRange.Reals.isReals()
+IntegerRange.Integers.isAll()
+RealRange.Reals.isAll()
 ```
 
 This is a set equality test:`value == complete domain` not merely a type check.
@@ -228,7 +228,7 @@ is neither always true nor always false. The result is represented by `XBool`:
 Empty   (no possible evaluation, or contradiction)
 One/True
 Zero/False
-XBool   (both possible, unknown, X)
+All   (both True and Falls is possible; also: unknown, X)
 ```
 
 This follows the same set semantics:

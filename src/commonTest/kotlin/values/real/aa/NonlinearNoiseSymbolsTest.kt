@@ -1,13 +1,5 @@
 package examples.values
 
-import io.github.tukcps.aadd.DDBuilder
-import kotlin.math.PI
-import kotlin.math.exp
-import kotlin.math.ln
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
-
 class NonlinearNoiseSymbolsTest {
     private val precision = 0.00001
 

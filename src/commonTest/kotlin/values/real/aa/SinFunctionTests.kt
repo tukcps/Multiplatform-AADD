@@ -6,7 +6,7 @@ import io.github.tukcps.aadd.values.real.aa.minus
 import io.github.tukcps.aadd.values.real.aa.sin
 import io.github.tukcps.aadd.values.real.ia.RealRange
 import io.github.tukcps.aadd.values.real.minus
-import testutil.Assertions.assertEquals
+import io.github.tukcps.aadd.util.Assertions.assertEquals
 import testutil.ddTest
 import kotlin.math.*
 import kotlin.test.Test

@@ -20,7 +20,7 @@ internal interface AADDMath: NumericApi<Real, AffineForm, Double> {
     override fun subtract(a: Real, b: Double): Real = a.applyOther(b, ::subtract)
     override fun multiply(a: AADD, b: AADD): AADD = a.apply(b, ::multiply)
     override fun multiply(a: AADD, b: Double): AADD = a.applyOther(b, ::multiply)
-    override fun inv(a: AADD): AADD = a.apply(::inv)
+    override fun inv(a: AADD): AADD = a.applySplit(::invSplit)
     override fun divide(a: AADD, b: AADD): AADD = a.apply(b, ::divide)
     override fun divide(a: Real, b: Double): Real = a.applyOther(b, ::divide)
 

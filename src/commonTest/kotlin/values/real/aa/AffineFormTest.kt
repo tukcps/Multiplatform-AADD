@@ -1,11 +1,11 @@
-package values.real
+package values.real.aa
 
 import io.github.tukcps.aadd.DDBuilder
 import io.github.tukcps.aadd.values.real.DoubleBoundMath.toDouble
 import io.github.tukcps.aadd.values.real.aa.*
 import io.github.tukcps.aadd.values.real.aa.AffineForm.Companion.create
 import io.github.tukcps.aadd.values.real.ia.RealRange
-import testutil.Assertions.assertEquals
+import io.github.tukcps.aadd.util.Assertions.assertEquals
 import kotlin.math.pow
 import kotlin.test.Test
 import kotlin.test.assertEquals

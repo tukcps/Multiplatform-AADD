@@ -119,7 +119,7 @@ fun multiply(a: IntegerRange, b: IntegerRange): IntegerRange {
     val defined = products.filterNotNull()
 
     return if (defined.isEmpty()) {
-        IntegerRange.Integers
+        IntegerRange.All
     } else {
         IntegerRange(
             LongMath.min(*defined.toTypedArray()),
@@ -393,7 +393,7 @@ fun root(value: IntegerRange, n: Long): IntegerRange {
  */
 fun root(value: IntegerRange, degree: IntegerRange): IntegerRange {
     if (value.isEmpty() || degree.isEmpty()) return IntegerRange.Empty
-    if (!degree.isFinite()) return IntegerRange.Integers
+    if (!degree.isFinite()) return IntegerRange.All
     if (degree.isScalar()) return root(value, degree.min.finiteValue)
 
     val minDegree = degree.min.finiteValue
@@ -513,3 +513,15 @@ fun pow(base: IntegerRange, exp: Long): IntegerRange =
 /** Returns b^e for b∈base and e∈exp. */
 fun pow(base: IntegerRange, exp: IntegerRange): IntegerRange =
     pow(base, exp)
+
+/**
+ * Computes 2^x for a non-negative integer interval.
+ *
+ * @throws IllegalArgumentException if [x] contains negative values.
+ */
+fun pow2(x: IntegerRange): IntegerRange = when {
+    x.isEmpty() -> IntegerRange.Empty
+    x.min < 0L -> throw IllegalArgumentException("pow2 requires x >= 0")
+    x.max > 62L -> IntegerRange.All
+    else -> IntegerRange(1L shl x.min.finiteValue.toInt(), 1L shl x.max.finiteValue.toInt())
+}

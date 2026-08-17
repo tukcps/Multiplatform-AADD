@@ -9,7 +9,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-class BoundOperatorsTests {
+class LongBoundOperatorsTests {
 
     @Test
     fun unaryMinusFinite() {
@@ -19,10 +19,7 @@ class BoundOperatorsTests {
 
     @Test
     fun unaryMinusOverflow() {
-        assertEquals(
-            LongBound.PositiveInfinity,
-            -LongBound.Finite(Long.MIN_VALUE)
-        )
+        assertEquals(LongBound.PositiveInfinity, -LongBound.Finite(Long.MIN_VALUE))
     }
 
     @Test

@@ -1,4 +1,4 @@
-package values.real
+package values.real.aa
 
 import io.github.tukcps.aadd.DDBuilder
 import io.github.tukcps.aadd.values.real.DoubleBound
@@ -14,18 +14,14 @@ import io.github.tukcps.aadd.values.real.ia.exp
 import io.github.tukcps.aadd.values.real.ia.ln
 import io.github.tukcps.aadd.values.real.ia.sqrt
 import io.github.tukcps.aadd.values.real.toDoubleBound
-import io.github.tukcps.aadd.values.real.unaryMinus
-import testutil.Assertions.assertEquals
+import io.github.tukcps.aadd.util.Assertions.assertEquals
 import kotlin.math.exp
 import kotlin.math.ln
 import kotlin.math.sqrt
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 
 class AffineFormFunctionsTest {
-
-    private val precision = 10E-6
 
     /**
      * The affine forms are enclosed in an IA result.
@@ -196,7 +192,7 @@ class AffineFormFunctionsTest {
     // Real to +inf with positive r
     fun test3AffineFormPlus() {
         val max: Double = Double.POSITIVE_INFINITY
-        val realRange = RealRange(-12.0.toDoubleBound()!!, max.toDoubleBound()!!)
+        val realRange = RealRange((-12.0).toDoubleBound()!!, max.toDoubleBound()!!)
         val xi = HashMap<Long, Double>()
         xi[1] = 2.0
         xi[2] = 4.0
@@ -222,7 +218,7 @@ class AffineFormFunctionsTest {
     //test passed with both when two affine from has two negative r's and one Af has
     //neg and another has positive r
     fun test4AffineFormPlus() {
-        val realRange = RealRange(-12.0.toDoubleBound()!!, DoubleBound.PositiveInfinity)
+        val realRange = RealRange((-12.0).toDoubleBound()!!, DoubleBound.PositiveInfinity)
         val xi = HashMap<Long, Double>()
         xi[1] = 2.0
         xi[2] = 4.0
@@ -308,7 +304,7 @@ class AffineFormFunctionsTest {
         yi[4] = 10.0
 
         DDBuilder {
-            val a = create(this, -5.0.toDoubleBound()!!, 15.0.toDoubleBound()!!, 5.0, 2.0, xi)
+            val a = create(this, (-5.0).toDoubleBound()!!, 15.0.toDoubleBound()!!, 5.0, 2.0, xi)
             val b = create(this, RealRange(10.0, 20.0), 8.0, 1.0, yi)
             val multipliedTwoAF = a.times(b)
             assertEquals(40.0, multipliedTwoAF.central, .01)

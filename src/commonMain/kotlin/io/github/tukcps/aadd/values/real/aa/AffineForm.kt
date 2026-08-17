@@ -27,7 +27,6 @@ import kotlin.math.*
  * @param max The maximum value of an interval interpretation
  * @param central The central value of the affine form
  * @param xi The noise variables of the affine form; if it is an empty set, we only use min/max.
- * @param r An interval for avoiding excessive use of noise variables
  * Note that the Affine Form also inherits RealRange that holds min/max values of interval arithmetic
  * computations. That are used to reduce over-approximation in particular for non-linear operations.
  */
@@ -158,6 +157,10 @@ class AffineForm internal constructor(
             return builder.AF.Empty
 
         return range(builder, interval)
+    }
+
+    infix fun constrainToRange(range: NumberRange<DoubleBound>): AffineForm {
+        return create(builder, RealRange(range intersect RealRange(this)), central, 0.0, xi)
     }
 
     /**

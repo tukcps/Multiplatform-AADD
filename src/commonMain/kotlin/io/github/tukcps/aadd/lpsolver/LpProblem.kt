@@ -120,8 +120,7 @@ data class LpProblem(
         println("Variables:")
         for(variable in variables) println("ID: ${variable.name} canBeNegative: ${variable.canBeNegative}")
         println("Constraints:")
-        for(constraint in constraints)
-        {
+        for(constraint in constraints) {
             var constraintString = ""
             for(a in constraint.expression.terms) constraintString += "${a.value} ${a.key.name}+"
             constraintString += "${constraint.expression.free}"

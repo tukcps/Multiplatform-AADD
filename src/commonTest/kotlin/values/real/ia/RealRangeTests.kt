@@ -1,13 +1,12 @@
-package values.real
+package values.real.ia
 import io.github.tukcps.aadd.values.real.DoubleBound
 import kotlin.test.*
-import testutil.Assertions.assertEquals
+import io.github.tukcps.aadd.util.Assertions.assertEquals
 import io.github.tukcps.aadd.values.real.ia.RealRange
 import io.github.tukcps.aadd.values.real.ia.exp
 import io.github.tukcps.aadd.values.real.ia.ln
 import io.github.tukcps.aadd.values.real.ia.minus
 import io.github.tukcps.aadd.values.real.ia.plus
-import io.github.tukcps.aadd.values.real.minus
 import io.github.tukcps.aadd.values.real.plus
 import kotlin.math.*
 import kotlin.ranges.rangeTo

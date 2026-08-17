@@ -1,12 +1,15 @@
-package testutil
+package io.github.tukcps.aadd.util
 
 import io.github.tukcps.aadd.values.integer.LongBound
 import io.github.tukcps.aadd.values.real.DoubleBound
 import io.github.tukcps.aadd.values.real.DoubleBoundMath.toDouble
 import kotlin.jvm.JvmName
-import kotlin.test.assertEquals
 
+/**
+ * Assertions to support testing of applications that use AADD library.
+ */
 object Assertions {
+
     /**
      * Compare two DoubleBound values with tolerance.
      */
@@ -15,11 +18,16 @@ object Assertions {
         actual: DoubleBound?,
         tolerance: Double = 0.0
     ) {
-        when {
-            expected is DoubleBound.Finite && actual is DoubleBound.Finite ->
-                assertEquals(expected.value, actual.value, tolerance)
+        when (expected) {
+            null if actual != null ->
+                throw AssertionError("expected: $expected, actual: $actual")
 
-            else -> kotlin.test.assertEquals(expected, actual)
+            is DoubleBound.Finite if actual is DoubleBound.Finite ->
+                if (actual.value !in expected.value-tolerance .. expected.value+tolerance)
+                    throw AssertionError("expected: $expected, actual: $actual")
+
+            else -> if (expected != actual)
+                throw AssertionError("expected: $expected, actual: $actual")
         }
     }
 
@@ -27,8 +35,8 @@ object Assertions {
         expected: ClosedRange<DoubleBound>,
         actual: ClosedRange<DoubleBound>
     ) {
-        assertEquals(expected.start, actual.start, "start")
-        assertEquals(expected.endInclusive, actual.endInclusive, "endInclusive")
+        if (expected.start != actual.start) throw AssertionError("Expected: $expected, Actual: $actual")
+        if (expected.endInclusive != actual.endInclusive) throw AssertionError("Expected: $expected, Actual: $actual")
     }
 
     @JvmName("assertEqualsDoubleBoundRangeWithTolerance")
@@ -68,8 +76,8 @@ object Assertions {
         expected: ClosedRange<LongBound>,
         actual: ClosedRange<LongBound>
     ) {
-        assertEquals(expected.start, actual.start)
-        assertEquals(expected.endInclusive, actual.endInclusive)
+        if(expected.start != actual.start) throw AssertionError("Expected: $expected, Actual: $actual")
+        if(expected.endInclusive != actual.endInclusive) throw AssertionError("Expected: $expected, Actual: $actual")
     }
 
     @JvmName("assertEqualsLongRange2")
@@ -77,7 +85,7 @@ object Assertions {
         expected: ClosedRange<Long>,
         actual: ClosedRange<LongBound>
     ) {
-        assertEquals(expected.start, actual.start.finiteValue)
-        assertEquals(expected.endInclusive, actual.endInclusive.finiteValue)
+        if (expected.start != actual.start.finiteValue) throw AssertionError("Expected: $expected, Actual: $actual")
+        if (expected.endInclusive != actual.endInclusive.finiteValue) throw AssertionError("Expected: $expected, Actual: $actual")
     }
 }

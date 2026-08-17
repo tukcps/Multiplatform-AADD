@@ -67,7 +67,6 @@ class AADDIntersectTests {
         }
     }
 
-
     /** Test the intersection of an AADD with a Range via constraintToRange */
     @Test fun constrainToRange() {
         DDBuilder{
@@ -201,7 +200,7 @@ class AADDIntersectTests {
     fun cornerCase() {
         DDBuilder {
             val a = real(1.0 .. 2.0)
-            val b = a.constrainTo(RealRange(2.0..2.00001))
+            val b = a constrainTo RealRange(2.0..2.00001)
             assertTrue(b.isScalar())
             assertTrue( (b as AADD.Leaf).value.xi.isEmpty())
         }

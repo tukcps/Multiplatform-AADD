@@ -4,7 +4,7 @@ import io.github.tukcps.aadd.values.real.DoubleBound
 import io.github.tukcps.aadd.values.real.ia.RealRange
 import io.github.tukcps.aadd.values.real.aa.AffineForm
 import io.github.tukcps.aadd.values.real.aa.exp
-import testutil.Assertions.assertEquals
+import io.github.tukcps.aadd.util.Assertions.assertEquals
 import testutil.ddTest
 import kotlin.math.exp
 import kotlin.test.Test

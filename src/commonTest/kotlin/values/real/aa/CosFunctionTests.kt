@@ -1,15 +1,11 @@
 package values.real.aa
 
-import io.github.tukcps.aadd.values.real.DoubleBoundMath.toDouble
+import io.github.tukcps.aadd.util.Assertions.assertEquals
 import io.github.tukcps.aadd.values.real.aa.AffineForm
 import io.github.tukcps.aadd.values.real.aa.cos
-import io.github.tukcps.aadd.values.real.aa.sin
-import io.github.tukcps.aadd.values.real.ia.RealRange
-import io.github.tukcps.aadd.values.real.ia.sin
-import io.github.tukcps.aadd.values.real.minus
-import testutil.Assertions.assertEquals
 import testutil.ddTest
-import kotlin.math.*
+import kotlin.math.PI
+import kotlin.math.cos
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -22,7 +18,7 @@ class CosFunctionTests {
 
     @Test
     fun cosHalfPi() = ddTest {
-        assertEquals(0.0..0.0, cos(AffineForm.scalar(this, PI / 2)), 1e-8)
+        assertEquals(0.0..0.0, cos(AffineForm.scalar(this, (PI / 2))), 1e-8)
     }
 
     @Test

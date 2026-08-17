@@ -191,7 +191,6 @@ class DDBuilder(
         LinearRegression
     }
 
-
     fun setExternalConfig(configString: String) {
         settings = jsonMapper.decodeFromString(string = configString)
     }
@@ -323,19 +322,19 @@ class DDBuilder(
 
     fun assign(old: BDD, new: BDD): BDD {
         var pathConjunction = pathConds[0]
-        for(i in 1 until pathConds.size)pathConjunction = pathConjunction.and(pathConds[i])
+        for(i in 1 until pathConds.size)pathConjunction = pathConjunction and pathConds[i]
         return pathConjunction.ite(new,old)
     }
 
     fun assign(old: AADD, new: AADD): AADD {
         var pathConjunction = pathConds[0]
-        for(i in 1 until pathConds.size)pathConjunction = pathConjunction.and(pathConds[i])
+        for(i in 1 until pathConds.size) pathConjunction = pathConjunction and pathConds[i]
         return pathConjunction.ite(new,old)
     }
 
     fun assign(old: IDD, new: IDD):IDD{
         var pathConjunction = pathConds[0]
-        for(i in 1 until pathConds.size)pathConjunction = pathConjunction.and(pathConds[i])
+        for(i in 1 until pathConds.size) pathConjunction = pathConjunction and pathConds[i]
         return pathConjunction.ite(new,old)
     }
 

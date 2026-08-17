@@ -5,7 +5,8 @@ import io.github.tukcps.aadd.values.real.aa.AffineForm
 import io.github.tukcps.aadd.values.real.aa.AtanFunction
 import io.github.tukcps.aadd.values.real.aa.atan
 import io.github.tukcps.aadd.values.real.aa.linearize
-import testutil.Assertions.assertEquals
+import io.github.tukcps.aadd.util.Assertions.assertEquals
+import io.github.tukcps.aadd.values.real.aa.tan
 import testutil.ddTest
 import kotlin.math.PI
 import kotlin.test.Test
@@ -69,6 +70,6 @@ class AtanFunctionTests {
     @Test
     fun tanAtanIdentity() = ddTest {
         val x = AffineForm.range(this, -1.0..1.0)
-        // assertTrue(x in tan(atan(x)))
+        assertTrue(x in tan(atan(x)))
     }
 }

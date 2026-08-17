@@ -27,7 +27,6 @@ interface UnaryFunction {
      */
     fun curvature(x: RealRange): Curvature
 
-
     /**
      * Returns x such that f'(x)=slope.
      */

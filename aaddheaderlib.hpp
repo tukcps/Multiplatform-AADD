@@ -6,9 +6,10 @@
 #include <iostream>
 
 /*
-* Static Wrapper Build command for windows to utilize the dll (x64 Native Tools Command prompt tool from VS Compiler Suite)
-* lib /def:libnative.def /out:libnative.lib
-*/
+ * !!! Needs update !!!
+ * Static Wrapper Build command for windows to utilize the dll (x64 Native Tools Command prompt tool from VS Compiler Suite)
+ * lib /def:libnative.def /out:libnative.lib
+ */
 
 
 class NumberRange {

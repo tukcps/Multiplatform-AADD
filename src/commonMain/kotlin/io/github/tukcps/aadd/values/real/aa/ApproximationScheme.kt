@@ -1,5 +1,7 @@
 package io.github.tukcps.aadd.values.real.aa
 
+import io.github.tukcps.aadd.values.real.ia.RealRange
+
 /**
  * Computes a linear affine approximation of a unary function.
  *
@@ -28,7 +30,7 @@ interface ApproximationScheme {
  *
  * where |ε| ≤ noise.
  */
-data class LinearApproximation(
+class LinearApproximation(
     val alpha: Double,
     val delta: Double,
     val noise: Double
@@ -41,6 +43,8 @@ fun UnaryFunction.approximate(x: AffineForm): AffineForm {
         x.isReals() -> return  AffineForm.range(x.builder, image)
         x.max.isInfinite -> return AffineForm.range(x.builder, range(x))
         x.min.isInfinite -> return AffineForm.range(x.builder, range(x))
+        range(x).isEmpty() -> return x.builder.AF.Empty
+        x.isScalar() -> return AffineForm.range(x.builder, range(RealRange(x.min, x.min)))
     }
     val range = this.range(x)
     val l = approximationScheme(x).linearize(this, x)

@@ -1,4 +1,4 @@
-package values.real.math
+package values.real.rounding
 
 import io.github.tukcps.aadd.values.real.rounding.ErrorFreeTransforms
 import io.github.tukcps.aadd.values.real.rounding.IEEE754RoundingMath

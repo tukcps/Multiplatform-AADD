@@ -4,6 +4,7 @@ import io.github.tukcps.aadd.Integer
 import io.github.tukcps.aadd.NumericApi
 import io.github.tukcps.aadd.values.NumberRange
 import io.github.tukcps.aadd.values.integer.*
+import io.github.tukcps.aadd.values.real.aa.power2
 
 
 interface IDDMath: NumericApi<Integer, IntegerRange, Long> {
@@ -43,7 +44,6 @@ interface IDDMath: NumericApi<Integer, IntegerRange, Long> {
     override fun divide(a: Integer, b: Long): Integer { TODO("Not yet implemented") }
 
     override fun inv(a: Integer): Integer = a.apply(::inv)
-    fun power2(value: IDD): IDD = value.apply(::power2)
     override fun exp(value: IDD): IDD = value.apply(::exp)
     override fun sqr(value: IDD): IDD = value.apply(::sqr)
     override fun sqrt(value: IDD): IDD = value.apply(::sqrt)
@@ -52,6 +52,8 @@ interface IDDMath: NumericApi<Integer, IntegerRange, Long> {
     override fun log(value: Integer, base: Long): Integer = value.applyOther(base, ::log)
     override fun pow(value: Integer, exponent: Integer): Integer = value.apply(exponent, ::pow)
     override fun pow(value: Integer, exponent: Long): Integer = value.applyOther(exponent, ::pow)
+    fun pow2(value: IDD): IDD = value.apply(::pow2)
+    fun pow10(value: Integer): IDD = value.apply(::pow10)
 
     override fun root(value: Integer, degree: Integer): Integer = value.apply(degree, ::root)
     override fun root(value: Integer, degree: Long): Integer = value.applyOther(degree, ::root)

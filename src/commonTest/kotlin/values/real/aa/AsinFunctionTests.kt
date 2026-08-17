@@ -1,19 +1,12 @@
 package values.real.aa
 
-import io.github.tukcps.aadd.values.real.DoubleBoundMath.toDouble
+import io.github.tukcps.aadd.util.Assertions.assertEquals
 import io.github.tukcps.aadd.values.real.aa.AffineForm
 import io.github.tukcps.aadd.values.real.aa.AsinFunction
 import io.github.tukcps.aadd.values.real.aa.asin
 import io.github.tukcps.aadd.values.real.aa.linearize
-import io.github.tukcps.aadd.values.real.aa.minus
-import io.github.tukcps.aadd.values.real.aa.sin
-import io.github.tukcps.aadd.values.real.ia.RealRange
-import io.github.tukcps.aadd.values.real.ia.sin
-import io.github.tukcps.aadd.values.real.minus
 import testutil.ddTest
-import testutil.Assertions.assertEquals
 import kotlin.math.PI
-import kotlin.ranges.rangeTo
 import kotlin.test.Test
 import kotlin.test.assertTrue
 

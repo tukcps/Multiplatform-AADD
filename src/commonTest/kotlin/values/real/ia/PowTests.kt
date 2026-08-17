@@ -2,7 +2,7 @@ package values.real.ia
 
 import io.github.tukcps.aadd.values.real.ia.RealRange
 import io.github.tukcps.aadd.values.real.ia.pow
-import testutil.Assertions.assertEquals
+import io.github.tukcps.aadd.util.Assertions.assertEquals
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.pow

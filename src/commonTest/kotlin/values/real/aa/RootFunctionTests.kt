@@ -3,7 +3,7 @@ package values.real.aa
 import io.github.tukcps.aadd.values.real.aa.AffineForm
 import io.github.tukcps.aadd.values.real.aa.pow
 import io.github.tukcps.aadd.values.real.aa.root
-import testutil.Assertions.assertEquals
+import io.github.tukcps.aadd.util.Assertions.assertEquals
 import testutil.ddTest
 import kotlin.test.Test
 import kotlin.test.assertEquals

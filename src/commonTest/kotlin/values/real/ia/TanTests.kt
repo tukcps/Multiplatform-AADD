@@ -3,7 +3,7 @@ package values.real.ia
 import io.github.tukcps.aadd.values.real.ia.RealRange
 import io.github.tukcps.aadd.values.real.ia.tan
 import testutil.ddTest
-import testutil.Assertions.assertEquals
+import io.github.tukcps.aadd.util.Assertions.assertEquals
 import kotlin.math.*
 import kotlin.test.Test
 import kotlin.test.assertTrue

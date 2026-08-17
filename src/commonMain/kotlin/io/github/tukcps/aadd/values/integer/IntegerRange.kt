@@ -13,7 +13,7 @@ import kotlin.math.roundToLong
  * An [IntegerRange] represents a possibly empty, convex subset of
  * the integer numbers. Bounds may be finite or infinite.
  *
- * The predefined constant [Integers] represents the complete set ℤ.
+ * The predefined constant [All] represents the complete set ℤ.
  *
  * Arithmetic operators are implemented in `IntegerRangeOperators.kt`.
  * Mathematical functions are implemented in `IntegerRangeMath.kt`.
@@ -85,7 +85,7 @@ class IntegerRange(
     /**
      * Returns whether this set equals ℤ.
      */
-    fun isIntegers(): Boolean =
+    fun isAll(): Boolean =
         min === LongBound.NegativeInfinity && max === LongBound.PositiveInfinity
 
     //
@@ -198,6 +198,23 @@ class IntegerRange(
     override fun lessThanOrEquals(other: LongBound) =
         lessThanOrEquals(IntegerRange(other, other))
 
+    /**
+     * Equality with IntegerRange and LongBound .. LongBouond, Long .. Long, Int .. Int, Long, Int
+     */
+    override fun equals(other: Any?): Boolean = when (other) {
+        is IntegerRange -> this.min == other.min && this.max == other.max
+        is ClosedRange<*> -> when {
+            other.start is LongBound -> start == other.start && endInclusive == other.endInclusive
+            other.start is Long      -> start == LongBound.Finite(other.start as Long) && endInclusive == LongBound.Finite(other.endInclusive as Long)
+            other.start is Int       -> start == LongBound.Finite((other.start as Int).toLong()) && endInclusive == LongBound.Finite((other.endInclusive as Int).toLong())
+            else -> false
+        }
+        is LongBound -> this.min == other && this.max == other
+        is Long -> start.isFinite && start.finiteValue == other && endInclusive.isFinite && endInclusive.finiteValue == other
+        is Int -> start.isFinite && start.finiteValue == other.toLong() && endInclusive.isFinite && endInclusive.finiteValue == other.toLong()
+        else -> false
+    }
+
     //
     // ---------------- I/O, misc -----------------------
     //
@@ -231,8 +248,10 @@ class IntegerRange(
         /** The empty set ∅. */
         val Empty = IntegerRange(LongBound.PositiveInfinity, LongBound.NegativeInfinity)
 
+        @Deprecated("Replace with All", replaceWith = ReplaceWith("All"))
+        val Integers get() = All
         /** The set of all integers (ℤ). */
-        val Integers = IntegerRange()
+        val All = IntegerRange()
 
         /** The singleton set {0}. */
         val Zero = IntegerRange(LongBound.Finite(0))
@@ -260,9 +279,7 @@ class IntegerRange(
         fun parse(text: String): IntegerRange {
             val value = text.trim()
 
-            require(value.isNotEmpty()) {
-                "Empty IntegerRange string"
-            }
+            require(value.isNotEmpty()) { "Empty IntegerRange string" }
 
             val parts = value.split("..", limit = 2)
 
@@ -289,5 +306,11 @@ class IntegerRange(
                 "-*" -> LongBound.NegativeInfinity
                 else -> LongBound.Finite(text.trim().toLong())
             }
+    }
+
+    override fun hashCode(): Int {
+        var result = min.hashCode()
+        result = 31 * result + max.hashCode()
+        return result
     }
 }

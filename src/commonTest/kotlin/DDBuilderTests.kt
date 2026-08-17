@@ -3,7 +3,7 @@ import io.github.tukcps.aadd.Real
 import io.github.tukcps.aadd.dd.IDD
 import io.github.tukcps.aadd.values.integer.IntegerRange
 import io.github.tukcps.aadd.values.integer.LongBound
-import testutil.Assertions.assertEquals
+import io.github.tukcps.aadd.util.Assertions.assertEquals
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertSame

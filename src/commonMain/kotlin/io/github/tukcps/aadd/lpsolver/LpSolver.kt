@@ -64,9 +64,9 @@ fun solve(problem: LpProblem): LpSolution {
         UNBOUNDED -> Unbounded
         NO_SOLUTION -> NoSolution
         SOLVED -> {
-            val variables = problem.variables.associate { v ->
+            val variables = problem.variables.associateWith { v ->
                 val id = variablesMapping[v]!!
-                v to finalState.x[id] - if (v.canBeNegative) finalState.x[id + 1] else .0
+                finalState.x[id] - if (v.canBeNegative) finalState.x[id + 1] else .0
             }
             var target = problem.function.expression.free
             val sign = if (problem.function.optimization == MAXIMIZE) +1 else -1

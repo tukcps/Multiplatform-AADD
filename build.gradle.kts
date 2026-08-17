@@ -1,5 +1,5 @@
 group = "io.github.tukcps"
-version = "0.9.3"
+version = "0.9.5"
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)

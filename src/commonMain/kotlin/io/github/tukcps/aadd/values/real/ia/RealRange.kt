@@ -31,7 +31,7 @@ open class RealRange(
     constructor(value: Double) : this(Finite(value), Finite(value))
 
     /** Creates the closed interval [min,max]. */
-    constructor(min: Double, max: Double) : this(Finite(min), Finite(max))
+    constructor(min: Double, max: Double) : this(min.toDoubleBound()?: NegativeInfinity, max.toDoubleBound()?:PositiveInfinity)
 
     /** Creates a range from another closed range. */
     constructor(range: ClosedRange<Double>) : this(range.start, range.endInclusive)

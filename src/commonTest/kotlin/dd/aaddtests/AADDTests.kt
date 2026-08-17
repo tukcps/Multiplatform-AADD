@@ -32,8 +32,7 @@ import io.github.tukcps.aadd.values.real.DoubleBound
 import io.github.tukcps.aadd.values.real.aa.AffineForm
 import io.github.tukcps.aadd.values.real.aa.AffineForm.Companion.create
 import io.github.tukcps.aadd.values.real.ia.RealRange
-import testutil.Assertions
-import testutil.Assertions.assertEquals
+import io.github.tukcps.aadd.util.Assertions.assertEquals
 import testutil.ddTest
 import kotlin.math.exp
 import kotlin.math.ln
@@ -279,25 +278,24 @@ class AADDTests {
         assertEquals(ln(1.0)..ln(5.0), ln(af), 0.0000001)
     }
 
-    /*
+
     @Test
     fun powerTest() {
         DDBuilder {
             val a = real(2.0..3.0)
             val b = real(-1.0..3.0)
             val c = a power b
-            assertEquals(1/3.0, c.getRange().min, 0.0000001)
-            assertEquals(27.0, c.getRange().max, 0.0000001)
+            assertEquals(1/3.0 .. 27.0, c.getRange(), 0.0000001)
         }
-    } */
+    }
 
     @Test
     fun invTest() {
         DDBuilder {
             val affineForm1 = AffineForm.range(this, 1.0..2.0)
             val af3Node = real(-2.0..2.0)
-            val inv = inv(af3Node) as AADD.Leaf
-            assertTrue(inv.value.isReals())
+            val inv = inv(af3Node)
+            assertEquals(Reals.All, inv)
 
             // Empty -> Empty
             val empty = inv(Reals.Empty) as AADD.Leaf
@@ -305,39 +303,37 @@ class AADDTests {
             assertTrue(empty.value.isEmpty())
             
             // Real -> Real 
-            val real = inv(Reals.All) as AADD.Leaf
-            assertTrue(real.value.isReals())
+            val real = inv(Reals.All)
+            assertEquals(Reals.All, real)
 
             // Regular
             val inv3Node = leaf(affineForm1)
-            val inv3 = inv(inv3Node) as AADD.Leaf
+            val inv3 = inv(inv3Node)
             assertEquals(1.0/2.0..1.0, inv3.getRange(), 0.001)
-            assertEquals(0.75, inv3.central, 0.0000001)
+            //assertEquals(0.75, inv3.central, 0.0000001)
             assertEquals(0.5..1.0, inv3, 0.0000001)
-            assertEquals(0.25, inv3.radius, 0.0000001)
+            // assertEquals(0.25, inv3.radius, 0.0000001)
         }
     }
 
     @Test
-    fun divTest() {
+    fun divTest() = ddTest {
         // Div by zero should return infinite
-        DDBuilder {
-            val affineForm1 = AffineForm.range(this, 1.0..2.0)
-            val zeroNode = real(0.0)
-            val affineForm1Node = leaf(affineForm1)
-            val div = (affineForm1Node / (zeroNode)) as AADD.Leaf
-            assertTrue(div.value.isEmpty())
+        val affineForm1 = AffineForm.range(this, 1.0..2.0)
+        val zeroNode = real(0.0)
+        val affineForm1Node = leaf(affineForm1)
+        val div = (affineForm1Node / (zeroNode)) as AADD.Leaf
+        assertTrue(div.value.isEmpty())
 
-            // Regular division
-            val a = real(10.0)
-            val b = real(5.0)
-            var result = (a / b) as AADD.Leaf
-            assertEquals(2.0, result.central)
+        // Regular division
+        val a = real(10.0)
+        val b = real(5.0)
+        var result = (a / b) as AADD.Leaf
+        assertEquals(2.0, result.central)
 
-            //Division tested by inversion + multiplication
-            result = (a * inv(b) ) as AADD.Leaf
-            assertEquals(2.0, result.central)
-        }
+        //Division tested by inversion + multiplication
+        result = (a * inv(b) ) as AADD.Leaf
+        assertEquals(2.0, result.central)
     }
 
     @Test
@@ -441,7 +437,7 @@ class AADDTests {
             assertEquals(3, yL)
             val yIR: IntegerRange = ceilToIntRange(x)
             //println("yIR = [" + yIR.min + ", " + yIR.max + "]")
-            Assertions.assertEquals(2L..3L, yIR)
+            assertEquals(2L..3L, yIR)
             //println("End of test of Ceiling Fxn. for AADD data type\n")
         }
     }

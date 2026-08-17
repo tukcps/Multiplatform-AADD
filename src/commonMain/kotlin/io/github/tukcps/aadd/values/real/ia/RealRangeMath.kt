@@ -1,5 +1,6 @@
 package io.github.tukcps.aadd.values.real.ia
 
+import io.github.tukcps.aadd.values.real.DoubleBound
 import io.github.tukcps.aadd.values.real.DoubleBound.*
 import io.github.tukcps.aadd.values.real.DoubleBoundMath
 import io.github.tukcps.aadd.values.real.DoubleBoundMath.toDouble
@@ -20,7 +21,7 @@ import kotlin.ranges.rangeTo
 
 
 fun negate(range: RealRange): RealRange =
-    RealRange(-range.max, -range.min)
+    RealRange( (-range.max) ?: NegativeInfinity, (-range.min) ?: PositiveInfinity)
 
 /**
  * Returns the sum of two real ranges.
@@ -193,7 +194,7 @@ fun pow(x: RealRange, exponent: Double): RealRange {
         }
 
         val upper = max(
-            DoubleBoundMath.pow(-domain.min, exponent, Rounding.UP)?.finiteValue ?: Double.POSITIVE_INFINITY,
+            DoubleBoundMath.pow((-domain.min)?: NegativeInfinity, exponent, Rounding.UP)?.finiteValue ?: Double.POSITIVE_INFINITY,
             DoubleBoundMath.pow(domain.max, exponent, Rounding.UP)?.finiteValue ?: Double.POSITIVE_INFINITY
         )
         return RealRange(0.0..upper)

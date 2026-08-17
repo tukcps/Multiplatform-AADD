@@ -9,17 +9,16 @@
 
 ## What the AADD library does
 The AADD library enables **semi-symbolic computations** over Reals (Doubles), Integers, and Booleans.
-These are represented by sets of convex ranges; likewise, operations are done on sets of convex ranges.
-We split the ranges by a (generalize) Shannon Decomposition to a more general set-representation. 
+These are represented by sets (via ranges, enumeration of single values, mixes thereof); operations are done on these sets.
 The results guarantee **safe inclusion**: no possible results are lost, and high performance 
 and scalability to **numerical problems with complex control** flow are achieved. 
 
-Use cases include 
+Use cases for which AADD is optimized include 
 
-- **Reachability analysis** by abstract execution in general, 
+- **Reachability analysis** by abstract execution in general,
+- **Constraint propagation and reasoning**, e.g., in reasoners, constraint programming, SMT solvers, 
 - **Formal verification** of mixed discrete/continuous and control systems, 
-- **Type inference and verification** in software systems, 
-- Development of tools for **constraint propagation and reasoning**, e.g., SMT solvers.
+- **Type inference and verification** in software systems.  
 
 What the AADD library does can be seen by a tiny code-example in Kotlin: 
 
@@ -49,14 +48,13 @@ To reduce over-approximation, the AADD library implements a number of state-of-t
   - Automatic **reduction of noise terms**, 
   - (WiP) Caching of intermediate results,
   - Minimization of overapproximation by an LP solver.
-  - **Splitting of image** where useful (WiP) is represented by **Shannon Decomposition in decision diagrams (DD)**, 
-  - Also, **linearized constraints** are represented as Shannon Decomposition in decision diagrams (DD), allowing us
-  to profit from BDD-like reduction techniques on AADDs and IDDs. 
+  - **Splitting of image sets** where useful making use of Decision Diagrams (*DD), 
+  - Also, **linearized constraints**, allowing us to profit from BDD-like reduction techniques on AADDs and IDDs. 
   - Possibility to model discrete computations with BDD (Bool),
   - BDD (Bool) can be used to control continuous computations (IF, THEN, ELSE, LOOP, etc.), and
 
 To the best of our knowledge, the last four techniques are unique to the AADD library.
-They allow us to achive in suitable applications like reachability analysis a high performance and scalability to
+They allow us to achieve in suitable applications like reachability analysis a high performance and scalability to
 numerical algorithms far beyond linear filters. 
 
 However, note: 

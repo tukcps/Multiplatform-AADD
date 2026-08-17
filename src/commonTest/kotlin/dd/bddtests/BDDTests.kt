@@ -4,6 +4,7 @@ package dd.bddtests
 
 import io.github.tukcps.aadd.DDBuilder
 import io.github.tukcps.aadd.DDBuilder.BoolMath.and
+import io.github.tukcps.aadd.DDBuilder.BoolMath.nand
 import io.github.tukcps.aadd.DDBuilder.BoolMath.not
 import io.github.tukcps.aadd.DDBuilder.BoolMath.or
 import io.github.tukcps.aadd.DDBuilder.BoolMath.xor
@@ -125,6 +126,7 @@ class BDDTests {
             val c = boolean("c")
             val d = fal and c and tru
             val e = fal or boolean("e")
+            val f = fal nand c
             assertEquals(Bool.False, d)
             assertEquals(Bool.False, fal)
             assertEquals(Bool.True, tru)

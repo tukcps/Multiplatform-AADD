@@ -26,7 +26,7 @@ fun AADD.applySplit(other: AADD, op: (AffineForm, AffineForm) -> AADD): AADD =
     applySplitGeneric(other, op)
 
 fun AADD.applyOther(other: Double, op: (AffineForm, Double) -> AffineForm): AADD =
-    applyDDOtherGeneric(other, op, { x: AffineForm -> this.builder.leaf(x)} )
+    applyDDOtherGeneric(other, op) { x: AffineForm -> this.builder.leaf(x) }
 
 
 /**

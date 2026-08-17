@@ -7,7 +7,7 @@ import io.github.tukcps.aadd.values.real.aa.minus
 import io.github.tukcps.aadd.values.real.aa.plus
 import io.github.tukcps.aadd.values.real.aa.sqrt
 import io.github.tukcps.aadd.values.real.aa.times
-import testutil.Assertions.assertEquals
+import io.github.tukcps.aadd.util.Assertions.assertEquals
 import testutil.ddTest
 import kotlin.test.Test
 import kotlin.test.assertTrue
