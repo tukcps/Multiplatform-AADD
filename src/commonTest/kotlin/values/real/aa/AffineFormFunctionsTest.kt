@@ -1,20 +1,16 @@
 package values.real.aa
 
 import io.github.tukcps.aadd.DDBuilder
+import io.github.tukcps.aadd.util.Assertions.assertSafeInclusion
 import io.github.tukcps.aadd.values.real.DoubleBound
 import io.github.tukcps.aadd.values.real.DoubleBoundMath.toDouble
-import io.github.tukcps.aadd.values.real.aa.AffineForm
+import io.github.tukcps.aadd.values.real.aa.*
 import io.github.tukcps.aadd.values.real.aa.AffineForm.Companion.create
-import io.github.tukcps.aadd.values.real.aa.minus
-import io.github.tukcps.aadd.values.real.aa.plus
-import io.github.tukcps.aadd.values.real.aa.pow
-import io.github.tukcps.aadd.values.real.aa.times
 import io.github.tukcps.aadd.values.real.ia.RealRange
 import io.github.tukcps.aadd.values.real.ia.exp
 import io.github.tukcps.aadd.values.real.ia.ln
 import io.github.tukcps.aadd.values.real.ia.sqrt
 import io.github.tukcps.aadd.values.real.toDoubleBound
-import io.github.tukcps.aadd.util.Assertions.assertEquals
 import kotlin.math.exp
 import kotlin.math.ln
 import kotlin.math.sqrt
@@ -31,7 +27,7 @@ class AffineFormFunctionsTest {
     fun expTestIA() {
         DDBuilder {
             val af = real(1.0..5.0).value
-            assertEquals(exp(1.0) .. exp(5.0), exp(af), 0.0000001)
+            assertSafeInclusion(exp(1.0)..exp(5.0), exp(af), 0.0000001)
         }
     }
 
@@ -43,7 +39,7 @@ class AffineFormFunctionsTest {
     fun sqrtTestIA() {
         DDBuilder {
             val af = real(1.0..5.0).value
-            assertEquals(sqrt(1.0) .. sqrt(5.0), sqrt(af), 0.0000001)
+            assertSafeInclusion(sqrt(1.0)..sqrt(5.0), sqrt(af), 0.0000001)
         }
     }
 
@@ -55,7 +51,7 @@ class AffineFormFunctionsTest {
     fun logTestIA() {
         DDBuilder {
             val af = real(1.0..5.0).value
-            assertEquals(ln(1.0)..ln(5.0), ln(af), 0.0000001)
+            assertSafeInclusion(ln(1.0)..ln(5.0), ln(af), 0.0000001)
         }
     }
 
@@ -67,7 +63,7 @@ class AffineFormFunctionsTest {
     fun expTestAF() {
         DDBuilder {
             val af = AffineForm.range(this, 1.0..5.0)
-            assertEquals(exp(1.0) .. exp(5.0), exp(af), 0.0000001)
+            assertSafeInclusion(exp(1.0)..exp(5.0), exp(af), 0.0000001)
         }
     }
 

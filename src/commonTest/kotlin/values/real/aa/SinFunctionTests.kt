@@ -1,12 +1,12 @@
 package values.real.aa
 
+import io.github.tukcps.aadd.util.Assertions
 import io.github.tukcps.aadd.values.real.DoubleBoundMath.toDouble
 import io.github.tukcps.aadd.values.real.aa.AffineForm
 import io.github.tukcps.aadd.values.real.aa.minus
 import io.github.tukcps.aadd.values.real.aa.sin
 import io.github.tukcps.aadd.values.real.ia.RealRange
 import io.github.tukcps.aadd.values.real.minus
-import io.github.tukcps.aadd.util.Assertions.assertEquals
 import testutil.ddTest
 import kotlin.math.*
 import kotlin.test.Test
@@ -15,7 +15,7 @@ import kotlin.test.assertTrue
 class SinFunctionTests {
     @Test
     fun sinScalar() = ddTest {
-        assertEquals(0.0..0.0, sin(AffineForm.scalar(this, 0.0)), 1e-8)
+        Assertions.assertSafeInclusion(0.0..0.0, sin(AffineForm.scalar(this, 0.0)), 1e-8)
     }
 
     @Test
@@ -42,7 +42,7 @@ class SinFunctionTests {
     fun sinAroundMaximum() = ddTest {
         val x = AffineForm.range(this, PI / 2 - 0.1..PI / 2 + 0.1)
         val y = sin(x)
-        assertEquals(sin(PI / 2 - 0.1) .. 1.0, y, 1e-9)
+        Assertions.assertSafeInclusion(sin(PI / 2 - 0.1)..1.0, y, 1e-9)
     }
 
     @Test
@@ -56,7 +56,7 @@ class SinFunctionTests {
     fun sinFullPeriod() = ddTest {
         val x = AffineForm.range(this, 0.0..2 * PI)
         val y = sin(x)
-        assertEquals(-1.0..1.0, y, 1e-8)
+        Assertions.assertSafeInclusion(-1.0..1.0, y, 1e-8)
     }
     @Test
     fun sinAffineSmallInterval() = ddTest {

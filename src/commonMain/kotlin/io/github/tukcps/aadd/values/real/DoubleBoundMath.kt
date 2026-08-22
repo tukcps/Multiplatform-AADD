@@ -4,6 +4,7 @@ import io.github.tukcps.aadd.values.real.DoubleBound.*
 import io.github.tukcps.aadd.values.real.rounding.IEEE754RoundingMath
 import io.github.tukcps.aadd.values.real.rounding.Rounding
 import io.github.tukcps.aadd.values.real.rounding.RoundingMath
+import kotlin.math.absoluteValue
 
 /**
  * Primitive arithmetic on [DoubleBound].
@@ -16,7 +17,7 @@ import io.github.tukcps.aadd.values.real.rounding.RoundingMath
  * NaN is not represented. Operations which do not have a unique bound
  * result return `null`.
  */
-data object DoubleBoundMath {
+object DoubleBoundMath {
 
     private val math: RoundingMath = IEEE754RoundingMath
 
@@ -120,14 +121,13 @@ data object DoubleBoundMath {
     private fun sameSign(a: DoubleBound, b: DoubleBound): Boolean =
         signBit(a.toDouble()) == signBit(b.toDouble())
 
-    fun abs(value: DoubleBound?): DoubleBound? = when {
-        value == null -> null
-        value === PositiveInfinity -> NegativeInfinity
-        value === NegativeInfinity -> PositiveInfinity
-        value.isInfinite && value.finiteValue < 0.0 -> -value
-        else -> value
-    }
-
+    @Suppress("UNCHECKED_CAST")
+    fun<T : DoubleBound?> abs(x : T) : T = when(x) {
+        is Finite -> Finite(x.value.absoluteValue)
+        NegativeInfinity, PositiveInfinity -> PositiveInfinity
+        null -> null
+    } as T
+    
     fun min(vararg values: DoubleBound): DoubleBound {
         require(values.isNotEmpty())
 

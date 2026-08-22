@@ -1,6 +1,7 @@
 package io.github.tukcps.aadd.values.real.aa
 
-import io.github.tukcps.aadd.DDBuilder
+import io.github.tukcps.aadd.DDBuilder.RealMath.times
+import io.github.tukcps.aadd.dd.AADD
 import io.github.tukcps.aadd.values.integer.IntegerRange
 import io.github.tukcps.aadd.values.integer.LongBound
 import io.github.tukcps.aadd.values.real.DoubleBound
@@ -20,7 +21,6 @@ import io.github.tukcps.aadd.values.real.rounding.Rounding
 import io.github.tukcps.aadd.values.real.times
 import io.github.tukcps.aadd.values.real.toDoubleBound
 import kotlin.math.*
-import io.github.tukcps.aadd.values.real.ia.inv as invRange
 
 //
 // ------------------ Non-linear functions that do not (yet?) use central approximation methods -----------------
@@ -108,6 +108,7 @@ fun multiply(a: AffineForm, b: AffineForm): AffineForm {
  * Reciprocal, a min-Range Approximations which gives us division.
  * Based on "Self-validated numerical methods and applications" by Stolfi and de Figueiredo (p.69-70 3.12 Reciprocal)
  */
+/*
 fun inv(value: AffineForm): AffineForm {
     when {
         value.isEmpty() -> return value.builder.AF.Empty
@@ -144,10 +145,10 @@ fun inv(value: AffineForm): AffineForm {
     return affine(value,
         invRange(RealRange(value)),
         alpha, delta, max(0.0, noise))
-}
+} */
 
-fun divide(numerator: AffineForm, denominator: AffineForm): AffineForm =
-    numerator * inv(denominator)
+fun divide(numerator: AffineForm, denominator: AffineForm): AADD =
+    numerator.builder.leaf(numerator) * invSplit(denominator)
 
 fun divide(numerator: AffineForm, denominator: Double): AffineForm =
     numerator * (1/denominator)
@@ -233,7 +234,7 @@ fun floorToIntRange(value: AffineForm) : IntegerRange =
  */
 fun power2(value: AffineForm): AffineForm = exp(value * ln(2.0))
 fun log2(value: AffineForm): AffineForm = ln(value) * (1/ln(2.0))
-fun log(value: AffineForm, base: AffineForm): AffineForm = divide(ln(value), ln(base))
+fun log(value: AffineForm, base: AffineForm): AADD = divide(ln(value), ln(base))
 
 /**
  * Intersection of a leaf and an interval returns a leaf.

@@ -73,6 +73,9 @@ sealed interface LongBound : Bound {
     infix operator fun compareTo(other: Long): Int =
         LongMath.compare(this, Finite(other))
 
+    infix operator fun compareTo(other: Int): Int =
+        LongMath.compare(this, Finite(other.toLong()))
+
     infix operator fun Long.compareTo(other: LongBound): Int =
         LongMath.compare(Finite(this), other)
 

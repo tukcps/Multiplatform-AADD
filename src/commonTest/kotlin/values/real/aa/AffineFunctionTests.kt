@@ -1,5 +1,6 @@
 package values.real.aa
 
+import io.github.tukcps.aadd.util.Assertions.assertSafeInclusion
 import io.github.tukcps.aadd.values.real.DoubleBound
 import io.github.tukcps.aadd.values.real.aa.AffineForm
 import io.github.tukcps.aadd.values.real.aa.affine
@@ -15,25 +16,25 @@ class AffineFunctionTests {
     fun affineIdentity() = ddTest {
         val x = AffineForm.range(this, 1.0..2.0)
         val identity = affine(x, x, 1.0, 0.0, 0.0)
-        assertEquals(x, identity)
+        assertSafeInclusion(x, identity)
     }
 
     @Test
     fun affineScaling() = ddTest {
         val x = AffineForm.range(this, 1.0..2.0)
-        assertEquals(2.0..4.0, affine(x, RealRange(2.0..4.0), 2.0, 0.0, 0.0))
+        assertSafeInclusion(2.0..4.0, affine(x, RealRange(2.0..4.0), 2.0, 0.0, 0.0), 0.0)
     }
 
     @Test
     fun affineTranslation() = ddTest {
         val x = AffineForm.range(this, 1.0..2.0)
-        assertEquals(4.0..5.0, affine(x, RealRange(4.0..5.0), 1.0, 3.0, 0.0))
+        assertSafeInclusion(4.0..5.0, affine(x, RealRange(4.0..5.0), 1.0, 3.0, 0.0), 0.0)
     }
 
     @Test
     fun affineNegation() = ddTest {
         val x = AffineForm.range(this, 1.0..2.0)
-        assertEquals(-2.0..-1.0, affine(x, RealRange(-2.0..-1.0), -1.0, 0.0, 0.0))
+        assertSafeInclusion(-2.0..-1.0, affine(x, RealRange(-2.0..-1.0), -1.0, 0.0, 0.0), 0.0)
     }
 
     @Test
@@ -49,7 +50,7 @@ class AffineFunctionTests {
     fun affineLinear() = ddTest {
         val x = AffineForm.range(this, 1.0..2.0)
         val y = affine(x, RealRange(5.0..7.0), 2.0, 3.0, 0.0)
-        assertEquals(5.0..7.0, y)
+        assertSafeInclusion(5.0..7.0, y, 0.0)
         // assertEquals(x.xi.size, y.xi.size)
     }
 

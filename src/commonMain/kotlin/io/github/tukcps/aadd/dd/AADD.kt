@@ -126,10 +126,10 @@ sealed class AADD: DD<AffineForm>, NumberRange<DoubleBound> {
      */
     override infix fun intersect(other: NumberRange<DoubleBound>): AADD = when {
         other is AADD       -> apply(other, AffineForm::intersect)
-        else                -> builder.leaf( (this as NumberRange<DoubleBound>) intersect other)
+        else                -> apply(builder.leaf(other), op = AffineForm::intersect)
     }
 
-    /** Computes a more simple intersection by just moving the constraints. w*/
+    /** Computes a more simple intersection by just moving the constraints. */
     fun constrainTo(other: NumberRange<DoubleBound>): AADD = when {
         other is AADD       -> builder.leaf(RealRange(this) intersect RealRange(other) )
         else                -> builder.leaf( (RealRange(this)) intersect other)

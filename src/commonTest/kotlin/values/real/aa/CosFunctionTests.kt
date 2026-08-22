@@ -1,6 +1,6 @@
 package values.real.aa
 
-import io.github.tukcps.aadd.util.Assertions.assertEquals
+import io.github.tukcps.aadd.util.Assertions.assertSafeInclusion
 import io.github.tukcps.aadd.values.real.aa.AffineForm
 import io.github.tukcps.aadd.values.real.aa.cos
 import testutil.ddTest
@@ -13,58 +13,58 @@ class CosFunctionTests {
 
     @Test
     fun cosZero() = ddTest {
-        assertEquals(1.0..1.0, cos(AffineForm.scalar(this, 0.0)), 1e-8)
+        assertSafeInclusion(1.0..1.0, cos(AffineForm.scalar(this, 0.0)), 1e-8)
     }
 
     @Test
     fun cosHalfPi() = ddTest {
-        assertEquals(0.0..0.0, cos(AffineForm.scalar(this, (PI / 2))), 1e-8)
+        assertSafeInclusion(0.0..0.0, cos(AffineForm.scalar(this, (PI / 2))), 1e-8)
     }
 
     @Test
     fun cosPi() = ddTest {
-        assertEquals(-1.0..-1.0, cos(AffineForm.scalar(this, PI)), 1e-8)
+        assertSafeInclusion(-1.0..-1.0, cos(AffineForm.scalar(this, PI)), 1e-8)
     }
 
     @Test
     fun cosTwoPi() = ddTest {
-        assertEquals(1.0..1.0, cos(AffineForm.scalar(this, 2.0 * PI)), 1e-8)
+        assertSafeInclusion(1.0..1.0, cos(AffineForm.scalar(this, 2.0 * PI)), 1e-8)
     }
 
     @Test
     fun cosFirstQuadrant() = ddTest {
         val y = cos(AffineForm.range(this, 0.0..PI / 2))
-        assertEquals(0.0..1.0, y, 1e-8)
+        assertSafeInclusion(0.0..1.0, y, 1e-8)
     }
 
     @Test
     fun cosSecondQuadrant() = ddTest {
         val y = cos(AffineForm.range(this, PI / 2..PI))
-        assertEquals(-1.0..0.0, y, 1e-8)
+        assertSafeInclusion(-1.0..0.0, y, 1e-8)
     }
 
     @Test
     fun cosThirdQuadrant() = ddTest {
         val y = cos(AffineForm.range(this, PI..3.0 * PI / 2))
-        assertEquals(-1.0..0.0, y, 1e-8)
+        assertSafeInclusion(-1.0..0.0, y, 1e-8)
     }
 
     @Test
     fun cosFourthQuadrant() = ddTest {
         val y = cos(AffineForm.range(this, 3.0 * PI / 2..2.0 * PI))
-        assertEquals(0.0..1.0, y, 1e-8)
+        assertSafeInclusion(0.0..1.0, y, 1e-8)
     }
 
     @Test
     fun cosFullPeriod() = ddTest {
         val y = cos(AffineForm.range(this, 0.0..2.0 * PI))
-        assertEquals(-1.0..1.0, y, 1e-8)
+        assertSafeInclusion(-1.0..1.0, y, 1e-8)
     }
 
     @Test
     fun cosManyPeriods() = ddTest {
         val y = cos(AffineForm.range(this, -10.0 * PI..10.0 * PI))
-        assertEquals(-1.0..1.0, y, 1e-8)
+        assertSafeInclusion(-1.0..1.0, y, 1e-8)
     }
 
     @Test
@@ -85,7 +85,7 @@ class CosFunctionTests {
     fun cosSmallInterval() = ddTest {
         val x = AffineForm.range(this, -0.1..0.1)
         val y = cos(x)
-        assertEquals(cos(-0.1)..1.0, y, 1e-10)
+        assertSafeInclusion(cos(-0.1)..1.0, y, 1e-10)
     }
 
     @Test

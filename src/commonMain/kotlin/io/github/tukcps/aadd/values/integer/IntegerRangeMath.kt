@@ -1,5 +1,7 @@
 package io.github.tukcps.aadd.values.integer
 
+import io.github.tukcps.aadd.DDBuilder
+import io.github.tukcps.aadd.dd.IDD
 import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.pow
@@ -278,14 +280,13 @@ fun sqr(x: IntegerRange): IntegerRange =
 
 /**
  * Calculates the square root of this integer range.
- *
  * The square root is only defined for non-negative values.
  * Negative parts of the input range are removed.
- *
  * The operation follows set semantics:
  *
  *     sqrt(S) = { sqrt(x) | x ∈ S and x >= 0 }
  *
+ * TODO: Use split and lower value!
  * @param value the value from which sqrt is calculated
  * @return enclosing range of all square roots
  */
@@ -306,8 +307,33 @@ fun sqrt(value: IntegerRange): IntegerRange =
                     )
                     LongBound.NegativeInfinity -> LongBound.Finite(0)
                 }
+            IntegerRange(-upper, upper)
+        }
+    }
 
-            IntegerRange(LongBound.Finite(lower), upper)
+fun sqrt(builder: DDBuilder, value: IntegerRange): IDD =
+    when {
+        value.isEmpty() -> builder.Integers.Empty
+        value.max < LongBound.Finite(0) -> builder.Integers.Empty
+        else -> {
+            val lower =
+                if (value.min < LongBound.Finite(0)) LongBound.Finite(0L)
+                else LongBound.Finite(ceil(kotlin.math.sqrt(value.min.finiteValue.toDouble())).toLong())
+
+            val upper =
+                when (value.max) {
+                    LongBound.PositiveInfinity -> LongBound.PositiveInfinity
+                    is LongBound.Finite -> LongBound.Finite(
+                        ceil(kotlin.math.sqrt(value.max.value.toDouble())).toLong()
+                    )
+                    LongBound.NegativeInfinity -> LongBound.Finite(0)
+                }
+
+            val v = builder.boolean("x")
+            val result = v.ite(
+                builder.integer(-upper .. -lower),
+                builder.integer(lower ..upper))
+            result
         }
     }
 
@@ -492,8 +518,29 @@ fun ln(x: IntegerRange): IntegerRange {
 fun log(x: IntegerRange, base: IntegerRange): IntegerRange =
     ln(x) / ln(base)
 
-fun log(x: IntegerRange, base: Long): IntegerRange =
-    ln(x) / ln(IntegerRange(base))
+fun log(x: Long, base: Long): Long {
+    require(x > 0)
+    require(base > 1)
+
+    var power = 1L
+    var result = 0L
+
+    while (power <= x / base) {
+        power *= base
+        result++
+    }
+    return result
+}
+
+fun log(x: IntegerRange, base: Long): IntegerRange {
+    require(base > 1)
+    if (x.isEmpty()) return IntegerRange.Empty
+    require(x.min.finiteValue > 0)
+    return IntegerRange(
+        log(x.min.finiteValue, base),
+        log(x.max.finiteValue, base)
+    )
+}
 
 fun log2(x: IntegerRange): IntegerRange =
     ln(x) / ln(IntegerRange(2L))
@@ -507,12 +554,50 @@ fun negate(x: IntegerRange): IntegerRange =
     IntegerRange(-x.max, -x.min)
 
 /** Returns b^exp. */
-fun pow(base: IntegerRange, exp: Long): IntegerRange =
-    pow(base, exp)
+fun pow(base: IntegerRange, exp: Long): IntegerRange {
+    if (base.isEmpty()) return IntegerRange.Empty
+
+    if (exp < 0L) {
+        val hasOne = LongBound.Finite(1L) in base
+        val hasMinusOne = LongBound.Finite(-1L) in base
+
+        return when {
+            !hasOne && !hasMinusOne -> IntegerRange.Empty
+            exp % 2L == 0L          -> IntegerRange.One
+            hasOne && hasMinusOne   -> IntegerRange(-1L, 1L)
+            hasOne                  -> IntegerRange.One
+            else                    -> IntegerRange(-1L)
+        }
+    }
+
+    if (exp == 0L) return IntegerRange.One
+    fun p(x: LongBound) = requireNotNull(LongMath.pow(x, exp))
+
+    return when {
+        exp % 2L != 0L -> IntegerRange(p(base.min), p(base.max))
+        base.max <= 0L -> IntegerRange(p(base.max), p(base.min))
+        base.min >= 0L -> IntegerRange(p(base.min), p(base.max))
+        else -> IntegerRange(LongBound.Finite(0L), LongMath.max(p(base.min), p(base.max)))
+    }
+}
 
 /** Returns b^e for b∈base and e∈exp. */
-fun pow(base: IntegerRange, exp: IntegerRange): IntegerRange =
-    pow(base, exp)
+fun pow(base: IntegerRange, exp: IntegerRange): IntegerRange {
+    if (base.isEmpty() || exp.isEmpty()) return IntegerRange.Empty
+    if (!exp.isFinite()) return IntegerRange.All
+
+    var result = IntegerRange.Empty
+    var e = exp.min.finiteValue
+    val last = exp.max.finiteValue
+
+    while (true) {
+        result = result join pow(base, e)
+        if (e == last) break
+        e++
+    }
+
+    return result
+}
 
 /**
  * Computes 2^x for a non-negative integer interval.

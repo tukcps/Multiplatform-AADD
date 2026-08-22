@@ -1,6 +1,7 @@
 package io.github.tukcps.aadd.values.integer
 
 import io.github.tukcps.aadd.values.integer.LongBound.*
+import kotlin.math.absoluteValue
 import kotlin.math.pow
 
 /**
@@ -101,7 +102,6 @@ object LongMath {
             is Finite ->        {
                 if (value.value == Long.MIN_VALUE) return PositiveInfinity
                 else {
-                    val m = -value.value
                     Finite(-value.value)
                 }
             }
@@ -113,18 +113,19 @@ object LongMath {
      * @param value the operand
      * @return the absolute value
      */
-    fun abs(value: LongBound): LongBound =
-        when (value) {
-            PositiveInfinity, NegativeInfinity -> PositiveInfinity
-            is Finite ->
-                if (value.value == Long.MIN_VALUE) PositiveInfinity
-                else Finite(kotlin.math.abs(value.value))
-        }
+    @Suppress("UNCHECKED_CAST")
+    fun <T: LongBound?> abs(value: T): T = when (value) {
+        null -> null
+        PositiveInfinity, NegativeInfinity -> PositiveInfinity
+        is Finite ->
+            if (value.value == Long.MIN_VALUE) PositiveInfinity
+            else Finite(value.value.absoluteValue)
+        } as T
 
     /**
      * Adds two integer bounds.
-     * If the result cannot be represented by a single bound
-     * (for example `+∞ + -∞`), `null` is returned.
+     * If the result cannot be represented by a single bound.
+     * For `+∞ + -∞`, `null` is returned.
      * @param a left operand
      * @param b right operand
      * @return sum or `null` if no unique bound exists

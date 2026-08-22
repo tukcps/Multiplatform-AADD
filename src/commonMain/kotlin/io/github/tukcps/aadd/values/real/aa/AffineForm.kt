@@ -121,14 +121,14 @@ class AffineForm internal constructor(
         if (abs((min - other.min).toDouble()) > tol) return false // Rounding, etc. negligible
         if (abs((max - other.max).toDouble()) > tol) return false
         if (other === this) return true
-        var nr = abs(central - other.central)
-        nr = (nr + nr.ulp) / 2.0
+        var uncorrelated = abs(central - other.central)
+        uncorrelated = (uncorrelated + uncorrelated.ulp) / 2.0
         for (i in xi.keys+other.xi.keys) {
             val xi = xi.getOrElse(i){0.0}
             val yi = other.xi.getOrElse(i){0.0}
-            nr += if (xi * yi > 0) abs(xi - yi) else xi + yi
+            uncorrelated += if (xi * yi > 0) abs(xi - yi) else xi + yi
         }
-        return nr < tol
+        return uncorrelated < tol
     }
 
     /**

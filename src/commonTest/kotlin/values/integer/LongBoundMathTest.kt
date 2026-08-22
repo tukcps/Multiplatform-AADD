@@ -14,10 +14,10 @@ import kotlin.test.assertTrue
 
 class LongBoundMathTest {
 
-    private fun b(value: Long) = LongBound.Finite(value)
+    private fun b(value: Long): LongBound = LongBound.Finite(value)
 
     private val pInf = LongBound.PositiveInfinity
-    private val nInf = LongBound.NegativeInfinity
+    private val nInf: LongBound = LongBound.NegativeInfinity
     private val nan: LongBound? = null
 
     @Test

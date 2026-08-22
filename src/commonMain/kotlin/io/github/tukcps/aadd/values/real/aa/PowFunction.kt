@@ -2,15 +2,12 @@ package io.github.tukcps.aadd.values.real.aa
 
 import io.github.tukcps.aadd.values.real.DoubleBound
 import io.github.tukcps.aadd.values.real.aa.AffineForm.Companion.create
+import io.github.tukcps.aadd.values.real.aa.AffineForm.Companion.math
 import io.github.tukcps.aadd.values.real.ia.RealRange
-import io.github.tukcps.aadd.values.real.ia.pow as powIA
 import io.github.tukcps.aadd.values.real.rounding.IEEE754RoundingMath
 import io.github.tukcps.aadd.values.real.rounding.Rounding
-import kotlin.math.abs
-import kotlin.math.ln
-import kotlin.math.max
-import kotlin.math.nextUp
-import kotlin.math.pow
+import kotlin.math.*
+import io.github.tukcps.aadd.values.real.ia.pow as powIA
 
 private val Double.isInteger: Boolean
     get() = this == toLong().toDouble()
@@ -132,14 +129,15 @@ fun pow(base: AffineForm, exponent: AffineForm): AffineForm {
         residual(base.max.finiteValue, exponent.max.finiteValue)
     )
 
-    val rMin = residuals.min()
-    val rMax = residuals.max()
+    val rMin = residuals.min().nextDown()
+    val rMax = residuals.max().nextUp()
 
     return create(
         builder = base.builder,
         range = ia,
         central = linear.central - alphaX * x0 - alphaY * y0 + f0 + (rMin + rMax) / 2.0,
-        newNoise = (rMax - rMin) / 2.0,
+        newNoise = (math.sub(rMax, rMin, Rounding.UP) / 2.0)*1.000000000000001,
+        // for inaccuracy in computation of residuals!
         xi = linear.xi
     )
 }

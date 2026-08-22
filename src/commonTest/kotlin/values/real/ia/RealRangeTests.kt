@@ -1,4 +1,5 @@
 package values.real.ia
+import io.github.tukcps.aadd.util.Assertions.assertSafeInclusion
 import io.github.tukcps.aadd.values.real.DoubleBound
 import kotlin.test.*
 import io.github.tukcps.aadd.util.Assertions.assertEquals
@@ -17,7 +18,7 @@ class RealRangeTests {
     fun rangeEqualsTestRange() {
         val realRangeA = RealRange(3.0..3.0)
         val realRangeB = RealRange(3.0..3.0)
-        assertEquals(realRangeA,realRangeB)
+        assertSafeInclusion(realRangeA, realRangeB)
     }
 
     @Test
@@ -59,12 +60,12 @@ class RealRangeTests {
     @Test
     fun testExp() {
         val c = exp(RealRange(1.0, 2.0))
-        assertEquals(exp(1.0) .. exp(2.0), c, 0.0000000001)
+        assertSafeInclusion(exp(1.0)..exp(2.0), c, 0.0000000001)
     }
 
     @Test
     fun testLn() {
         val c = ln(RealRange(1.0, 2.0))
-        assertEquals(ln(1.0) .. ln(2.0), c, 0.0000000001)
+        assertSafeInclusion(ln(1.0)..ln(2.0), c, 0.0000000001)
     }
 }

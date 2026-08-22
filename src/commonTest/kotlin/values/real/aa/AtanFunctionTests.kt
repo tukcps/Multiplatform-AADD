@@ -1,5 +1,6 @@
 package values.real.aa
 
+import io.github.tukcps.aadd.util.Assertions
 import io.github.tukcps.aadd.values.real.DoubleBound
 import io.github.tukcps.aadd.values.real.aa.AffineForm
 import io.github.tukcps.aadd.values.real.aa.AtanFunction
@@ -15,23 +16,23 @@ import kotlin.test.assertTrue
 class AtanFunctionTests {
     @Test
     fun atanZero() = ddTest {
-        assertEquals(0.0..0.0, atan(AffineForm.scalar(this, 0.0)), 1e-8)
+        Assertions.assertSafeInclusion(0.0..0.0, atan(AffineForm.scalar(this, 0.0)), 1e-8)
     }
 
     @Test
     fun atanOne() = ddTest {
-        assertEquals(PI / 4.0..PI / 4.0, atan(AffineForm.scalar(this, 1.0)), 1e-8)
+        Assertions.assertSafeInclusion(PI / 4.0..PI / 4.0, atan(AffineForm.scalar(this, 1.0)), 1e-8)
     }
 
     @Test
     fun atanMinusOne() = ddTest {
-        assertEquals(-PI / 4.0..-PI / 4.0, atan(AffineForm.scalar(this, -1.0)), 1e-8)
+        Assertions.assertSafeInclusion(-PI / 4.0..-PI / 4.0, atan(AffineForm.scalar(this, -1.0)), 1e-8)
     }
 
     @Test
     fun atanInterval() = ddTest {
         val y = atan(AffineForm.range(this, -1.0..1.0))
-        assertEquals(-PI / 4.0..PI / 4.0, y, 1e-6)
+        Assertions.assertSafeInclusion(-PI / 4.0..PI / 4.0, y, 1e-6)
     }
 
     @Test

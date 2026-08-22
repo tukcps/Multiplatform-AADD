@@ -1,9 +1,9 @@
 package values.real.ia
 
+import io.github.tukcps.aadd.util.Assertions.assertSafeInclusion
 import io.github.tukcps.aadd.values.real.ia.RealRange
 import io.github.tukcps.aadd.values.real.ia.tan
 import testutil.ddTest
-import io.github.tukcps.aadd.util.Assertions.assertEquals
 import kotlin.math.*
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -12,17 +12,17 @@ class TanTests {
 
     @Test
     fun tanQuarterPi() = ddTest {
-        assertEquals(0.0..1.0, tan(RealRange(0.0..PI / 4)), 1e-8)
+        assertSafeInclusion(0.0..1.0, tan(RealRange(0.0..PI / 4)), 1e-8)
     }
 
     @Test
     fun tanNegativeQuarterPi() = ddTest {
-        assertEquals(-1.0..0.0, tan(RealRange(-PI / 4..0.0)), 1e-8)
+        assertSafeInclusion(-1.0..0.0, tan(RealRange(-PI / 4..0.0)), 1e-8)
     }
 
     @Test
     fun tanCrossesPole() = ddTest {
-        assertEquals(
+        assertSafeInclusion(
             RealRange.Reals,
             tan(RealRange(PI / 2 - 0.1..PI / 2 + 0.1))
         )
@@ -30,7 +30,7 @@ class TanTests {
 
     @Test
     fun tanFullPeriod() = ddTest {
-        assertEquals(
+        assertSafeInclusion(
             RealRange.Reals,
             tan(RealRange(0.0..PI))
         )
@@ -38,7 +38,7 @@ class TanTests {
 
     @Test
     fun tanPoleAtBoundary() = ddTest {
-        assertEquals(
+        assertSafeInclusion(
             RealRange.Reals,
             tan(RealRange(PI / 2..PI / 2))
         )
@@ -46,34 +46,34 @@ class TanTests {
 
     @Test
     fun tanLargeInterval() = ddTest {
-        assertEquals(
+        assertSafeInclusion(
             RealRange.Reals,
             tan(RealRange(-100.0..100.0))
         )
     }
     @Test
     fun tanZero() = ddTest {
-        assertEquals(0.0..0.0, tan(RealRange(0.0..0.0)), 1e-8)
+        assertSafeInclusion(0.0..0.0, tan(RealRange(0.0..0.0)), 1e-8)
     }
 
     @Test
     fun tanPositive() = ddTest {
-        assertEquals(0.0..1.0, tan(RealRange(0.0..PI / 4)), 1e-8)
+        assertSafeInclusion(0.0..1.0, tan(RealRange(0.0..PI / 4)), 1e-8)
     }
 
     @Test
     fun tanNegative() = ddTest {
-        assertEquals(-1.0..0.0, tan(RealRange(-PI / 4..0.0)), 1e-8)
+        assertSafeInclusion(-1.0..0.0, tan(RealRange(-PI / 4..0.0)), 1e-8)
     }
 
     @Test
     fun tanPole() = ddTest {
-        assertEquals(RealRange.Reals, tan(RealRange(-PI / 2..PI / 2)))
+        assertSafeInclusion(RealRange.Reals, tan(RealRange(-PI / 2..PI / 2)))
     }
 
     @Test
     fun tanPeriod() = ddTest {
-        assertEquals(RealRange.Reals, tan(RealRange(0.0..PI)))
+        assertSafeInclusion(RealRange.Reals, tan(RealRange(0.0..PI)))
     }
 
     @Test

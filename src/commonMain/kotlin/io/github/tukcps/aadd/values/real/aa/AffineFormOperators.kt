@@ -1,5 +1,7 @@
 package io.github.tukcps.aadd.values.real.aa
 
+import io.github.tukcps.aadd.DDBuilder.RealMath.multiply
+import io.github.tukcps.aadd.dd.AADD
 import io.github.tukcps.aadd.values.real.DoubleBound
 import io.github.tukcps.aadd.values.real.DoubleBoundMath.toDouble
 
@@ -34,6 +36,6 @@ operator fun DoubleBound.times(other: AffineForm): AffineForm = multiply(other, 
  * We do division by multiplying by inv(other) as suggested by Stolfi.
  * Division by zero returns infinity.
  */
-operator fun AffineForm.div(other: AffineForm): AffineForm = multiply(this, inv(other))
+operator fun AffineForm.div(other: AffineForm): AADD = multiply(other.builder.leaf(this), invSplit(other))
 operator fun AffineForm.div(other: Double): AffineForm = multiply(this, 1 / other)
-operator fun Double.div(other: AffineForm): AffineForm = multiply(inv(other), this)
+operator fun Double.div(other: AffineForm): AADD = multiply(invSplit(other), this)

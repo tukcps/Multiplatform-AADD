@@ -1,6 +1,7 @@
 import io.github.tukcps.aadd.DDBuilder
 import io.github.tukcps.aadd.Real
 import io.github.tukcps.aadd.dd.IDD
+import io.github.tukcps.aadd.util.Assertions
 import io.github.tukcps.aadd.values.integer.IntegerRange
 import io.github.tukcps.aadd.values.integer.LongBound
 import io.github.tukcps.aadd.util.Assertions.assertEquals
@@ -14,19 +15,19 @@ class DDBuilderTests {
     fun testRealCornerCases() {
         DDBuilder {
             // If a bound cannot be computed, use Infinity as over-approximation.
-            val n1 = real(Double.NaN .. 2.0)
-            assertEquals(Double.NEGATIVE_INFINITY .. 2.0, n1)
+            val n1 = real(Double.NaN..2.0)
+            Assertions.assertSafeInclusion(Double.NEGATIVE_INFINITY..2.0, n1, 0.0)
 
             // Maintain infinities ...
-            val n2 = real(Double.NEGATIVE_INFINITY .. 2.0)
-            assertEquals(Double.NEGATIVE_INFINITY .. 2.0, n2)
+            val n2 = real(Double.NEGATIVE_INFINITY..2.0)
+            Assertions.assertSafeInclusion(Double.NEGATIVE_INFINITY..2.0, n2, 0.0)
 
             // If both bounds are not computable, return all Reals
-            val n3 = real(Double.NaN .. Double.NaN)
+            val n3 = real(Double.NaN..Double.NaN)
             assertSame(Reals.All, n3)
 
             // Map empty to singleton
-            val n4 = real(5.0 .. 4.0)
+            val n4 = real(5.0..4.0)
             assertSame(Reals.Empty, n4)
         }
     }
@@ -43,12 +44,12 @@ class DDBuilderTests {
     @Test
     fun testNumberToAADD() {
         DDBuilder {
-            val n1 = number(1.0 .. 2.0)
+            val n1 = number(1.0..2.0)
             val n2 = number(3.0)
             assertTrue(n1 is Real)
             assertTrue(n2 is Real)
-            assertEquals(1.0..2.0, n1)
-            assertEquals(3.0 .. 3.0, n2)
+            Assertions.assertSafeInclusion(1.0..2.0, n1, 0.0)
+            Assertions.assertSafeInclusion(3.0..3.0, n2, 0.0)
         }
     }
 

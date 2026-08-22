@@ -1,11 +1,11 @@
 package values.real.aa
 
 import io.github.tukcps.aadd.DDBuilder
+import io.github.tukcps.aadd.util.Assertions.assertSafeInclusion
 import io.github.tukcps.aadd.values.real.DoubleBoundMath.toDouble
 import io.github.tukcps.aadd.values.real.aa.*
 import io.github.tukcps.aadd.values.real.aa.AffineForm.Companion.create
 import io.github.tukcps.aadd.values.real.ia.RealRange
-import io.github.tukcps.aadd.util.Assertions.assertEquals
 import kotlin.math.pow
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -93,7 +93,7 @@ class AffineFormTest {
             assertTrue(sum1.min.isInfinite)
             assertEquals(Double.POSITIVE_INFINITY, sum2.min.toDouble())
             assertEquals(Double.POSITIVE_INFINITY, sum2.max.toDouble())
-            assertEquals(sum1, sum2)
+            assertSafeInclusion(sum1, sum2)
         }
     }
 
@@ -135,10 +135,10 @@ class AffineFormTest {
     @Test
     fun testNegation() {
         DDBuilder {
-            val af1 = AffineForm.range(this, 1.0 .. 2.0)
+            val af1 = AffineForm.range(this, 1.0..2.0)
             val neg: AffineForm = -af1
             assertEquals(-1.5, neg.central, precision)
-            assertEquals(-2.0 .. -1.0, neg, precision)
+            assertSafeInclusion(-2.0..-1.0, neg, precision)
             assertEquals(0.5, neg.radius, precision)
         }
     }
@@ -149,15 +149,15 @@ class AffineFormTest {
             val terms = hashMapOf(1L to 2.0, 2L to 1.0)
             val lgr = create(this, RealRange.Reals, 10.0, 0.0, terms)
             val terms2 = hashMapOf(1L to -2.0, 3L to 1.0)
-            val af3 = create(this, RealRange.Reals,10.0, 0.0, terms2)
+            val af3 = create(this, RealRange.Reals, 10.0, 0.0, terms2)
             val mult: AffineForm = lgr * af3
             assertTrue(!mult.isScalar())
             assertEquals(100.0, mult.central, precision)
-            assertEquals(71.0..129.0, mult, precision)
+            assertSafeInclusion(71.0..129.0, mult, precision)
 
             // Check that FP roundoff for simple scalar is included
-            val b1  = AffineForm.scalar(this, 10.0) * 100.0
-            assertTrue(1000.0 in b1 )
+            val b1 = AffineForm.scalar(this, 10.0) * 100.0
+            assertTrue(1000.0 in b1)
         }
     }
 
@@ -166,7 +166,7 @@ class AffineFormTest {
         DDBuilder {
             val v = AffineForm.range(this, 1.0..2.0, "1")
             val vm: AffineForm = negate(v)
-            assertEquals(-2.0..-1.0, vm)
+            assertSafeInclusion(-2.0..-1.0, vm, 0.0)
             assertEquals(0.5, vm.radius)
         }
     }
@@ -174,14 +174,14 @@ class AffineFormTest {
     @Test
     fun testAbs(){
         DDBuilder{
-            val x= AffineForm.range(this, -2.0 .. 1.0, "1")
-            val y= AffineForm.range(this, 0.5 .. 2.5, "2")
+            val x = AffineForm.range(this, -2.0..1.0, "1")
+            val y = AffineForm.range(this, 0.5..2.5, "2")
             val z1 = abs(x)
             val z2 = abs(y)
-            assertEquals(0.0..2.0, z1, precision)
-            assertEquals(-1.5, z1.xi[1]!!,precision)
-            assertEquals(0.5..2.5, z2,precision)
-            assertEquals(1.0, z2.xi[2]!!,precision)
+            assertSafeInclusion(0.0..2.0, z1, precision)
+            assertEquals(-1.5, z1.xi[1]!!, precision)
+            assertSafeInclusion(0.5..2.5, z2, precision)
+            assertEquals(1.0, z2.xi[2]!!, precision)
         }
     }
 
@@ -191,7 +191,7 @@ class AffineFormTest {
             val terms = hashMapOf(1L to 2.0, 2L to 1.0)
             val lgr = create(this, RealRange.Reals, 10.0, 0.0, terms)
             val scl = AffineForm.scalar(this, 1.0)
-            val af1 = AffineForm.range(this, 1.0 .. 2.0, "1")
+            val af1 = AffineForm.range(this, 1.0..2.0, "1")
 
             // Test scalar
             val af3 = AffineForm.scalar(this, 3.5)
@@ -207,11 +207,11 @@ class AffineFormTest {
             val exp4 = power2(af1)
             //central and r value determined by printouts
             assertEquals(3.0, exp4.central, 20.0)
-            assertEquals(2.0 .. 4.0, exp4, 2.0)
+            assertSafeInclusion(2.0..4.0, exp4, 2.0)
             //test [7,13]
             val exp5 = power2(lgr)
             //central and r value determined by printouts
-            assertEquals(2.0.pow(7.0) .. 2.0.pow(13.0), exp5, 100.0)
+            assertSafeInclusion(2.0.pow(7.0)..2.0.pow(13.0), exp5, 100.0)
         }
     }
 

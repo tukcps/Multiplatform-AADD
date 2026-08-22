@@ -7,7 +7,7 @@ import io.github.tukcps.aadd.DDBuilder.RealMath.pow
 import io.github.tukcps.aadd.DDBuilder.RealMath.times
 import io.github.tukcps.aadd.Real
 import io.github.tukcps.aadd.dd.AADD
-import io.github.tukcps.aadd.util.Assertions.assertEquals
+import io.github.tukcps.aadd.util.Assertions.assertSafeInclusion
 import kotlin.test.DefaultAsserter.assertTrue
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -38,7 +38,7 @@ class TestsAgainstRumpEquations {
                 pow(x, 4.0) * 9.0 -
                         pow(y, 4.0) +
                         pow(y, 2.0) * 2.0
-            assertEquals(0.999995995999 .. 1.0, z, 0.01)
+            assertSafeInclusion(0.999995995999..1.0, z, 0.01)
         }
     }
 
@@ -56,7 +56,7 @@ class TestsAgainstRumpEquations {
                         pow(y, 4.0) +
                         pow(y, 2.0) * 2.0
             assertTrue(1.0 in z)
-            assertEquals(-190.691904643992..192.708096644008, z.getRange(), 0.1)
+            assertSafeInclusion(-190.691904643992..192.708096644008, z.getRange(), 0.1)
         }
     }
 
@@ -74,7 +74,7 @@ class TestsAgainstRumpEquations {
                         pow(y, 2.0) * 2.0
             assertTrue(1.0 in z)
             //println("z = " + z)
-            assertEquals(0.940031956008 .. 1.060032044007, z, 0.0002)
+            assertSafeInclusion(0.940031956008..1.060032044007, z, 0.0002)
         }
     }
 
@@ -91,7 +91,7 @@ class TestsAgainstRumpEquations {
                     pow(y, 4.0) +
                     pow(y, 2.0) * 2.0
             assertTrue(1.0 in z)
-            assertEquals(-2.647428171992 .. 4.648572172008, z, 0.01)
+            assertSafeInclusion(-2.647428171992..4.648572172008, z, 0.01)
         }
     }
 
@@ -112,7 +112,7 @@ class TestsAgainstRumpEquations {
                         pow(y, 2.0) * 2.0
 
             assertTrue(1.0 in z)
-            assertEquals(1.0..1.0, z, 1e-7)
+            assertSafeInclusion(1.0..1.0, z, 1e-7)
         }
     }
 
@@ -132,7 +132,7 @@ class TestsAgainstRumpEquations {
                         pow(y, 4.0) +
                         pow(y, 2.0) * 2.0
             assertTrue(1.0 in z)
-            assertEquals(-518403.535496971 .. 518408.680520973, z, 3.0)
+            assertSafeInclusion(-518403.535496971..518408.680520973, z, 3.0)
         }
     }
 
@@ -155,7 +155,7 @@ class TestsAgainstRumpEquations {
                         pow(y, 4.0) +
                         pow(y, 2.0) * 2.0
             assertTrue(1.0 in z)
-            assertEquals(-26_947_229.89763749 .. 26_947_275.70242948, z, 11.0)
+            assertSafeInclusion(-26_947_229.89763749..26_947_275.70242948, z, 11.0)
         }
     }
 
@@ -176,7 +176,7 @@ class TestsAgainstRumpEquations {
                         pow(y, 4.0) +
                         pow(y, 2.0) * 2.0
             assertTrue(1.0 in z)
-            assertEquals(-1_400_738_835.238972 ..1_400_739_447.361276, z, 41.0)
+            assertSafeInclusion(-1_400_738_835.238972..1_400_739_447.361276, z, 41.0)
             assertTrue(z is AADD.Leaf)
             val radius = z.radius
             assertTrue("Regression: radius of pow got worse compared with previous version", radius < 1_400_739_751.9736900)
@@ -201,7 +201,7 @@ class TestsAgainstRumpEquations {
                         pow(y, 4.0) +
                         pow(y, 2.0) * 2.0
             assertTrue(1.0 in z)
-            assertEquals(-7.281044418696875E10..7.281045273496875E10, z, 1050000.0)
+            assertSafeInclusion(-7.281044418696875E10..7.281045273496875E10, z, 1050000.0)
             assertTrue(z is AADD.Leaf)
             val optimalRadius = 72_811_493_845.3223
             val maxRelativeOverapproximation = 1e-6

@@ -12,6 +12,7 @@ import io.github.tukcps.aadd.values.real.DoubleBoundMath.toDouble
 import io.github.tukcps.aadd.values.real.aa.AffineForm
 import io.github.tukcps.aadd.values.real.aa.times
 import io.github.tukcps.aadd.values.real.ia.RealRange
+import testutil.ddTest
 import kotlin.test.*
 
 /**
@@ -63,17 +64,14 @@ class TrapTests {
         }
     }
 
-
     @Test
-    fun divisionByZeroInRange() {
-        DDBuilder {
-            val b: AADD = real(1.0..2.0)
-            val c = b/Reals.All
-            assertFalse(c.isEmpty())
-            assertSame(c, Reals.All)
-            assertEquals(Reals.All.min, c.min)
-            assertEquals(Reals.All.max, c.max)
-        }
+    fun divisionByZeroInRange() = ddTest {
+        val b: Real = real(1.0..2.0)
+        val c = b/Reals.All
+        assertFalse(c.isEmpty())
+        assertTrue(c is AADD.Internal)
+        assertEquals(Reals.All.min, c.min)
+        assertEquals(Reals.All.max, c.max)
     }
 
     /** Operations with Empty set return Infeasible for comparisons */

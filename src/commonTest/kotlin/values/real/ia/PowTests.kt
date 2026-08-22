@@ -1,8 +1,8 @@
 package values.real.ia
 
+import io.github.tukcps.aadd.util.Assertions
 import io.github.tukcps.aadd.values.real.ia.RealRange
 import io.github.tukcps.aadd.values.real.ia.pow
-import io.github.tukcps.aadd.util.Assertions.assertEquals
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.pow
@@ -49,15 +49,15 @@ class PowTests {
     }
     @Test
     fun powZeroExponent() =
-        assertEquals(RealRange.One, pow(RealRange(-5.0..5.0), RealRange.Zero))
+        Assertions.assertSafeInclusion(RealRange.One, pow(RealRange(-5.0..5.0), RealRange.Zero))
 
     @Test
     fun powOneExponent() =
-        assertEquals(2.0..4.0, pow(RealRange(2.0..4.0), RealRange.One))
+        Assertions.assertSafeInclusion(2.0..4.0, pow(RealRange(2.0..4.0), RealRange.One), 0.0)
 
     @Test
     fun powOneBase() =
-        assertEquals(RealRange.One, pow(RealRange.One, RealRange(-10.0..10.0)))
+        Assertions.assertSafeInclusion(RealRange.One, pow(RealRange.One, RealRange(-10.0..10.0)))
 
     @Test
     fun powNegativeBase() =

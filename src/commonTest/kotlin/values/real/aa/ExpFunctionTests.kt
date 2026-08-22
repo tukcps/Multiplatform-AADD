@@ -1,5 +1,6 @@
 package values.real.aa
 
+import io.github.tukcps.aadd.util.Assertions.assertSafeInclusion
 import io.github.tukcps.aadd.values.real.DoubleBound
 import io.github.tukcps.aadd.values.real.ia.RealRange
 import io.github.tukcps.aadd.values.real.aa.AffineForm
@@ -16,10 +17,10 @@ class ExpFunctionTests {
 
     @Test
     fun expTest1() = ddTest {
-        val af1to2 = AffineForm.range(this, 1.0 .. 2.0 )
+        val af1to2 = AffineForm.range(this, 1.0..2.0)
         val af = exp(af1to2)
         assertEquals(exp(1.5), af.central, 1e-15)
-        assertEquals(exp(1.0)..exp(2.0), af, 1e-15)
+        assertSafeInclusion(exp(1.0)..exp(2.0), af, 1e-15)
         assertEquals(2, af.xi.size)
         assertEquals(0.5 * exp(1.5), af.xi[1]!!, 1e-15)
         assertEquals(exp(2.0) * 0.5 * 0.5 / 2.0, af.xi[-1L]!!, 1e-14)
@@ -50,7 +51,7 @@ class ExpFunctionTests {
     fun expInterval() = ddTest {
         val x = real(1.0..2.0).value
         val y = exp(x)
-        assertEquals(exp(1.0)..exp(2.0), y, 0.000000001)
+        assertSafeInclusion(exp(1.0)..exp(2.0), y, 0.000000001)
     }
 
     @Test
@@ -67,21 +68,21 @@ class ExpFunctionTests {
 
     @Test
     fun expInfinity() = ddTest {
-        assertEquals(
-            AffineForm.scalar(this, Double.POSITIVE_INFINITY),
-            exp(AffineForm.scalar(this, Double.POSITIVE_INFINITY))
-        )
+        assertSafeInclusion(
+                    AffineForm.scalar(this, Double.POSITIVE_INFINITY),
+                    exp(AffineForm.scalar(this, Double.POSITIVE_INFINITY))
+                )
 
-        assertEquals(
-            AffineForm.scalar(this, 0.0),
-            exp(AffineForm.scalar(this, Double.NEGATIVE_INFINITY))
-        )
+        assertSafeInclusion(
+                    AffineForm.scalar(this, 0.0),
+                    exp(AffineForm.scalar(this, Double.NEGATIVE_INFINITY))
+                )
 
-        assertEquals(
-            RealRange(DoubleBound.Finite(0.0), DoubleBound.PositiveInfinity),
-            exp(AF.All)
-        )
+        assertSafeInclusion(
+                    RealRange(DoubleBound.Finite(0.0), DoubleBound.PositiveInfinity),
+                    exp(AF.All)
+                )
 
-        assertEquals(AF.Empty, exp(AF.Empty))
+        assertSafeInclusion(AF.Empty, exp(AF.Empty))
     }
 }

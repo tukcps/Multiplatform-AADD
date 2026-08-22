@@ -8,8 +8,8 @@ import io.github.tukcps.aadd.DDBuilder.IntMath.times
 import io.github.tukcps.aadd.Integer
 import io.github.tukcps.aadd.dd.BDD
 import io.github.tukcps.aadd.dd.IDD
-import io.github.tukcps.aadd.values.integer.*
 import io.github.tukcps.aadd.util.Assertions.assertEquals
+import io.github.tukcps.aadd.values.integer.*
 import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals

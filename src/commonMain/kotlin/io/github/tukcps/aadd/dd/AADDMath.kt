@@ -21,7 +21,7 @@ internal interface AADDMath: NumericApi<Real, AffineForm, Double> {
     override fun multiply(a: AADD, b: AADD): AADD = a.apply(b, ::multiply)
     override fun multiply(a: AADD, b: Double): AADD = a.applyOther(b, ::multiply)
     override fun inv(a: AADD): AADD = a.applySplit(::invSplit)
-    override fun divide(a: AADD, b: AADD): AADD = a.apply(b, ::divide)
+    override fun divide(a: AADD, b: AADD): AADD = a.applySplit(b, ::divide)
     override fun divide(a: Real, b: Double): Real = a.applyOther(b, ::divide)
 
     override fun negate(value: AADD): AADD = value.apply(::negate)
@@ -31,11 +31,11 @@ internal interface AADDMath: NumericApi<Real, AffineForm, Double> {
     override fun pow(value: AADD, exponent: AADD): AADD = value.apply(exponent, ::pow)
     fun pow2(value: AADD): AADD = value.apply(::power2)
 
-    override fun root(value: AADD, degree: AADD): AADD = value.apply(degree, ::root)
+    override fun root(value: AADD, degree: AADD): AADD = value.applySplit(degree, ::root)
     override fun root(value: AADD, degree: Double): AADD = value.applyOther(degree, ::root)
     override fun exp(value: AADD): AADD = value.apply(::exp)
     override fun ln(value: AADD): AADD = value.apply(::ln)
-    override fun log(value: AADD, base: AADD) = value.apply(base, ::log)
+    override fun log(value: AADD, base: AADD) = value.applySplit(base, ::log)
     override fun log(value: AADD, base: Double) = value.applyOther(base, ::log)
     fun log2(value: AADD): AADD = value.apply(::log2)
 
@@ -81,8 +81,8 @@ internal interface AADDMath: NumericApi<Real, AffineForm, Double> {
     operator fun AADD.times(other: NumberRange<DoubleBound>): AADD = multiply(this, builder.leaf(other))
     override operator fun AADD.times(other: Double): AADD = applyOther(other, ::multiply)
 
-    override operator fun AADD.div(other: AADD): AADD = apply(other, ::divide)
-    operator fun AADD.div(other: NumberRange<DoubleBound>): AADD = apply(builder.leaf(other), ::divide)
+    override operator fun AADD.div(other: AADD): AADD = applySplit(other, ::divide)
+    operator fun AADD.div(other: NumberRange<DoubleBound>): AADD = applySplit(builder.leaf(other), ::divide)
     override operator fun AADD.div(other: Double): AADD = applyOther(other, ::divide)
 
     infix fun AADD.power(other: AADD): AADD = apply(other, ::pow)

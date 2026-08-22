@@ -3,17 +3,19 @@ package io.github.tukcps.aadd.dd
 
 import io.github.tukcps.aadd.DDBuilder.BoolMath.and
 import io.github.tukcps.aadd.DDBuilder.BoolMath.or
+import io.github.tukcps.aadd.DDBuilder.IntMath.div
 import io.github.tukcps.aadd.DDBuilder.IntMath.minus
 import io.github.tukcps.aadd.DDBuilder.IntMath.negate
 import io.github.tukcps.aadd.DDBuilder.IntMath.plus
+import io.github.tukcps.aadd.DDBuilder.IntMath.times
 import io.github.tukcps.aadd.DDBuilder.RealMath.div
 import io.github.tukcps.aadd.DDBuilder.RealMath.minus
 import io.github.tukcps.aadd.DDBuilder.RealMath.negate
 import io.github.tukcps.aadd.DDBuilder.RealMath.plus
 import io.github.tukcps.aadd.DDBuilder.RealMath.times
 import io.github.tukcps.aadd.DDException
+import io.github.tukcps.aadd.values.real.DoubleBound
 import kotlin.math.max
-
 
 operator fun DD<*>.plus(other: DD<*>): DD<*> = when (this) {
     is AADD if other is AADD -> (this + other)
@@ -98,14 +100,15 @@ operator fun DD<*>.unaryMinus(): DD<*> = when(this) {
 }
 
 fun DD<*>.ite(t: DD<*>, e: DD<*>): DD<*> = when(this) {
-    builder.Bool.Empty -> t.empty
-    builder.Bool.One -> t.one
-    builder.Bool.Zero -> e.zero
+    builder.Bool.Empty if (t::class == e::class) -> t.empty
+    builder.Bool.One if (t::class == e::class) -> t.one
+    builder.Bool.Zero if (t::class == e::class) -> e.zero
     else -> when (t) {
-        is AADD -> ite(t, e as AADD)
-        is BDD -> ite(t, e as BDD)
-        is IDD  -> ite(t, e as IDD)
-        is StrDD -> ite(t, e as StrDD)
+        is AADD if e is AADD -> (this as BDD).ite(t, e)
+        is BDD if e is BDD   -> (this as BDD).ite(t, e)
+        is IDD if e is IDD   -> (this as BDD).ite(t, e)
+        is StrDD if e is StrDD -> (this as BDD).ite(t, e)
+        else     -> throw DDException("ite on incompatible types.")
     }
 }
 
@@ -121,6 +124,11 @@ infix fun DD<*>.intersect(other: DD<*>): DD<*> =
         is StrDD -> this intersect other as StrDD
     }
 
+operator fun DD<*>.contains(x : Long) = when(this) {
+    is AADD -> min <= DoubleBound.Finite(x.toDouble()) && max >= DoubleBound.Finite(x.toDouble())
+    is IDD ->  min<= x && max >= x
+    else -> false
+}
 
 /**
  * Returns number of internal nodes in a BDD.
@@ -138,6 +146,8 @@ fun DD<*>.numUnknownVars(node: DD<*> = this): Int = when(node) {
     is DD.Leaf<*> ->  0
     is DD.Internal<*> -> max(node.index, max(numUnknownVars(node.T), numUnknownVars(node.F)))
 }
+
+
 
 // fun DD<*>.structurallyEquals(dd: DD<*>, other: DD<*>): Boolean =
 //     structurallyEquals(dd, other)

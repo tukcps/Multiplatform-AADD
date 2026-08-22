@@ -107,13 +107,23 @@ internal fun invSplit(x: AffineForm): AADD {
     val builder = x.builder
     val xAsAADD = builder.real(x)
 
-    return xAsAADD.lessThan(-InvFunction.EPSILON).ite(
+    val result = xAsAADD.lessThan(-InvFunction.EPSILON).ite(
         t = builder.leaf(InvFunction
             .approximate(x constrainToRange RealRange(x.min.toDouble()..-InvFunction.EPSILON))),
         e = xAsAADD.lessThan(InvFunction.EPSILON).ite(
-            t = builder.Reals.All,
+            t = when {
+                (x.isScalar() && x.central == 0.0)
+                    -> builder.Reals.Empty
+                x.max <= DoubleBound.Finite(0.0)
+                    -> builder.real(DoubleBound.NegativeInfinity .. DoubleBound.Finite(0.0))
+                x.min >= DoubleBound.Finite(0.0)
+                    -> builder.real(DoubleBound.Finite(0.0) ..DoubleBound.PositiveInfinity)
+                else
+                    -> builder.Reals.All
+            },
             e = builder.leaf(InvFunction
                 .approximate(x constrainToRange RealRange(InvFunction.EPSILON..x.max.toDouble())))
         )
     )
+    return result
 }

@@ -1,5 +1,6 @@
 package values.real.aa
 
+import io.github.tukcps.aadd.util.Assertions
 import io.github.tukcps.aadd.values.real.DoubleBound
 import io.github.tukcps.aadd.values.real.aa.AffineForm
 import io.github.tukcps.aadd.values.real.aa.exp
@@ -15,14 +16,14 @@ class LnFunctionTests {
     fun lnOne() = ddTest {
         val x = AffineForm.scalar(this, 1.0)
         val y = ln(x)
-        assertEquals(0.0..0.0, y, 0.00000001)
+        Assertions.assertSafeInclusion(0.0..0.0, y, 0.00000001)
     }
 
     @Test
     fun lnInterval() = ddTest {
         val x = AffineForm.range(this, 1.0..2.0)
         val y = ln(x)
-        assertEquals(0.0 .. kotlin.math.ln(2.0), y, 0.000001)
+        Assertions.assertSafeInclusion(0.0..kotlin.math.ln(2.0), y, 0.000001)
     }
 
     @Test
@@ -58,14 +59,14 @@ class LnFunctionTests {
     fun expLnIdentity() = ddTest {
         val x = AffineForm.range(this, 1.0..2.0)
         val y = exp(ln(x))
-        assertEquals(1.0..2.0, y, 1e-6)
+        Assertions.assertSafeInclusion(1.0..2.0, y, 1e-6)
     }
 
     @Test
     fun lnExpIdentity() = ddTest {
         val x = AffineForm.range(this, -1.0..2.0)
         val y = ln(exp(x))
-        assertEquals(-1.0..2.0, y, 1e-6)
+        Assertions.assertSafeInclusion(-1.0..2.0, y, 1e-6)
     }
 
 }

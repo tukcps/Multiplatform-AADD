@@ -62,3 +62,9 @@ internal object AcosFunction : UnaryFunction {
         return if (interval.max <= DoubleBound.Finite(0.0)) -x else x
     }
 }
+
+
+internal fun AcosFunction.linearize(x: AffineForm): LinearApproximation? =
+    MinimaxApproximation.linearize(this, x)
+
+fun acos(x: AffineForm): AffineForm = AcosFunction.approximate(x)

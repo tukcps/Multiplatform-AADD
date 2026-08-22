@@ -1,10 +1,10 @@
 package io.github.tukcps.aadd.dd
 
+import io.github.tukcps.aadd.DDBuilder
 import io.github.tukcps.aadd.dd.IDD.Internal
 import io.github.tukcps.aadd.dd.IDD.Leaf
 import io.github.tukcps.aadd.values.integer.IntegerRange
 import kotlin.math.min
-
 
 /**
  * Applies a unary operator on an IDD and returns its IDD result.
@@ -16,6 +16,11 @@ fun IDD.apply(f: (IntegerRange) -> IntegerRange): IDD = when (this) {
     is Internal -> builder.internal(index, T.apply(f), F.apply(f))
 }
 
+fun IDD.applySplit(f: (DDBuilder, IntegerRange) -> IDD): IDD = when (this) {
+    is Leaf -> if (isInfeasible()) infeasible else f(builder, this.value)
+    is Internal -> builder.internal(index, T.applySplit(f), F.applySplit(f))
+}
+
 /**
  * Applies a function with two parameters on the IDD
  * @param function the function
@@ -23,13 +28,13 @@ fun IDD.apply(f: (IntegerRange) -> IntegerRange): IDD = when (this) {
  * @return result of binary operation on this and g.
  */
 internal fun IDD.applySplit(other: IDD, function: (IntegerRange, IntegerRange) -> IDD): IDD =
-    applySplitGeneric(other, function)
+    applySplitGeneric(other,function)
 
 internal fun IDD.apply(other: IDD, function: (IntegerRange, IntegerRange) -> IntegerRange): IDD =
     applyGeneric(other, function)
 
 internal fun IDD.applyOther(other: Long, op: (IntegerRange, Long) -> IntegerRange): IDD =
-    applyDDOtherGeneric(other, op, { x: IntegerRange -> this.builder.leaf(x)} )
+    applyDDOtherGeneric(other, op) { x: IntegerRange -> this.builder.leaf(x) }
 
 /**
  * Applies a multiplication of the IDD with a BDD
@@ -49,7 +54,7 @@ fun IDD.timesBDD(other: BDD): IDD {
     // Check for the terminals of the BDD g. It ends iteration and applies operation.
     if (isInfeasible() || other.isInfeasible()) return infeasible
     return  when (other) {
-        builder.Bool.Empty     -> builder.Integers.Empty
+        builder.Bool.Empty   -> builder.Integers.Empty
         builder.Bool.False   -> builder.leaf(IntegerRange(0))
         builder.Bool.True    -> clone()
         else -> {

@@ -1,4 +1,4 @@
-@file:Suppress("unused", "UnusedVariable")
+@file:Suppress("unused", "UnusedVariable", "LocalVariableName")
 
 package dd.aaddtests
 
@@ -27,12 +27,13 @@ import io.github.tukcps.aadd.DDBuilder.RealMath.times
 import io.github.tukcps.aadd.DDBuilder.RealMath.unaryMinus
 import io.github.tukcps.aadd.Real
 import io.github.tukcps.aadd.dd.AADD
+import io.github.tukcps.aadd.util.Assertions.assertEquals
+import io.github.tukcps.aadd.util.Assertions.assertSafeInclusion
 import io.github.tukcps.aadd.values.integer.IntegerRange
 import io.github.tukcps.aadd.values.real.DoubleBound
 import io.github.tukcps.aadd.values.real.aa.AffineForm
 import io.github.tukcps.aadd.values.real.aa.AffineForm.Companion.create
 import io.github.tukcps.aadd.values.real.ia.RealRange
-import io.github.tukcps.aadd.util.Assertions.assertEquals
 import testutil.ddTest
 import kotlin.math.exp
 import kotlin.math.ln
@@ -123,7 +124,7 @@ class AADDTests {
 
         val b = real(5.0 .. 10.0, "b")
         val s = negate(b) as AADD.Leaf
-        assertEquals(-10.0..-5.0, s, 0.0001)
+        assertSafeInclusion(-10.0..-5.0, s, 0.0001)
         assertEquals(-2.5, s.value.xi[1L])
     }
 
@@ -137,7 +138,7 @@ class AADDTests {
         val t = internal(cond, a, r)
         val tn = - t
         val s = tn + t
-        assertEquals(0.0..0.0, s, 0.00000001)
+        assertSafeInclusion(0.0..0.0, s, 0.00000001)
         // This assertion or above assertions fail if merging when considering the quantization error prevents merge.
         assertTrue(s is AADD.Leaf)
     }
@@ -172,14 +173,14 @@ class AADDTests {
             val b = real(-1.0)
             val exp1 = exp(a)
             val exp2 = exp(b)
-            assertEquals(exp(3.5) .. exp(3.5), exp1, 0.0000001)
+            assertSafeInclusion(exp(3.5)..exp(3.5), exp1, 0.0000001)
 
             // Test Interval
             val c = leaf(affineForm1)
             val exp3 = exp(c) as AADD.Leaf
             // assertEquals(5.06, exp3.central, 0.01)
             // assertEquals(0.98, exp3.value.r, 0.01)
-            assertEquals(exp(1.0).. exp(2.0), exp3, 0.01)
+            assertSafeInclusion(exp(1.0)..exp(2.0), exp3, 0.01)
 
             val d = leaf(largerValue)
             val exp4 = exp(d) as AADD.Leaf
@@ -200,12 +201,12 @@ class AADDTests {
         val c = real(0.0)
 
         var d : AADD = exp(a)
-        assertEquals(2.718281828459045..2.7182818284590455, d, 0.00000001)
-        assertEquals(exp(1.0) .. exp(1.0), d, 1e-9)
+        assertSafeInclusion(2.718281828459045..2.7182818284590455, d, 0.00000001)
+        assertSafeInclusion(exp(1.0)..exp(1.0), d, 1e-9)
         d = exp(b)
-        assertEquals(exp(-1.0)..exp(-1.0), d, 0.00000001)
+        assertSafeInclusion(exp(-1.0)..exp(-1.0), d, 0.00000001)
         d = exp(c)
-        assertEquals(1.0..1.0, d, 0.01)
+        assertSafeInclusion(1.0..1.0, d, 0.01)
     }
 
     @Test
@@ -243,28 +244,28 @@ class AADDTests {
         DDBuilder {
             val a: Real = real(AffineForm.range(this, 1.0..1.0, "a"))
             var b: Real = log(a, 10.0)
-            assertEquals(0.0..0.0, b, 0.001)
+            assertSafeInclusion(0.0..0.0, b, 0.001)
             b = log(leaf(AffineForm.range(this, 100.0..100.0, "a")), 10.0)
             //println("b = " + b)
-            assertEquals(2.0..2.0, b, 0.001)
+            assertSafeInclusion(2.0..2.0, b, 0.001)
             b = log(leaf(AffineForm.range(this, 100.0..100.0, "a")), 5.0)
             //println("b = " + b)
-            assertEquals(ln(100.0) / ln(5.0)..ln(100.0) / ln(5.0), b, 0.001)
+            assertSafeInclusion(ln(100.0) / ln(5.0)..ln(100.0) / ln(5.0), b, 0.001)
             b = log(leaf(AffineForm.range(this, 128.0..128.0, "a")), 2.0)
             //println("b = " + b)
-            assertEquals(ln(128.0) / ln(2.0)..ln(128.0)  / ln(2.0), b, 0.001)
+            assertSafeInclusion(ln(128.0) / ln(2.0)..ln(128.0) / ln(2.0), b, 0.001)
             b = log(leaf(AffineForm.range(this, 1.5..1.5, "a")), 2.0)
             //println("b = " + b)
-            assertEquals(0.5849625007211561 .. 0.5849625007211561, b.getRange(), 0.001)
+            assertSafeInclusion(0.5849625007211561..0.5849625007211561, b.getRange(), 0.001)
             b = log(leaf(AffineForm.range(this, 10.5..10.5, "a")), 2.0)
             //println("b = " + b)
-            assertEquals(3.39231742277876 .. 3.39231742277876, b.getRange(), 0.001)
+            assertSafeInclusion(3.39231742277876..3.39231742277876, b.getRange(), 0.001)
             b = log(leaf(AffineForm.scalar(this, 8.0)), 2.0)
             //println("b = " + b)
-            assertEquals(3.0..3.0, b.getRange(), 0.001)
+            assertSafeInclusion(3.0..3.0, b.getRange(), 0.001)
             b = log(leaf(AffineForm.range(this, 16.0..16.0, "a")), 2.0)
             //println("b = " + b)
-            assertEquals(4.0..4.0, b.getRange(), 0.001)
+            assertSafeInclusion(4.0..4.0, b.getRange(), 0.001)
         }
     }
 
@@ -275,7 +276,7 @@ class AADDTests {
     @Test
     fun lnTestRange() = ddTest {
         val af = real(1.0..5.0)
-        assertEquals(ln(1.0)..ln(5.0), ln(af), 0.0000001)
+        assertSafeInclusion(ln(1.0)..ln(5.0), ln(af), 0.0000001)
     }
 
 
@@ -285,7 +286,7 @@ class AADDTests {
             val a = real(2.0..3.0)
             val b = real(-1.0..3.0)
             val c = a power b
-            assertEquals(1/3.0 .. 27.0, c.getRange(), 0.0000001)
+            assertSafeInclusion(1 / 3.0..27.0, c.getRange(), 0.0000001)
         }
     }
 
@@ -295,7 +296,7 @@ class AADDTests {
             val affineForm1 = AffineForm.range(this, 1.0..2.0)
             val af3Node = real(-2.0..2.0)
             val inv = inv(af3Node)
-            assertEquals(Reals.All, inv)
+            assertSafeInclusion(Reals.All, inv)
 
             // Empty -> Empty
             val empty = inv(Reals.Empty) as AADD.Leaf
@@ -304,25 +305,24 @@ class AADDTests {
             
             // Real -> Real 
             val real = inv(Reals.All)
-            assertEquals(Reals.All, real)
+            assertSafeInclusion(Reals.All, real)
 
             // Regular
             val inv3Node = leaf(affineForm1)
             val inv3 = inv(inv3Node)
-            assertEquals(1.0/2.0..1.0, inv3.getRange(), 0.001)
+            assertSafeInclusion(1.0 / 2.0..1.0, inv3.getRange(), 0.001)
             //assertEquals(0.75, inv3.central, 0.0000001)
-            assertEquals(0.5..1.0, inv3, 0.0000001)
+            assertSafeInclusion(0.5..1.0, inv3, 0.0000001)
             // assertEquals(0.25, inv3.radius, 0.0000001)
         }
     }
 
     @Test
     fun divTest() = ddTest {
-        // Div by zero should return infinite
+        // Div by zero should return infinite, but division by scalar 0.0 should return Empty.
         val affineForm1 = AffineForm.range(this, 1.0..2.0)
-        val zeroNode = real(0.0)
         val affineForm1Node = leaf(affineForm1)
-        val div = (affineForm1Node / (zeroNode)) as AADD.Leaf
+        val div = (affineForm1Node / (real(0.0))) as AADD.Leaf
         assertTrue(div.value.isEmpty())
 
         // Regular division
@@ -403,9 +403,9 @@ class AADDTests {
             val z: AADD
 
             val y: AADD = ceil(x)
-            assertEquals(2.0..2.0, y, precision)
+            assertSafeInclusion(2.0..2.0, y, precision)
             z = invCeil(y)
-            assertEquals(1.0..2.0, z.getRange(), precision)
+            assertSafeInclusion(1.0..2.0, z.getRange(), precision)
             val yL: Long = ceilAsLong(x)
             assertEquals(2, yL)
             val yIR: IntegerRange = ceilToIntRange(x)
@@ -428,10 +428,10 @@ class AADDTests {
             val z: AADD
 
             val y: AADD = ceil(x)
-            assertEquals(2.0..3.0, y.getRange(), precision)
+            assertSafeInclusion(2.0..3.0, y.getRange(), precision)
             z = invCeil(y)
 
-            assertEquals(1.0..3.0, z, precision)
+            assertSafeInclusion(1.0..3.0, z, precision)
             val yL: Long = ceilAsLong(x)
             //println("yL = " + yL)
             assertEquals(3, yL)
@@ -458,11 +458,11 @@ class AADDTests {
             val y: AADD = floor(x)
             //println("x = [" + x.getRange().min + ", " + x.getRange().max + "]")
             //println("y = [" + y.getRange().min + ", " + y.getRange().max + "]")
-            assertEquals(1.0..1.0, y.getRange(), precision)
+            assertSafeInclusion(1.0..1.0, y.getRange(), precision)
             z = invFloor(y)
             //println("y = [" + y.getRange().min + ", " + y.getRange().max + "]")
             //println("z = [" + z.getRange().min + ", " + z.getRange().max + "]")
-            assertEquals(1.0..2.0, z.getRange(), precision)
+            assertSafeInclusion(1.0..2.0, z.getRange(), precision)
             val yL: Long = floorAsLong(x)
             //println("yL = " + yL)
             assertEquals(1, yL)
@@ -489,11 +489,11 @@ class AADDTests {
             val y: AADD = floor(x)
             //println("x = [" + x.getRange().min + ", " + x.getRange().max + "]")
             //println("y = [" + y.getRange().min + ", " + y.getRange().max + "]")
-            assertEquals(1.0..2.0, y, precision)
+            assertSafeInclusion(1.0..2.0, y, precision)
             z = invFloor(y)
             //println("y = [" + y.getRange().min + ", " + y.getRange().max + "]")
             //println("z = [" + z.getRange().min + ", " + z.getRange().max + "]")
-            assertEquals(1.0..3.0, z, precision)
+            assertSafeInclusion(1.0..3.0, z, precision)
             val yL: Long = floorAsLong(x)
             //println("yL = " + yL)
             assertEquals(1, yL)
@@ -531,18 +531,12 @@ class AADDTests {
             val C_wb_s_floor_arg: AADD = (C_wb - 1.0) / s + 1.0
             val a_pb: AADD = p * floor(C_wb_s_floor_arg)
 
-            //println("F = [" + F.getRange().min + ", " + F.getRange().max + "]")
-            //println("p = [" + p.getRange().min + ", " + p.getRange().max + "]")
-            //println("s = [" + s.getRange().min + ", " + s.getRange().max + "]")
-            //println("C_wb = [" + C_wb.getRange().min + ", " + C_wb.getRange().max + "]")
-            //println("C_wb_s_floor_arg = [" + C_wb_s_floor_arg.getRange().min + ", " + C_wb_s_floor_arg.getRange().max + "]")
-            //println("a_pb = [" + a_pb.getRange().min + ", " + a_pb.getRange().max + "]")
-            assertEquals(9.0..9.0, F.getRange(), precision)
-            assertEquals(1.0..1.0, p.getRange(), precision)
-            assertEquals(1.0..1.0, s.getRange(), precision)
-            assertEquals(4.0..4.0, C_wb.getRange(), precision)
-            assertEquals(4.0..4.0, C_wb_s_floor_arg.getRange(), precision)
-            assertEquals(4.0..4.0, a_pb.getRange(), precision)
+            assertSafeInclusion(9.0..9.0, F.getRange(), precision)
+            assertSafeInclusion(1.0..1.0, p.getRange(), precision)
+            assertSafeInclusion(1.0..1.0, s.getRange(), precision)
+            assertSafeInclusion(4.0..4.0, C_wb.getRange(), precision)
+            assertSafeInclusion(4.0..4.0, C_wb_s_floor_arg.getRange(), precision)
+            assertSafeInclusion(4.0..4.0, a_pb.getRange(), precision)
         }
     }
 
@@ -564,37 +558,37 @@ class AADDTests {
     fun testFloorFxnFromNeuralNetworkRun4_var_a_w() {
         DDBuilder {
             val precision = 0.001
-            val C_w = real(50.0 .. 50.0)
-            val F = real(9.0 .. 9.0)
-            val s = real(1.0 .. 1.0)
-            val p = real(1.0 .. 1.0)// padding, 0 = NOT enabled, 1 = enabled
+            val C_w = real(50.0..50.0)
+            val F = real(9.0..9.0)
+            val s = real(1.0..1.0)
+            val p = real(1.0..1.0)// padding, 0 = NOT enabled, 1 = enabled
             val C_wb = floor(F / 2.0)
             val C_w_hat: AADD = C_w + p * 2.0 * C_wb
             val a_w: AADD = floor((C_w_hat - F) / s + 1.0)
 
-            assertEquals(9.0..9.0, F, precision)
-            assertEquals(1.0 .. 1.0, p, precision)
-            assertEquals(1.0 .. 1.0, s, precision)
-            assertEquals(4.0..4.0, C_wb, precision)
-            assertEquals(58.0..58.0, C_w_hat, precision)
-            assertEquals(50.0..50.0, a_w, precision)
+            assertSafeInclusion(9.0..9.0, F, precision)
+            assertSafeInclusion(1.0..1.0, p, precision)
+            assertSafeInclusion(1.0..1.0, s, precision)
+            assertSafeInclusion(4.0..4.0, C_wb, precision)
+            assertSafeInclusion(58.0..58.0, C_w_hat, precision)
+            assertSafeInclusion(50.0..50.0, a_w, precision)
         }
     }
 
     @Test
     fun testITEBounds(){
         DDBuilder {
-            var a : AADD = real(-1.0..1.0)
+            var a: AADD = real(-1.0..1.0)
             IF(a greaterThanOrEquals 0.0)
-                a = assign(a, a + 10.0)
+            a = assign(a, a + 10.0)
             ELSE()
-                a = assign(a, a - 10.0)
+            a = assign(a, a - 10.0)
             END()
             assertEquals(1, a.height())
-            assertEquals(-11.0..11.0, a, 0.000001)
+            assertSafeInclusion(-11.0..11.0, a, 0.000001)
             //  println(a.toIteString())
             a.getRange()
-            assertEquals(-11.0..11.0, a, 0.000001)
+            assertSafeInclusion(-11.0..11.0, a, 0.000001)
             // println(a.toIteString())
         }
     }
@@ -605,9 +599,9 @@ class AADDTests {
             //Worst Case for Multiplication
             val x = real(-20.0..20.0, 1.toString())
             val a = x.times(x) as AADD.Leaf
-            assertEquals(-400.0..400.0, a, 0.0000001)
+            assertSafeInclusion(-400.0..400.0, a, 0.0000001)
             // will x1 == 0.0 because central value therefore the multiplication plane is zero
-            assertEquals(0.0,a.value.xi[1]!!, 0.0000001)
+            assertEquals(0.0, a.value.xi[1]!!, 0.0000001)
         }
     }
 
@@ -616,7 +610,7 @@ class AADDTests {
         DDBuilder {
             val x = real(0.5..20.0, 1.toString())
             val a = pow(x, 2.0) as AADD.Leaf
-            assertEquals(0.25.. 400.0, a, 0.0000001)
+            assertSafeInclusion(0.25..400.0, a, 0.0000001)
             // assertTrue(a.radius < 500.0)
         }
     }
@@ -627,7 +621,7 @@ class AADDTests {
             val x = real(0.5..20.0)
             val a = x power (real(2.0) as AADD.Leaf)
             // assertTrue(a.radius < 500.0)
-            assertEquals(0.25..400.0, a,0.0000001)
+            assertSafeInclusion(0.25..400.0, a, 0.0000001)
         }
     }
 
@@ -646,7 +640,7 @@ class AADDTests {
         DDBuilder {
             val x = real(0.5..20.0, 2.toString())
             val a = x power real(2.0 .. 3.0, 1.toString())
-            assertEquals(0.125 .. 8000.0, a, 0.0000001)
+            assertSafeInclusion(0.125..8000.0, a, 0.0000001)
             //assertEquals(9.75,a.value.xi[2])
         }
     }
@@ -654,8 +648,8 @@ class AADDTests {
     @Test
     fun testAbs(){
         DDBuilder {
-            val x= real(-2.0 .. 1.0, 1.toString())
-            val y= real(-3.0 .. -1.0, 2.toString())
+            val x = real(-2.0..1.0, 1.toString())
+            val y = real(-3.0..-1.0, 2.toString())
 
             val decision = x.greaterThan(-1.5)
             val tree = decision.ite(x, y)
@@ -664,30 +658,30 @@ class AADDTests {
 
             val r = z.getRange()
 
-            assertEquals(0.0..3.0, z, 0.0000001)
+            assertSafeInclusion(0.0..3.0, z, 0.0000001)
             assertEquals(3, z.numLeaves())
 
-            val rightChild = if(z is AADD.Internal)z.T else Bool.Empty
+            val rightChild = if (z is AADD.Internal) z.T else Bool.Empty
 
             assertEquals(2, rightChild.numLeaves())
             val rightleftChild = if (rightChild is AADD.Internal) rightChild.F else Bool.Empty
-            val rightleftChildValue =  if (rightleftChild is AADD.Leaf) rightleftChild.getRange() else AF.Empty
-            assertEquals(0.0..1.5, rightleftChildValue, 0.0000001)
+            val rightleftChildValue = if (rightleftChild is AADD.Leaf) rightleftChild.getRange() else AF.Empty
+            assertSafeInclusion(0.0..1.5, rightleftChildValue, 0.0000001)
             // assertEquals(-1.5, rightleftChildValue.xi[1]!!,0.0000001)
 
-            val leftiChild = if(z is AADD.Internal)z.F else Bool.Empty
+            val leftiChild = if (z is AADD.Internal) z.F else Bool.Empty
 
-            val value = if(leftiChild is AADD.Leaf) leftiChild.value else AF.Empty
-            assertEquals(1.0..3.0, value, 0.0000001)
-            assertEquals(-1.0, value.xi[2L]!!,0.0000001)
+            val value = if (leftiChild is AADD.Leaf) leftiChild.value else AF.Empty
+            assertSafeInclusion(1.0..3.0, value, 0.0000001)
+            assertEquals(-1.0, value.xi[2L]!!, 0.0000001)
         }
     }
 
     @Test
     fun testPowRangeCloseToZero(){
         DDBuilder {
-            val x = real(0.1 .. 2.0)
-            val z = x power real(1.0 .. 2.0)
+            val x = real(0.1..2.0)
+            val z = x power real(1.0..2.0)
 
             //println("x = " + x.central)
             //println("x = [" + x.min + ", " + x.max + "]")
@@ -696,7 +690,7 @@ class AADDTests {
             //println("z = x^y = [" + z.min + ", " + z.max + "]")
 
             //assertEquals(1.95, z.central, tol)
-            assertEquals(0.01..4.0, z, 0.0000001)
+            assertSafeInclusion(0.01..4.0, z, 0.0000001)
         }
     }
 
@@ -706,15 +700,15 @@ class AADDTests {
     @Test
     fun pathConditionTest() {
         DDBuilder {
-            val A = real(0.0 .. 0.0) greaterThanOrEquals real(1.0)
-            val B = real(0.0 .. 0.0) lessThanOrEquals real(1.0)
-            var rangeC: AADD = real(1.0 .. 1.0)
+            val A = real(0.0..0.0) greaterThanOrEquals real(1.0)
+            val B = real(0.0..0.0) lessThanOrEquals real(1.0)
+            var rangeC: AADD = real(1.0..1.0)
             IF(B)
             IF(A)
-            rangeC = assign(rangeC,real(2.0))
+            rangeC = assign(rangeC, real(2.0))
             END()
             END()
-            assertEquals(1.0..1.0, rangeC)
+            assertSafeInclusion(1.0..1.0, rangeC)
         }
     }
 }
